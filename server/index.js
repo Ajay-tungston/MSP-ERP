@@ -13,6 +13,7 @@ app.use("/welcome", (req, res) => {
 //admin-routes
 app.use("/admin/auth", require("./routes/admin/authRoutes"));
 app.use("/admin/supplier", require("./routes/admin/supplier/adminSupplierRoutes"));
+app.use("/admin/employee", require("./routes/admin/employee/adminEmployeeRoutes"));
 
 connectDb()
   .then(() =>

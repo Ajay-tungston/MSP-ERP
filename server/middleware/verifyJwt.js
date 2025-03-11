@@ -1,5 +1,7 @@
 const jwt = require("jsonwebtoken");
+const Admin = require("../models/Admin");
 
+//only work for admin
 
 const verifyJwt = async (req, res, next) => {
   const authHeader = req.headers.authorization || req.headers.Authorization;
@@ -12,7 +14,13 @@ const verifyJwt = async (req, res, next) => {
       return res.status(403).json({ message: "Forbidden" });
     }
     req.user = decoded;
+
+    const admin = await Admin.findById(decoded.id);
+    if (!admin) {
+      return res.status(404).json({ message: "Unauthorized" });
+      }
     next();
   });
 };
+
 module.exports = verifyJwt;

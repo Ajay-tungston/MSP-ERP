@@ -36,8 +36,9 @@ const supplierSchema = new mongoose.Schema(
       default: 0 
     }, 
 
-    commissionCode: { 
-      type: String
+    commission: { 
+      type: Number,
+      default: 10
     }, 
   },
   { timestamps: true } 

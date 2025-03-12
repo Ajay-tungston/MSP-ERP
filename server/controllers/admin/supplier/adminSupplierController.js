@@ -11,7 +11,7 @@ const addNewSupplier = async (req, res) => {
       whatsapp,
       advance,
       advanceDeducted,
-      commissionCode,
+      commission,
     } = req.body;
 
     //required feilds
@@ -87,18 +87,15 @@ const addNewSupplier = async (req, res) => {
         message: "Advance deducted must be a valid non-negative number",
       });
     }
-
+    
     if (
-      commissionCode &&
-      (!validator.isAlphanumeric(commissionCode) ||
-        commissionCode.length < 3 ||
-        commissionCode.length > 10)
-    ) {
-      return res.status(400).json({
-        message:
-          "Commission code must be alphanumeric and between 3 to 10 characters long",
-      });
-    }
+        commission &&
+        (!validator.isNumeric(commission.toString()) || commission < 0 || commission > 100)
+      ) {
+        return res.status(400).json({
+          message: "Commission must be a number between 0 and 100 (inclusive)",
+        });
+      }
 
     // const lastSupplier = await Supplier.findOne().sort({ no: -1 });
     // const nextNo = lastSupplier ? lastSupplier.no + 1 : 1;
@@ -112,7 +109,7 @@ const addNewSupplier = async (req, res) => {
       whatsapp,
       advance,
       advanceDeducted,
-      commissionCode,
+      commission,
     });
     await newSupplier.save();
     return res

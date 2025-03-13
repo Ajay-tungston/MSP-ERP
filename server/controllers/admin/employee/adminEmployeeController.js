@@ -92,11 +92,74 @@ const addNewEmployee = async (req, res) => {
       salary,
     });
     await newEmployee.save();
-    return res.status(201).json({ message: "Employee created successfully" ,newEmployee});
+    return res
+      .status(201)
+      .json({ message: "Employee created successfully", newEmployee });
   } catch (error) {
     console.log(error);
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
 
-module.exports={addNewEmployee}
+const getAllEmployees = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const search = req.query.search || "";
+
+    const searchQuery = {
+      employeeName: { $regex: search, $options: "i" }
+    };
+
+    const totalEmployee = await Employee.countDocuments(searchQuery);
+
+    if (totalEmployee === 0) {
+      return res.status(200).json({
+        currentPage: page,
+        totalPages: 0,
+        totalEmployee: 0,
+        employees: [],
+      });
+    }
+
+    const employees = await Employee.find(searchQuery).skip(skip).limit(limit);
+
+    return res.status(200).json({
+      currentPage: page,
+      totalPages: Math.ceil(totalEmployee / limit),
+      totalEmployee,
+      employees,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: "Error getting employees" });
+  }
+};
+
+const deleteEmployees = async (req, res) => {
+  try {
+    const { employeeId } = req.body;
+
+    if (!Array.isArray(employeeId) || employeeId.length === 0) {
+      return res
+        .status(400)
+        .json({ message: "Please provide a valid list of employee IDs." });
+    }
+    const result = await Employee.deleteMany({ _id: { $in: employeeId } });
+
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ message: "employee not found" });
+    }
+
+    return res.status(200).json({
+      message: `${result.deletedCount} employees deleted successfully`,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: "Error deleting employees" });
+  }
+};
+
+module.exports = { addNewEmployee, getAllEmployees,deleteEmployees };

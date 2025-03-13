@@ -1,4 +1,6 @@
+
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 function Login() {
     // State variables for email, password, and error messages
@@ -7,10 +9,12 @@ function Login() {
     const [emailError, setEmailError] = useState('');
     const [passwordError, setPasswordError] = useState('');
 
+    const navigate = useNavigate(); // Hook to navigate to a different page
+
+
     // Handle form submission
     const handleSubmit = (e) => {
         e.preventDefault(); // Prevent the default form submission
-
         let isValid = true;
 
         // Reset previous errors
@@ -38,11 +42,10 @@ function Login() {
     };
 
     return (
-        <div className="w-full h-screen bg-white overflow-hidden flex items-center justify-center">
+        <div className="fixed inset-0 bg-white flex items-center justify-center overflow-hidden">
             {/* Container with fixed position and center alignment */}
-            {/* <div className="w-full sm:w-[90%] md:w-[600px] lg:w-[700px] px-6 sm:px-8 md:px-12 py-6 sm:py-8 md:py-10 bg-white rounded-[27px] shadow-2xl outline-offset-[-0.25px] outline-black inline-flex flex-col justify-start items-center gap-6 sm:gap-8 md:gap-10"> */}
-            <div className="w-full sm:w-[90%] md:w-[600px] lg:w-[700px] px-6 sm:px-8 md:px-12 py-6 sm:py-8 md:py-10 bg-white rounded-[27px] shadow-[0px_0px_15px_4px_rgba(0,0,0,0.25)] outline-offset-[-0.25px] outline-black inline-flex flex-col justify-start items-center gap-6 sm:gap-8 md:gap-10">
-
+            <div className="w-full sm:w-[90%] md:w-[400px] lg:w-[500px] xl:w-[600px] px-6 sm:px-8 md:px-10 py-6 sm:py-8 md:py-10 bg-white rounded-[27px] shadow-lg flex flex-col justify-start items-center gap-6 sm:gap-8 md:gap-10">
+                
                 <img
                     src="/images/logo.jpeg"  // Use the path relative to the public folder
                     alt="Logo"
@@ -51,7 +54,7 @@ function Login() {
                 
                 {/* Welcome Title and Subtitle */}
                 <div className="text-center">
-                    <div className="text-black text-3xl sm:text-4xl md:text-5xl font-bold font-['Urbanist']">
+                    <div className="text-black text-2xl sm:text-3xl md:text-4xl font-bold font-['Urbanist']">
                         Welcome back!
                     </div>
                     <div className="text-[#9f9f9f] text-lg sm:text-xl md:text-2xl font-semibold font-['Urbanist']">
@@ -60,8 +63,8 @@ function Login() {
                 </div>
 
                 {/* Email Input Section */}
-                <div className="w-full flex flex-col justify-start items-start gap-4">
-                    <label className="self-start text-black text-lg sm:text-xl md:text-2xl font-bold font-['Urbanist']">Email</label>
+                <div className="w-full flex flex-col justify-start items-start">
+                    <label className="self-start text-black text-sm sm:text-lg md:text-xl font-bold font-['Urbanist']">Email</label>
                     <input
                         type="email"
                         value={email}
@@ -73,11 +76,17 @@ function Login() {
                 </div>
 
                 {/* Password Input Section */}
-                <div className="w-full flex flex-col justify-start items-start gap-4">
+                <div className="w-full flex flex-col justify-start items-start">
                     <div className="w-full flex justify-between items-center">
-                        <label className="self-start text-black text-lg sm:text-xl md:text-2xl font-bold font-['Urbanist']">Password</label>
-                        <div className="text-[#5d5fef] text-sm sm:text-base md:text-lg font-normal font-['Urbanist']">Forgot password?</div>
+                        <label className="self-start text-black text-sm sm:text-lg md:text-xl font-bold font-['Urbanist']">Password</label>
+                        <div
+                            className="text-[#5d5fef] text-sm sm:text-base md:text-lg font-normal font-['Urbanist'] cursor-pointer"
+                            onClick={() => navigate('/reset')} // Navigate to Reset Password page
+                        >
+                            Forgot password?
+                        </div>
                     </div>
+               
                     <input
                         type="password"
                         value={password}

@@ -1,0 +1,92 @@
+// 
+import React, { useState } from 'react'
+
+function Reset() {
+  // State to store the new password and confirm password
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [error, setError] = useState('');
+
+  // Handle the change for the new password input
+  const handleNewPasswordChange = (e) => {
+    setNewPassword(e.target.value);
+  };
+
+  // Handle the change for the confirm password input
+  const handleConfirmPasswordChange = (e) => {
+    setConfirmPassword(e.target.value);
+  };
+
+  // Handle form submission
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    // Check if the passwords match
+    if (newPassword !== confirmPassword) {
+      setError('Passwords do not match!');
+    } else {
+      setError('');
+      // Here you can add further logic for handling password reset (e.g., making an API call)
+      console.log('Password has been successfully reset');
+    }
+  };
+
+  return (
+    <div className="w-full h-screen bg-white overflow-hidden flex items-center justify-center px-4">
+      <div className="w-full sm:w-[90%] md:w-[500px] lg:w-[600px] px-6 py-6 sm:px-8 sm:py-8 md:px-12 md:py-10 bg-white rounded-xl shadow-xl outline-offset-[-0.25px] outline-black inline-flex flex-col justify-start items-center gap-6 sm:gap-8 md:gap-10">
+        <img
+          src="/images/logo.jpeg"
+          alt="Logo"
+          className="w-[120px] h-[120px] sm:w-[150px] sm:h-[150px] mb-4"
+        />
+
+        {/* Welcome Title and Subtitle */}
+        <div className="text-center">
+          <div className="text-black text-3xl sm:text-4xl font-bold font-['Urbanist']">
+            Rest your password
+          </div>
+        </div>
+
+        <form onSubmit={handleSubmit} className="w-full flex flex-col justify-start items-start gap-4">
+          {/* New password Input Section */}
+          <div className="w-full flex flex-col justify-start items-start gap-2">
+            <label className="self-start text-black text-lg sm:text-xl font-bold font-['Urbanist']">New password</label>
+            <input
+              type="password"
+              value={newPassword}
+              onChange={handleNewPasswordChange}
+              placeholder="Enter new password"
+              className="w-full h-[45px] sm:h-[50px] px-4 py-2 rounded-md border border-[#8b8b8b] focus:outline-none focus:ring-2 focus:ring-[#5d5fef] text-sm sm:text-base"
+            />
+          </div>
+
+          {/* Confirm Password Input Section */}
+          <div className="w-full flex flex-col justify-start items-start gap-2">
+            <label className="self-start text-black text-lg sm:text-xl font-bold font-['Urbanist']">Confirm new Password</label>
+            <input
+              type="password"
+              value={confirmPassword}
+              onChange={handleConfirmPasswordChange}
+              placeholder="Confirm new password"
+              className="w-full h-[45px] sm:h-[50px] px-4 py-2 rounded-md border border-[#8b8b8b] focus:outline-none focus:ring-2 focus:ring-[#5d5fef] text-sm sm:text-base"
+            />
+          </div>
+
+          {/* Error Message */}
+          {error && (
+            <div className="text-red-500 text-sm mt-2">{error}</div>
+          )}
+
+          {/* Submit Button */}
+          <button
+            type="submit"
+            className="w-full px-10 py-3 sm:px-[100px] sm:py-4 bg-[#5d5fef] rounded-md text-white text-lg sm:text-xl font-bold font-['Urbanist'] hover:bg-[#4a4fdf] focus:outline-none focus:ring-2 focus:ring-[#5d5fef] transition-all"
+          >
+            Reset Password
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+export default Reset;

@@ -4,6 +4,10 @@ const app = express();
 const PORT = process.env.PORT || 3500;
 const cookieParser=require("cookie-parser")
 const connectDb = require("./config/connectDB");
+const cors=require("cors")
+const corsOptions = require("./config/corsOptions");
+
+app.use(cors(corsOptions));
 
 app.use(express.json());
 app.use(cookieParser());
@@ -17,6 +21,8 @@ app.use("/admin/auth", require("./routes/admin/authRoutes"));
 app.use("/admin/supplier", require("./routes/admin/supplier/adminSupplierRoutes"));
 app.use("/admin/employee", require("./routes/admin/employee/adminEmployeeRoutes"));
 app.use("/admin/item", require("./routes/admin/item/adminItemRoutes"));
+app.use("/admin/purchase", require("./routes/admin/purchase/purchaseRoutes"));
+
 
 connectDb()
   .then(() =>

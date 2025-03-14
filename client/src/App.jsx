@@ -8,6 +8,7 @@ import AddSupplier from './Pages/AddSupplier'
 import Supplier from './Pages/Supplier'
 import Employe from './Pages/Employe'
 import Sa from './Pages/Sa'
+import Va from './Pages/Va'
 function App() {
 
   return (
@@ -19,8 +20,9 @@ function App() {
         <Route path='/employe' element={<Employe />} />
         <Route path='/sample' element={<Sample />} />
         <Route path='/customer' element={<AddCustomer />} />
-        <Route path='/add' element={<AddSupplier />} />
+        <Route path='/addsupplier' element={<AddSupplier />} />
         <Route path='/supplier' element={<Supplier/>} />
+        <Route path='/va' element={<Va/>} />
       </Routes>
     </>
   )

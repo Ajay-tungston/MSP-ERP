@@ -5,7 +5,7 @@ const itemNameRegex = /^[a-zA-Z0-9\s]+$/;
 
 const addItem = async (req, res) => {
   try {
-    const { itemCode, itemName } = req.body;
+    const { itemCode, itemName,conversionRatio } = req.body;
     if (!itemCode || !itemName) {
       return res.status(400).json({ message: "Please fill in all fields" });
     }
@@ -34,7 +34,14 @@ const addItem = async (req, res) => {
         message: "Item name must contain only letters, numbers, and spaces",
       });
     }
-    const item = await Item.create({ itemCode, itemName });
+    
+    if (conversionRatio && (isNaN(conversionRatio) || conversionRatio <= 0)) {
+      return res.status(400).json({
+        message: "Conversion ratio must be a positive number",
+      });
+    }
+
+    const item = await Item.create({ itemCode, itemName, conversionRatio });
     res.status(201).json({ item });
   } catch (error) {
     console.log(error);

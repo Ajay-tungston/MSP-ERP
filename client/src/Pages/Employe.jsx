@@ -119,7 +119,7 @@ function Employe() {
     <div className="w-full h-full p-4 md:p-8 lg:p-12 bg-white rounded-3xl flex flex-col justify-start items-start gap-12 overflow-hidden">
       <div className="w-full pb-6 border-b border-[#a1a5b6] flex justify-start items-center gap-2.5">
         <div className="text-[#151d48] text-[24px] sm:text-[28px] md:text-[32px] font-bold font-['Urbanist'] leading-[44.80px]">
-          Add New Customer
+          Add New Employee
         </div>
       </div>
       <div className="w-full flex flex-wrap justify-between items-start gap-12 md:px-8 lg:px-40">

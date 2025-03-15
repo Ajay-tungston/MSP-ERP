@@ -122,6 +122,41 @@ const login = async (req, res) => {
   }
 };
 
+const refresh=async(req,res)=>{
+    try {
+        const cookies = req.cookies;
+        if (!cookies || !cookies.jwt) {
+          return res
+            .status(401)
+            .json({ message: "Please login first , unauthorized" });
+        }
+        const refreshToken = cookies.jwt;
+        jwt.verify(
+          refreshToken,
+          process.env.REFRESHTOKEN_SECRET,
+          async (err, decoded) => {
+            if (err) {
+              return res.status(403).json({ message: "Invalid token" });
+            }
+            const { id } = decoded;
+            const foundUser = await Admin.findById(id);
+      
+            if (!foundUser) {
+              return res.status(404).json({ message: "Admin not found" });
+            }
+            const accessToken = jwt.sign(
+                { id: foundUser._id, email: foundUser.email },
+                process.env.ACCESSTOKEN_SECRET,
+                { expiresIn: "1h" }
+              );
+             return res.status(200).json({ message: "refresh token successfull", accessToken });
+          }
+        );
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({ message: "server error" });
+    }
+}
 
 //for password reset
 
@@ -170,4 +205,4 @@ const resetPassword = async (req, res) => {
   }
 };
 
-module.exports = { login, signUp,checkResetToken,resetPassword };
+module.exports = { login, signUp,refresh,checkResetToken,resetPassword };

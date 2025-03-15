@@ -11,17 +11,22 @@ const addNewEmployee = async (req, res) => {
       openingBalance,
       joiningDate,
       salary,
+      salaryType
     } = req.body;
 
-    if (!employeeName || !phone || !salary) {
+    if (!employeeName || !phone || !salary || !salaryType) {
       return res
         .status(400)
-        .json({ message: "Employee name, phone, and salary are required." });
+        .json({ message: "Employee name, phone, salary and salaryType are required." });
     }
 
     const existingEmployee = await Employee.findOne({ employeeName });
     if (existingEmployee) {
       return res.status(400).json({ message: "Employee already exist." });
+    }
+
+    if (!["monthly", "daily"].includes(salaryType)) {
+      return res.status(400).json({ message: "Invalid salary type." });
     }
 
     if (
@@ -90,6 +95,7 @@ const addNewEmployee = async (req, res) => {
       openingBalance,
       joiningDate,
       salary,
+      salaryType
     });
     await newEmployee.save();
     return res

@@ -1,7 +1,6 @@
 import axios from "axios";
 
 const BASE_URL = import.meta.env.VITE_BACKEND_URL;
-console.log(BASE_URL)
 
 // Public API instance (no authentication required)
 const api = axios.create({

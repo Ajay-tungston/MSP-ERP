@@ -33,6 +33,7 @@ const employeeSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
+  salaryType: { type: String, enum: ["monthly", "daily"], required: true },
 },{
   timestamps: true,
 }

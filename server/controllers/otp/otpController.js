@@ -15,7 +15,7 @@ const sendOtpForPasswordReset=async(req,res)=>{
         const otp = await generateUniqueOtp();
         await Otp.create({ otp, email });
         
-        res.status(200).json({ message: "OTP sent successfully", otp });
+        res.status(200).json({ message: "OTP sent successfully"  });
       } catch (error) {
         console.log(error);
         return res.status(500).json({ message: "Internal Server Error" });

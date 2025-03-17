@@ -1,11 +1,30 @@
-// 
-import React, { useState } from 'react'
+//
+import React, { useEffect, useState } from "react";
+import { api } from "../api/api";
+import { useNavigate } from "react-router-dom";
 
-function Reset() {
+function ResetPassword() {
   // State to store the new password and confirm password
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [error, setError] = useState('');
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
+
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+])[A-Za-z\d!@#$%^&*()_+]{8,32}$/;
+
+  useEffect(() => {
+    const checkResetToken = async () => {
+      try {
+        const response = await api.get("/admin/auth/check-reset-token", {
+          withCredentials: true,
+        });
+      } catch (error) {
+        console.log(error);
+        navigate("/login");
+      }
+    };
+    checkResetToken();
+  }, []);
 
   // Handle the change for the new password input
   const handleNewPasswordChange = (e) => {
@@ -18,15 +37,33 @@ function Reset() {
   };
 
   // Handle form submission
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!passwordRegex.test(newPassword)) {
+      setError(
+        "Password must be 8-32 characters long, with at least one uppercase letter, one lowercase letter, one number, and one special character."
+      );
+      return;
+    }
     // Check if the passwords match
     if (newPassword !== confirmPassword) {
-      setError('Passwords do not match!');
+      setError("Passwords do not match!");
     } else {
-      setError('');
+      setError("");
       // Here you can add further logic for handling password reset (e.g., making an API call)
-      console.log('Password has been successfully reset');
+      console.log("Password has been successfully reset");
+      try {
+        const response = await api.post(
+          "/admin/auth/reset-password",
+          { newPassword },
+          { withCredentials: true }
+        );
+        console.log(response);
+        navigate("/login");
+      } catch (error) {
+        console.log(error);
+        setError("Failed to reset password");
+      }
     }
   };
 
@@ -46,10 +83,15 @@ function Reset() {
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="w-full flex flex-col justify-start items-start gap-4">
+        <form
+          onSubmit={handleSubmit}
+          className="w-full flex flex-col justify-start items-start gap-4"
+        >
           {/* New password Input Section */}
           <div className="w-full flex flex-col justify-start items-start gap-2">
-            <label className="self-start text-black text-lg sm:text-xl font-bold font-['Urbanist']">New password</label>
+            <label className="self-start text-black text-lg sm:text-xl font-bold font-['Urbanist']">
+              New password
+            </label>
             <input
               type="password"
               value={newPassword}
@@ -61,7 +103,9 @@ function Reset() {
 
           {/* Confirm Password Input Section */}
           <div className="w-full flex flex-col justify-start items-start gap-2">
-            <label className="self-start text-black text-lg sm:text-xl font-bold font-['Urbanist']">Confirm new Password</label>
+            <label className="self-start text-black text-lg sm:text-xl font-bold font-['Urbanist']">
+              Confirm new Password
+            </label>
             <input
               type="password"
               value={confirmPassword}
@@ -72,9 +116,7 @@ function Reset() {
           </div>
 
           {/* Error Message */}
-          {error && (
-            <div className="text-red-500 text-sm mt-2">{error}</div>
-          )}
+          {error && <div className="text-red-500 text-sm mt-2">{error}</div>}
 
           {/* Submit Button */}
           <button
@@ -89,4 +131,4 @@ function Reset() {
   );
 }
 
-export default Reset;
+export default ResetPassword;

@@ -102,7 +102,7 @@ function Login() {
                         <label className="self-start text-black text-sm sm:text-lg md:text-xl font-bold font-['Urbanist']">Password</label>
                         <div
                             className="text-[#5d5fef] text-sm sm:text-base md:text-lg font-normal font-['Urbanist'] cursor-pointer"
-                            onClick={() => navigate('/reset')} // Navigate to Reset Password page
+                            onClick={() => navigate('/forgot-password')} // Navigate to Reset Password page
                         >
                             Forgot password?
                         </div>

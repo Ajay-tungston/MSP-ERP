@@ -1,128 +1,167 @@
-import { useState } from 'react'
+import { useEffect, useState } from "react";
 import { CiCirclePlus } from "react-icons/ci";
-import { CiFilter } from 'react-icons/ci';
+import { CiFilter } from "react-icons/ci";
 import { GoTrash } from "react-icons/go";
 import { useNavigate } from "react-router-dom";
 import { FaCheckSquare, FaRegSquare } from "react-icons/fa"; // For styled checkboxes
+import useAxiosPrivate from "../hooks/useAxiosPrivate";
 export default function CustomerHeader() {
-    const [selectedRows, setSelectedRows] = useState([]);
-    const customers = [
-        { id: "001",scode:"S001", name: "GreenMart", address: "123 Main St", phone: "987654321", whatsapp: "987654321", comm: "C0M001", advance: "$500",    adv: "$200.00",  },
-        { id: "002",scode:"S001", name: "LocalMart", address: "123 Main St", phone: "987654321", whatsapp: "987654321", comm: "C0M002", advance: "$1500", adv: "$200.00",  },
-        { id: "003",scode:"S001", name: "GreenMart", address: "123 Main St", phone: "987654321", whatsapp: "987654321", comm: "C0M003", advance: "$2500", adv: "$200.00",  },
-        { id: "004", scode:"S001",name: "LocalMart", address: "123 Main St", phone: "987654321", whatsapp: "987654321", comm: "C0M004", advance: "$3500", adv: "$200.00",  },
-    ];
-    const toggleRowSelection = (id) => {
-        setSelectedRows((prev) =>
-            prev.includes(id) ? prev.filter((rowId) => rowId !== id) : [...prev, id]
+  const [selectedRows, setSelectedRows] = useState([]);
+  const [supplier, setSupplier] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const limit = 8;
+
+  const axiosInstance = useAxiosPrivate();
+  useEffect(() => {
+    const fetchSuppliers = async () => {
+      try {
+        const response = await axiosInstance.get(
+          `/admin/supplier?page=${currentPage}&limit=${limit}`
         );
+        console.log(response);
+        setSupplier(response?.data);
+      } catch (error) {
+        console.log(error);
+      }
     };
-    const navigate = useNavigate();
+    fetchSuppliers();
+  }, [currentPage]);
 
-    const toggleAllRows = () => {
-        if (selectedRows.length === customers.length) {
-            setSelectedRows([]);
-        } else {
-            setSelectedRows(customers.map((customer) => customer.id));
-        }
-    };
-
-    return (
-        <div className=" p-4 rounded-lg shadow-sm h-[800px] bg-white mt-5">
-            {/* Breadcrumb */}
-            <nav className="text-sm text-gray-500 mb-2  mt-10">
-                <span>Master</span> <span className="mx-1">›</span> <span className="text-gray-700">Supplier</span>
-            </nav>
-
-            {/* Header & Buttons */}
-            <div className="flex justify-between items-center ">
-                {/* Title */}
-                <h1 className="text-2xl font-bold text-gray-900">Supplier</h1>
-                {/* Buttons */}
-                <div className="flex space-x-3 -mt-10  mr-10 ">
-                   <button
-                                 className="bg-[#5D5FEF] text-white px-6 py-2 rounded-lg flex items-center gap-2"
-                                 onClick={() => navigate("/add-supplier")}
-                               >
-                                 <CiCirclePlus className="text-xl" /> Add New Company
-                               </button>
-                </div>
-            </div>
-            <div className="flex space-x-3 float-right mt-5 mr-10">
-                <button className="border border-red-500 text-red-500 px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-red-100 font-Urbanist">
-                    <GoTrash className="text-lg" /> Delete
-                </button>
-                <button className="border border-gray-300 text-[#4079ED] px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-gray-100">
-                    <CiFilter classname="text-lg " /> Filter
-                </button>
-            </div>
-  <div className=" mt-20 bg-white ">
-      <table className="w-full border-collapse text-gray-900">
-        {/* Table Header */}
-        <thead>
-          <tr className="text-left text-gray-900 font-bold border-b-2 border-gray-200 bg-[#F9FAFB] ">
-            <th className="p-3">
-              <button onClick={toggleAllRows} className="text-blue-600">
-                {selectedRows.length === customers.length ? <FaCheckSquare size={20} /> : <FaRegSquare size={20} />}
-              </button>
-            </th>
-            <th className="p-3">No.</th>
-            <th className="p-3">S.code</th>
-            <th className="p-3">Name</th>
-            <th className="p-3">Address</th>
-            <th className="p-3">Phone</th>
-            <th className="p-3">WhatsApp</th>
-            <th className="p-3">Comm.Type</th>
-            <th className="p-3">Advance</th>
-            <th className="p-3">Adv.Deducted</th>
-      
-          </tr>
-        </thead>
-
-        {/* Table Body */}
-        <tbody>
-          {customers.map((supplier) => (
-            <tr key={supplier.id} className="border-b border-gray-200 hover:bg-gray-50 bg-white">
-              <td className="p-3">
-                <button onClick={() => toggleRowSelection(customer.id)} className="text-blue-600">
-                  {selectedRows.includes(supplier.id) ? <FaCheckSquare size={20} /> : <FaRegSquare size={20} />}
-                </button>
-              </td>
-              <td className="p-3">{supplier.id}</td>
-              <td className="p-3">{supplier.scode}</td>
-              <td className="p-3">{supplier.name}</td>
-              <td className="p-3">{supplier.address}</td>
-              <td className="p-3">{supplier.phone}</td>
-              <td className="p-3">{supplier.whatsapp}</td>
-              <td className="p-3">{supplier.comm}</td>
-              <td className="p-3">{supplier.advance}</td>
-              <td className="p-3">{supplier.adv}</td>
-            
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-          
-            {/* Pagination */}
-            <div className="flex justify-between items-center mt-68 text-gray-600 ml-10">
-                <span>Page 1 of 10</span>
-                <div className="flex space-x-2">
-                    <button className="px-4 py-2 text-gray-400 border border-gray-300 rounded-lg cursor-not-allowed">
-                        Previous
-                    </button>
-                    <button className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100">
-                        Next
-                    </button>
-                </div>
-
-            </div>
-        </div>
-
-       
-
-
-
-
+  const toggleRowSelection = (id) => {
+    setSelectedRows((prev) =>
+      prev.includes(id) ? prev.filter((rowId) => rowId !== id) : [...prev, id]
     );
+  };
+  const navigate = useNavigate();
+
+  const toggleAllRows = () => {
+    if (selectedRows.length === supplier?.suppliers?.length) {
+      setSelectedRows([]);
+    } else {
+      setSelectedRows(supplier?.suppliers?.map((i) => i.id));
+    }
+  };
+
+  return (
+    <div className=" p-4 rounded-lg shadow-sm h-[800px] bg-white mt-5">
+      {/* Breadcrumb */}
+      <nav className="text-sm text-gray-500 mb-2  mt-10">
+        <span>Master</span> <span className="mx-1">›</span>{" "}
+        <span className="text-gray-700">Supplier</span>
+      </nav>
+
+      {/* Header & Buttons */}
+      <div className="flex justify-between items-center ">
+        {/* Title */}
+        <h1 className="text-2xl font-bold text-gray-900">Supplier</h1>
+        {/* Buttons */}
+        <div className="flex space-x-3 -mt-10  mr-10 ">
+          <button
+            className="bg-[#5D5FEF] text-white px-6 py-2 rounded-lg flex items-center gap-2"
+            onClick={() => navigate("/add-supplier")}
+          >
+            <CiCirclePlus className="text-xl" /> Add New Company
+          </button>
+        </div>
+      </div>
+      <div className="flex space-x-3 float-right mt-5 mr-10">
+        <button className="border border-red-500 text-red-500 px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-red-100 font-Urbanist">
+          <GoTrash className="text-lg" /> Delete
+        </button>
+        <button className="border border-gray-300 text-[#4079ED] px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-gray-100">
+          <CiFilter classname="text-lg " /> Filter
+        </button>
+      </div>
+      <div className=" mt-20 bg-white ">
+        <table className="w-full border-collapse text-gray-900">
+          {/* Table Header */}
+          <thead>
+            <tr className="text-left text-gray-900 font-bold border-b-2 border-gray-200 bg-[#F9FAFB] ">
+              <th className="p-3">
+                <button onClick={toggleAllRows} className="text-blue-600">
+                  {selectedRows.length === supplier?.suppliers?.length ? (
+                    <FaCheckSquare size={20} />
+                  ) : (
+                    <FaRegSquare size={20} />
+                  )}
+                </button>
+              </th>
+              <th className="p-3">No.</th>
+              <th className="p-3">S.code</th>
+              <th className="p-3">Name</th>
+              <th className="p-3">Address</th>
+              <th className="p-3">Phone</th>
+              <th className="p-3">WhatsApp</th>
+              <th className="p-3">Comm.Type</th>
+              <th className="p-3">Advance</th>
+              <th className="p-3">Adv.Deducted</th>
+            </tr>
+          </thead>
+
+          {/* Table Body */}
+          <tbody>
+            {supplier?.suppliers?.map((supplier, index) => (
+              <tr
+                key={supplier.id}
+                className="border-b border-gray-200 hover:bg-gray-50 bg-white"
+              >
+                <td className="p-3">
+                  <button
+                    onClick={() => toggleRowSelection(customer.id)}
+                    className="text-blue-600"
+                  >
+                    {selectedRows.includes(supplier.id) ? (
+                      <FaCheckSquare size={20} />
+                    ) : (
+                      <FaRegSquare size={20} />
+                    )}
+                  </button>
+                </td>
+                <td className="p-3">{index + 1}</td>
+                <td className="p-3">{supplier?.supplierCode}</td>
+                <td className="p-3">{supplier?.supplierName}</td>
+                <td className="p-3">{supplier?.address}</td>
+                <td className="p-3">{supplier?.phone}</td>
+                <td className="p-3">{supplier?.whatsapp}</td>
+                <td className="p-3">{supplier?.commission}</td>
+                <td className="p-3">{supplier?.advance}</td>
+                <td className="p-3">{supplier?.advanceDeducted}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Pagination */}
+      <div className="flex justify-between items-center mt-68 text-gray-600 ml-10">
+        <span>
+          Page {supplier?.currentPage}of {supplier?.totalPages}
+        </span>
+        <div className="flex space-x-2">
+          <button
+            className={`px-4 py-2 border border-gray-300 rounded-lg ${
+              currentPage === 1
+                ? "text-gray-400 cursor-not-allowed"
+                : "hover:bg-gray-100"
+            }`}
+            disabled={currentPage === 1}
+            onClick={() => setCurrentPage((prev) => prev - 1)}
+          >
+            Previous
+          </button>
+          <button
+            className={`px-4 py-2 border border-gray-300 rounded-lg ${
+              currentPage === supplier?.totalPages
+                ? "text-gray-400 cursor-not-allowed"
+                : "hover:bg-gray-100"
+            }`}
+            disabled={currentPage === supplier?.totalPages}
+            onClick={() => setCurrentPage((prev) => prev + 1)}
+          >
+            Next
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 }

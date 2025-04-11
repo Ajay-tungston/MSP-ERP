@@ -11,7 +11,7 @@ import {
   FiSettings,
 } from "react-icons/fi";
 
-export default function Dashboard() {
+export default function Sidebar() {
   const [isMasterOpen, setIsMasterOpen] = useState(true);
   const [selectedItem, setSelectedItem] = useState("Route Customer");
   const [selectedMainItem, setSelectedMainItem] = useState("Master");

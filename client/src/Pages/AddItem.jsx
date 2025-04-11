@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { XCircleIcon, PlusCircleIcon } from '@heroicons/react/24/outline';
 
 const AddItem = () => {
@@ -6,10 +7,10 @@ const AddItem = () => {
   const [itemName, setItemName] = useState('');
   const [itemCodeError, setItemCodeError] = useState('');
   const [itemNameError, setItemNameError] = useState('');
+  const navigate = useNavigate(); // <-- initialize navigation
 
-  const itemNameRegex = /^[a-zA-Z0-9\s]+$/;  // Regex to validate item name (letters, numbers, spaces)
-  
-  // Validate Item Code
+  const itemNameRegex = /^[a-zA-Z0-9\s]+$/;
+
   const validateItemCode = () => {
     if (!itemCode) {
       setItemCodeError('Item code is required.');
@@ -27,7 +28,6 @@ const AddItem = () => {
     return true;
   };
 
-  // Validate Item Name
   const validateItemName = () => {
     if (!itemName.match(itemNameRegex)) {
       setItemNameError('Item name can only contain letters, numbers, and spaces.');
@@ -37,18 +37,21 @@ const AddItem = () => {
     return true;
   };
 
-  // Handle form submission (no backend code)
   const handleSubmit = (e) => {
     e.preventDefault();
-    
-    if (!validateItemCode() || !validateItemName()) {
-      return;
-    }
+    if (!validateItemCode() || !validateItemName()) return;
 
-    // If validation is passed, simulate form submission (without backend)
     alert('Item added successfully!');
     setItemCode('');
     setItemName('');
+  };
+
+  const handleCancel = () => {
+    setItemCode('');
+    setItemName('');
+    setItemCodeError('');
+    setItemNameError('');
+    navigate('/item'); // <-- change route to your desired page
   };
 
   return (
@@ -57,13 +60,10 @@ const AddItem = () => {
         <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-gray-900">Add New Item</h2>
         <hr className="my-3 border-gray-300" />
 
-        {/* Grid for Item Code and Item Name */}
         <div className="grid grid-cols-1 sm:grid-cols-2 items-center gap-4">
-          {/* Item Code Section */}
+          {/* Item Code */}
           <div className="flex flex-col w-full">
-            {itemCodeError && (
-              <p className="text-red-500 text-sm mb-2">{itemCodeError}</p>
-            )}
+            {itemCodeError && <p className="text-red-500 text-sm mb-2">{itemCodeError}</p>}
             <div className="flex items-center gap-x-4">
               <label className="text-gray-600">Item code</label>
               <input
@@ -71,17 +71,15 @@ const AddItem = () => {
                 placeholder="Enter here"
                 value={itemCode}
                 onChange={(e) => setItemCode(e.target.value)}
-                onBlur={validateItemCode} // Validate on blur
+                onBlur={validateItemCode}
                 className="w-[350px] h-[56px] gap-2 rounded-[12px] pt-4 pr-6 pb-4 pl-6 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
           </div>
 
-          {/* Item Name Section */}
+          {/* Item Name */}
           <div className="flex flex-col">
-            {itemNameError && (
-              <p className="text-red-500 text-sm mb-2">{itemNameError}</p>
-            )}
+            {itemNameError && <p className="text-red-500 text-sm mb-2">{itemNameError}</p>}
             <div className="flex items-center gap-4">
               <label className="text-gray-600">Item Name <span className="text-red-500">*</span></label>
               <input
@@ -89,24 +87,27 @@ const AddItem = () => {
                 placeholder="Enter here"
                 value={itemName}
                 onChange={(e) => setItemName(e.target.value)}
-                onBlur={validateItemName} // Validate on blur
+                onBlur={validateItemName}
                 className="w-[350px] h-[56px] gap-2 rounded-[12px] pt-4 pr-6 pb-4 pl-6 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
           </div>
         </div>
 
-        {/* Action buttons */}
+        {/* Buttons */}
         <div className="w-full h-full p-4 md:p-8 lg:p-12 bg-white rounded-3xl flex flex-col justify-start items-start gap-12 overflow-hidden">
           <div className="self-stretch flex justify-end items-center gap-4 mt-8 md:mr-25">
             <div className="flex gap-4">
-              {/* Cancel Button */}
-              <button className="flex items-center gap-2 border border-red-500 text-red-500 px-4 py-2 rounded-lg hover:bg-red-100 transition">
+              {/* Cancel */}
+              <button
+                onClick={handleCancel}
+                className="flex items-center gap-2 border border-red-500 text-red-500 px-4 py-2 rounded-lg hover:bg-red-100 transition"
+              >
                 <XCircleIcon className="w-5 h-5" />
                 Cancel
               </button>
 
-              {/* Save Button */}
+              {/* Save */}
               <button
                 onClick={handleSubmit}
                 className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
@@ -120,6 +121,6 @@ const AddItem = () => {
       </div>
     </div>
   );
-}
+};
 
 export default AddItem;

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { XCircleIcon, PlusCircleIcon } from '@heroicons/react/24/outline';
+import useAxiosPrivate from '../hooks/useAxiosPrivate';
 
 const AddItem = () => {
   const [itemCode, setItemCode] = useState('');
@@ -8,6 +9,7 @@ const AddItem = () => {
   const [itemCodeError, setItemCodeError] = useState('');
   const [itemNameError, setItemNameError] = useState('');
   const navigate = useNavigate(); // <-- initialize navigation
+  const axiosInstance=useAxiosPrivate()
 
   const itemNameRegex = /^[a-zA-Z0-9\s]+$/;
 
@@ -37,10 +39,20 @@ const AddItem = () => {
     return true;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit =async (e) => {
     e.preventDefault();
     if (!validateItemCode() || !validateItemName()) return;
 
+    // try {
+    //   const response= await axiosInstance.post("/admin/item/add",{
+    //     itemCode,
+    //     itemName
+
+    //   })
+    //   console.log(first)
+    // } catch (error) {
+    //   console.log(error)
+    // }
     alert('Item added successfully!');
     setItemCode('');
     setItemName('');

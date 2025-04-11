@@ -5,27 +5,80 @@ import { GoTrash } from "react-icons/go";
 import { useNavigate } from "react-router-dom";
 import { FaCheckSquare, FaRegSquare } from "react-icons/fa"; // For styled checkboxes
 import useAxiosPrivate from "../hooks/useAxiosPrivate";
+import OvalSpinner from "../Components/spinners/OvalSpinner";
+import Swal from "sweetalert2";
 export default function CustomerHeader() {
   const [selectedRows, setSelectedRows] = useState([]);
   const [supplier, setSupplier] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const limit = 8;
-
+  const [isLoading, setIsLoading] = useState(false);
   const axiosInstance = useAxiosPrivate();
+
   useEffect(() => {
+    setSelectedRows([]);
     const fetchSuppliers = async () => {
       try {
+        setIsLoading(true);
         const response = await axiosInstance.get(
           `/admin/supplier?page=${currentPage}&limit=${limit}`
         );
-        console.log(response);
         setSupplier(response?.data);
       } catch (error) {
         console.log(error);
+      } finally {
+        setIsLoading(false);
       }
     };
     fetchSuppliers();
   }, [currentPage]);
+
+  //need to add logic for check the supplier has any transcations
+  const handleDelete = async () => {
+    const swalWithTailwindButtons = Swal.mixin({
+      customClass: {
+        confirmButton:
+          "bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded",
+        cancelButton:
+          "bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded mr-4" // ← Add margin-right to cancel button
+      },
+      buttonsStyling: false
+    });
+    
+    swalWithTailwindButtons.fire({
+      title: "Are you sure?",
+      text: "You won't be able to revert this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes, delete it!",
+      cancelButtonText: "No, cancel!",
+      reverseButtons: true
+    }).then((result) => {
+      if (result.isConfirmed) {
+        swalWithTailwindButtons.fire({
+          title: "Deleted!",
+          text: "Your file has been deleted.",
+          icon: "success"
+        });
+      } else if (result.dismiss === Swal.DismissReason.cancel) {
+        swalWithTailwindButtons.fire({
+          title: "Cancelled",
+          text: "Your imaginary file is safe :)",
+          icon: "error"
+        });
+      }
+    });
+    
+    try {
+      const response = await axiosInstance.delete("/admin/supplier",{
+        data:{
+          supplierIds:selectedRows
+        }
+      });
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   const toggleRowSelection = (id) => {
     setSelectedRows((prev) =>
@@ -38,7 +91,7 @@ export default function CustomerHeader() {
     if (selectedRows.length === supplier?.suppliers?.length) {
       setSelectedRows([]);
     } else {
-      setSelectedRows(supplier?.suppliers?.map((i) => i.id));
+      setSelectedRows(supplier?.suppliers?.map((i) => i._id));
     }
   };
 
@@ -60,12 +113,14 @@ export default function CustomerHeader() {
             className="bg-[#5D5FEF] text-white px-6 py-2 rounded-lg flex items-center gap-2"
             onClick={() => navigate("/add-supplier")}
           >
-            <CiCirclePlus className="text-xl" /> Add New Company
+            <CiCirclePlus className="text-xl" /> Add New Supplier
           </button>
         </div>
       </div>
       <div className="flex space-x-3 float-right mt-5 mr-10">
-        <button className="border border-red-500 text-red-500 px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-red-100 font-Urbanist">
+        <button className="border border-red-500 text-red-500 px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-red-100 font-Urbanist"
+        // onClick={handleDelete}
+        >
           <GoTrash className="text-lg" /> Delete
         </button>
         <button className="border border-gray-300 text-[#4079ED] px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-gray-100">
@@ -100,34 +155,50 @@ export default function CustomerHeader() {
 
           {/* Table Body */}
           <tbody>
-            {supplier?.suppliers?.map((supplier, index) => (
-              <tr
-                key={supplier.id}
-                className="border-b border-gray-200 hover:bg-gray-50 bg-white"
-              >
-                <td className="p-3">
-                  <button
-                    onClick={() => toggleRowSelection(customer.id)}
-                    className="text-blue-600"
-                  >
-                    {selectedRows.includes(supplier.id) ? (
-                      <FaCheckSquare size={20} />
-                    ) : (
-                      <FaRegSquare size={20} />
-                    )}
-                  </button>
+            {isLoading ? (
+              <tr>
+                <td colSpan="10">
+                  <OvalSpinner />
                 </td>
-                <td className="p-3">{index + 1}</td>
-                <td className="p-3">{supplier?.supplierCode}</td>
-                <td className="p-3">{supplier?.supplierName}</td>
-                <td className="p-3">{supplier?.address}</td>
-                <td className="p-3">{supplier?.phone}</td>
-                <td className="p-3">{supplier?.whatsapp}</td>
-                <td className="p-3">{supplier?.commission}</td>
-                <td className="p-3">{supplier?.advance}</td>
-                <td className="p-3">{supplier?.advanceDeducted}</td>
               </tr>
-            ))}
+            ) : !supplier?.suppliers?.length > 0 ? (
+              <tr>
+                <td colSpan="10" className="text-center py-10 text-gray-500">
+                  No data available
+                </td>
+              </tr>
+            ) : (
+              supplier?.suppliers?.map((supplier, index) => (
+                <tr
+                  key={supplier.id}
+                  className="border-b border-gray-200 hover:bg-gray-50 bg-white"
+                >
+                  <td className="p-3">
+                    <button
+                      onClick={() => toggleRowSelection(supplier?._id)}
+                      className="text-blue-600"
+                    >
+                      {selectedRows.includes(supplier?._id) ? (
+                        <FaCheckSquare size={20} />
+                      ) : (
+                        <FaRegSquare size={20} />
+                      )}
+                    </button>
+                  </td>
+                  <td className="p-3">
+                    {index + 1 + (currentPage - 1) * limit}
+                  </td>
+                  <td className="p-3">{supplier?.supplierCode}</td>
+                  <td className="p-3">{supplier?.supplierName}</td>
+                  <td className="p-3">{supplier?.address}</td>
+                  <td className="p-3">{supplier?.phone}</td>
+                  <td className="p-3">{supplier?.whatsapp}</td>
+                  <td className="p-3">{supplier?.commission}</td>
+                  <td className="p-3">{supplier?.advance}</td>
+                  <td className="p-3">{supplier?.advanceDeducted}</td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>

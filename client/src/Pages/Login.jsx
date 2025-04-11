@@ -53,7 +53,7 @@ function Login() {
                     dispatch(login({ userName: response.data.username, accessToken: response.data.accessToken }));
                     setEmail("");
                     setPassword("");
-                    // navigate("/");
+                    navigate("/");
                   }
             } catch (error) {
                 console.log(error)

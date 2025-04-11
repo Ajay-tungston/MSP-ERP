@@ -1,363 +1,298 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
-import { toast } from 'react-toastify';
-
-const AddCustomer = () => {
-  const navigate = useNavigate();
-  const [customerNumber, setCustomerNumber] = useState('');
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import { XCircleIcon, PlusCircleIcon } from "@heroicons/react/24/solid";
+import useAxiosPrivate from '../hooks/useAxiosPrivate'
+const AddCustomerModal = ({ onClose }) => {
+  // Form state; note that we use keys that differ from backend names.
   const [formData, setFormData] = useState({
-    customerName: '',
-    address: '',
-    phone: '',
-    whatsapp: '',
-    discount: 0,
-    discountApplied: 'manual',
-    openingBalance: 0,
-    routeCustomer: false,
-    routeAddress: '',
-    sameAsPhone: false
+    name: "",
+    address: "",
+    phone: "",
+    whatsapp: "",
+    discount: "",
+    discountType: "",      // For discount method (Manual/Auto)
+    discountFrequency: "", // For discount frequency (Weekly/Monthly/Yearly)
+    balance: "",
+    route: "",             // "Yes" or "No"
+    routeName: "",
   });
-  const [loading, setLoading] = useState(false);
 
-  // Fetch the next customer number when component mounts
+  // State for next customer number; you can fetch from your backend if available.
+  const [customerNumber, setCustomerNumber] = useState("Auto Generated");
+
+  // Optional: Fetch the next customer number if your backend provides an endpoint.
   useEffect(() => {
-    const fetchCustomerNumber = async () => {
+    const fetchNextNumber = async () => {
       try {
-        const response = await axios.get('http://localhost:3503/admin/customer/get');
-        setCustomerNumber(response.data.nextNumber.toString().padStart(3, '0'));
+        // Replace with your actual endpoint if available
+        const response = await axiosInstance.get("/admin/customer/next");
+        // Assume the backend returns { nextNumber: "002" } or similar
+        setCustomerNumber(response.data.nextNumber);
       } catch (error) {
-        console.error('Error fetching customer number:', error);
-        toast.error('Failed to fetch customer number');
+        console.error("Error fetching next customer number:", error);
+        // Fallback remains "Auto Generated"
       }
     };
-    
-    fetchCustomerNumber();
+
+    fetchNextNumber();
   }, []);
 
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value
-    }));
+  const handleChange = (field, value) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
-
-  const handleSameAsPhoneChange = (e) => {
-    const checked = e.target.checked;
-    setFormData(prev => ({
-      ...prev,
-      sameAsPhone: checked,
-      whatsapp: checked ? prev.phone : ''
-    }));
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
+const axiosInstance = useAxiosPrivate()
+  // Submit handler to call backend API for adding the customer.
+  const handleSubmit = async () => {
+    // Prepare payload mapping UI fields to backend expected fields.
+    const payload = {
+      customerName: formData.name.trim(),
+      address: formData.address.trim(),
+      phone: formData.phone.trim(),
+      whatsapp: formData.whatsapp.trim(),
+      discount: parseFloat(formData.discount) || 0,
+      // discountApplied will be taken from discountFrequency (converted to lowercase).
+      discountApplied: formData.discountFrequency.toLowerCase() || "manual",
+      // discountType as extra field from discountMethod (converted to lowercase)
+      discountType: formData.discountType.toLowerCase() || "manual",
+      openingBalance: parseFloat(formData.balance) || 0,
+      // routeCustomer is true if route is "Yes"
+      routeCustomer: formData.route === "Yes",
+      // Use routeName only if routeCustomer is true
+      routeAddress: formData.route === "Yes" ? formData.routeName.trim() : "",
+    };
 
     try {
-      // Prepare the data to match the backend schema
-      const customerData = {
-        customerName: formData.customerName.trim(),
-        address: formData.address.trim(),
-        phone: formData.phone.trim(),
-        whatsapp: formData.whatsapp.trim(),
-        discount: Number(formData.discount),
-        discountApplied: formData.discountApplied,
-        openingBalance: Number(formData.openingBalance),
-        routeCustomer: formData.routeCustomer,
-        routeAddress: formData.routeCustomer ? formData.routeAddress.trim() : ''
-      };
-
-      const response = await axios.post('http//:localhost:3503/admin/customer/add', customerData);
-      
-      toast.success('Customer added successfully!');
-      navigate('/customers'); // Redirect to customers list
+      const response = await axiosInstance.post(
+        "/admin/customer/add",
+        payload
+      );
+      console.log("Customer added successfully:", response.data);
+      onClose();
     } catch (error) {
-      console.error('Error adding customer:', error);
-      let errorMessage = 'Failed to add customer';
-      
-      if (error.response) {
-        if (error.response.status === 400) {
-          errorMessage = error.response.data.message || 'Validation failed';
-        } else if (error.response.status === 409) {
-          errorMessage = 'Customer with this name or phone already exists';
-        }
-      }
-      
-      toast.error(errorMessage);
-    } finally {
-      setLoading(false);
+      console.error("Error adding customer:", error.response || error);
+      // Optionally display error feedback to the user (e.g., using a toast or alert)
     }
   };
 
+  const handleCancel = () => {
+    onClose();
+  };
+
   return (
-    <div className="w-[1280px] p-12 bg-white rounded-3xl inline-flex flex-col justify-start items-start gap-12 overflow-hidden">
-      <div className="w-[1184px] pb-6 border-b border-[#a1a5b6] inline-flex justify-start items-center gap-2.5">
-        <div className="justify-start text-[#151d48] text-[32px] font-bold font-['Urbanist'] leading-[44.80px]">
-          Add New Customer
-        </div>
-      </div>
-      
-      <form onSubmit={handleSubmit} className="self-stretch inline-flex justify-between items-start flex-wrap content-start gap-8">
-        {/* Customer Number */}
-        <div className="w-[570px] h-14 flex justify-start items-center gap-12">
-          <div className="min-w-[172px] justify-start text-[#737791] text-xl font-normal font-['Urbanist']">
-            No.
-          </div>
-          <div className="w-[77px] text-center justify-start text-[#05004e] text-xl font-bold font-['Urbanist']">
-            {customerNumber || '...'}
-          </div>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30 backdrop-blur-sm">
+      <div className="w-full sm:w-[640px] lg:w-[1000px] xl:w-[1200px] bg-white rounded-[24px] p-8 sm:p-10 shadow-xl relative">
+        {/* Header */}
+        <div className="flex justify-between items-center pb-4 border-b border-gray-300">
+          <h2 className="text-2xl font-bold text-gray-900">Add New Customer</h2>
+          <button onClick={handleCancel}>
+            <XCircleIcon className="w-6 h-6 text-gray-500 hover:text-red-500" />
+          </button>
         </div>
 
-        {/* Customer Name */}
-        <div className="flex justify-start items-center gap-12">
-          <div className="min-w-[172px] justify-start">
-            <span className="text-[#737791] text-xl font-normal font-['Urbanist']">Customer Name </span>
-            <span className="text-red-500 text-xl font-normal font-['Urbanist']">*</span>
+        {/* Form */}
+        <div className="grid grid-cols-2 gap-x-20 gap-y-6 mt-6 text-[#05004e] text-xl">
+          {/* No. */}
+          <div className="flex items-center">
+            <label className="w-[172px] text-[#737791]">No.</label>
+            <span className="font-bold">{customerNumber}</span>
           </div>
-          <div className="w-[350px] px-6 py-4 bg-gray-50 rounded-xl flex justify-start items-center gap-2">
+
+          {/* Customer Name */}
+          <div className="flex items-center">
+            <label className="w-[172px] text-[#737791]">
+              Customer Name <span className="text-red-500">*</span>
+            </label>
             <input
-              type="text"
-              name="customerName"
-              value={formData.customerName}
-              onChange={handleChange}
+              value={formData.name}
+              onChange={(e) => handleChange("name", e.target.value)}
               placeholder="Enter here"
-              className="w-full bg-transparent outline-none text-[#05004e] text-xl font-normal font-['Urbanist']"
-              required
+              className="w-[300px] px-4 py-3 bg-gray-50 rounded-xl outline-none"
             />
           </div>
-        </div>
 
-        {/* Address */}
-        <div className="flex justify-start items-center gap-12">
-          <div className="min-w-[172px] justify-start">
-            <span className="text-[#737791] text-xl font-normal font-['Urbanist']">Address </span>
-            <span className="text-red-500 text-xl font-normal font-['Urbanist']">*</span>
-          </div>
-          <div className="w-[350px] px-6 py-4 bg-gray-50 rounded-xl flex justify-start items-center gap-2">
+          {/* Address */}
+          <div className="flex items-center">
+            <label className="w-[172px] text-[#737791]">Address</label>
             <input
-              type="text"
-              name="address"
               value={formData.address}
-              onChange={handleChange}
+              onChange={(e) => handleChange("address", e.target.value)}
               placeholder="Enter here"
-              className="w-full bg-transparent outline-none text-[#05004e] text-xl font-normal font-['Urbanist']"
-              required
+              className="w-[300px] px-4 py-3 bg-gray-50 rounded-xl outline-none"
             />
           </div>
-        </div>
 
-        {/* Phone */}
-        <div className="flex justify-start items-center gap-12">
-          <div className="min-w-[172px] justify-start">
-            <span className="text-[#737791] text-xl font-normal font-['Urbanist']">Phone</span>
-            <span className="text-red-500 text-xl font-normal font-['Urbanist']"> *</span>
-          </div>
-          <div className="w-[350px] px-6 py-4 bg-gray-50 rounded-xl flex justify-start items-center gap-2">
+          {/* Phone */}
+          <div className="flex items-center">
+            <label className="w-[172px] text-[#737791]">
+              Phone <span className="text-red-500">*</span>
+            </label>
             <input
-              type="tel"
-              name="phone"
               value={formData.phone}
-              onChange={handleChange}
-              placeholder="Enter 10 digits"
-              pattern="[0-9]{10}"
-              maxLength="10"
-              className="w-full bg-transparent outline-none text-[#05004e] text-xl font-normal font-['Urbanist']"
-              required
+              onChange={(e) => handleChange("phone", e.target.value)}
+              placeholder="Enter here"
+              className="w-[300px] px-4 py-3 bg-gray-50 rounded-xl outline-none"
             />
           </div>
-        </div>
 
-        {/* WhatsApp */}
-        <div className="flex justify-start items-center gap-12">
-          <div className="w-[172px] min-w-[172px] justify-start text-[#737791] text-xl font-normal font-['Urbanist']">
-            WhatsApp
-          </div>
-          <div className="inline-flex flex-col justify-center items-start gap-3">
-            <div className="w-[350px] px-6 py-4 bg-gray-50 rounded-xl inline-flex justify-start items-center gap-2">
+          {/* WhatsApp */}
+          <div className="flex items-start">
+            <label className="w-[172px] text-[#737791]">WhatsApp</label>
+            <div className="flex flex-col gap-3">
               <input
-                type="tel"
-                name="whatsapp"
-                value={formData.sameAsPhone ? formData.phone : formData.whatsapp}
-                onChange={handleChange}
+                value={formData.whatsapp}
+                onChange={(e) => handleChange("whatsapp", e.target.value)}
                 placeholder="Enter here"
-                pattern="[0-9]{10}"
-                maxLength="10"
-                disabled={formData.sameAsPhone}
-                className="w-full bg-transparent outline-none text-[#05004e] text-xl font-normal font-['Urbanist']"
+                className="w-[300px] px-4 py-3 bg-gray-50 rounded-xl outline-none"
               />
-            </div>
-            <div className="inline-flex justify-start items-center gap-2">
-              <input
-                type="checkbox"
-                id="sameAsPhone"
-                checked={formData.sameAsPhone}
-                onChange={handleSameAsPhoneChange}
-                className="w-4 h-4 accent-[#4078ec]"
-              />
-              <label htmlFor="sameAsPhone" className="justify-start text-[#a1a5b6] text-base font-normal font-['Urbanist']">
-                Same as Phone
-              </label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  onChange={(e) =>
+                    handleChange(
+                      "whatsapp",
+                      e.target.checked ? formData.phone : ""
+                    )
+                  }
+                  className="checkbox w-4 h-4 rounded border-2 border-gray-300 focus:ring-0 checked:border-blue-500 checked:bg-blue-500"
+                />
+                <label className="text-[#a1a5b6] text-base">
+                  Same as Phone
+                </label>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Discount */}
-        <div className="flex justify-start items-center gap-12">
-          <div className="w-[172px] min-w-[172px] justify-start text-[#737791] text-xl font-normal font-['Urbanist']">
-            Discount %
-          </div>
-          <div className="w-[350px] px-6 py-4 bg-gray-50 rounded-xl flex justify-start items-center gap-2">
+          {/* Discount % */}
+          <div className="flex items-center">
+            <label className="w-[172px] text-[#737791]">Discount %</label>
             <input
-              type="number"
-              name="discount"
               value={formData.discount}
-              onChange={handleChange}
-              min="0"
-              max="100"
-              placeholder="0-100"
-              className="w-full bg-transparent outline-none text-[#05004e] text-xl font-normal font-['Urbanist']"
+              onChange={(e) => handleChange("discount", e.target.value)}
+              placeholder="Enter here"
+              className="w-[300px] px-4 py-3 bg-gray-50 rounded-xl outline-none"
             />
           </div>
-        </div>
 
-        {/* Discount Applied */}
-        <div className="flex justify-start items-center gap-12">
-          <div className="w-[172px] min-w-[172px] justify-start text-[#737791] text-xl font-normal font-['Urbanist']">
-            Discount Applied
-          </div>
-          <div className="inline-flex flex-col justify-center items-start gap-6">
-            <div className="w-[350px] rounded-xl inline-flex justify-start items-center">
-              {['weekly', 'monthly', 'yearly'].map((type) => (
+          {/* Discount Frequency */}
+          <div className="flex items-center">
+            <label className="w-[172px] text-[#737791]">Discount Applied</label>
+            <div className="flex">
+              {["Weekly", "Monthly", "Yearly"].map((freq, index) => (
                 <button
-                  key={type}
-                  type="button"
-                  onClick={() => setFormData(prev => ({ ...prev, discountApplied: type }))}
-                  className={`min-w-[116px] px-6 py-4 ${
-                    formData.discountApplied === type ? 'bg-blue-50 text-[#4078ec]' : 'bg-gray-50 text-[#a1a5b6]'
-                  } rounded-tl-xl rounded-bl-xl outline-1 outline-offset-[-1px] outline-[#e8e8ed] flex justify-center items-center gap-2 overflow-hidden`}
+                  key={freq}
+                  onClick={() => handleChange("discountFrequency", freq)}
+                  className={`px-6 py-3 ${
+                    formData.discountFrequency === freq
+                      ? "bg-blue-100 text-blue-700 border border-blue-500"
+                      : "bg-gray-100 text-gray-500 border border-gray-300"
+                  } ${
+                    index === 0
+                      ? "rounded-l-2xl"
+                      : index === 2
+                      ? "rounded-r-2xl"
+                      : "rounded-none"
+                  }`}
                 >
-                  <span className="text-xl font-normal font-['Urbanist']">
-                    {type.charAt(0).toUpperCase() + type.slice(1)}
-                  </span>
+                  {freq}
                 </button>
               ))}
             </div>
-            <div className="rounded-xl inline-flex justify-start items-center">
-              <button
-                type="button"
-                onClick={() => setFormData(prev => ({ ...prev, discountApplied: 'manual' }))}
-                className={`min-w-[175px] px-6 py-4 ${
-                  formData.discountApplied === 'manual' ? 'bg-blue-50 text-[#4078ec]' : 'bg-gray-50 text-[#a1a5b6]'
-                } rounded-tl-xl rounded-bl-xl outline-1 outline-offset-[-1px] outline-[#e8e8ed] flex justify-center items-center gap-2 overflow-hidden`}
-              >
-                <span className="text-xl font-normal font-['Urbanist']">Manual</span>
-              </button>
+          </div>
+
+          {/* Opening Balance */}
+          <div className="flex items-center">
+            <label className="w-[172px] text-[#737791]">Opening Balance</label>
+            <div className="w-[300px] flex items-center px-4 py-3 bg-gray-50 rounded-xl">
+              <span className="mr-2 font-bold">$</span>
+              <input
+                value={formData.balance}
+                onChange={(e) => handleChange("balance", e.target.value)}
+                placeholder="Enter here"
+                className="w-full bg-transparent outline-none"
+              />
             </div>
           </div>
-        </div>
 
-        {/* Opening Balance */}
-        <div className="flex justify-start items-center gap-12">
-          <div className="w-[172px] min-w-[172px] justify-start text-[#737791] text-xl font-normal font-['Urbanist']">
-            Opening Balance
+          {/* Discount Method */}
+          <div className="flex items-center">
+            <label className="w-[172px] text-[#737791]">Discount Method</label>
+            <div className="flex">
+              {["Manual", "Auto"].map((method, index) => (
+                <button
+                  key={method}
+                  onClick={() => handleChange("discountType", method)}
+                  className={`px-6 py-3 ${
+                    formData.discountType === method
+                      ? "bg-blue-100 text-blue-700 border border-blue-500"
+                      : "bg-gray-100 text-gray-500 border border-gray-300"
+                  } ${
+                    index === 0
+                      ? "rounded-l-xl border-r-0"
+                      : "rounded-r-xl border-l-0"
+                  }`}
+                >
+                  {method}
+                </button>
+              ))}
+            </div>
           </div>
-          <div className="w-[350px] px-6 py-4 bg-gray-50 rounded-xl flex justify-start items-center gap-3">
-            <div className="justify-start text-[#05004e] text-xl font-bold font-['Urbanist']">$</div>
+
+          {/* Route Name */}
+          <div className="flex items-center">
+            <label className="w-[172px] text-[#737791]">Route</label>
             <input
-              type="number"
-              name="openingBalance"
-              value={formData.openingBalance}
-              onChange={handleChange}
-              min="0"
-              step="0.01"
-              placeholder="0.00"
-              className="w-full bg-transparent outline-none text-[#05004e] text-xl font-normal font-['Urbanist']"
+              value={formData.routeName}
+              onChange={(e) => handleChange("routeName", e.target.value)}
+              placeholder="Enter here"
+              className="w-[300px] px-4 py-3 bg-gray-50 rounded-xl outline-none"
             />
           </div>
         </div>
 
-        {/* Route Customer */}
-        <div className="flex justify-start items-center gap-12">
-          <div className="min-w-[172px] justify-start text-[#737791] text-xl font-normal font-['Urbanist']">
-            Route Customer
-          </div>
-          <div className="rounded-xl flex justify-start items-center">
-            {[true, false].map((value) => (
+        {/* Route Yes/No */}
+        <div className="flex items-center col-span-2 mt-6">
+          <label className="w-[172px] text-[#737791]">Route</label>
+          <div className="flex">
+            {["Yes", "No"].map((val, index) => (
               <button
-                key={value.toString()}
-                type="button"
-                onClick={() => setFormData(prev => ({ ...prev, routeCustomer: value }))}
-                className={`min-w-[175px] px-6 py-4 ${
-                  formData.routeCustomer === value ? 'bg-blue-50 text-[#4078ec]' : 'bg-gray-50 text-[#a1a5b6]'
-                } ${value ? 'rounded-tl-xl rounded-bl-xl' : 'rounded-tr-xl rounded-br-xl'} outline-1 outline-offset-[-1px] outline-[#e8e8ed] flex justify-center items-center gap-2 overflow-hidden`}
+                key={val}
+                onClick={() => handleChange("route", val)}
+                className={`px-6 py-3 ${
+                  formData.route === val
+                    ? "bg-blue-100 text-blue-700 border border-blue-500"
+                    : "bg-gray-100 text-gray-500 border border-gray-300"
+                } ${
+                  index === 0
+                    ? "rounded-l-xl border-r-0"
+                    : "rounded-r-xl border-l-0"
+                }`}
               >
-                <span className="text-xl font-normal font-['Urbanist']">
-                  {value ? 'Yes' : 'No'}
-                </span>
+                {val}
               </button>
             ))}
           </div>
         </div>
 
-        {/* Route Address (conditionally shown) */}
-        {formData.routeCustomer && (
-          <div className="flex justify-start items-center gap-12">
-            <div className="min-w-[172px] justify-start text-[#737791] text-xl font-normal font-['Urbanist']">
-              Route Address
-            </div>
-            <div className="w-[350px] px-6 py-4 bg-gray-50 rounded-xl flex justify-start items-center gap-2">
-              <input
-                type="text"
-                name="routeAddress"
-                value={formData.routeAddress}
-                onChange={handleChange}
-                placeholder="Enter route address"
-                className="w-full bg-transparent outline-none text-[#05004e] text-xl font-normal font-['Urbanist']"
-                required={formData.routeCustomer}
-              />
-            </div>
-          </div>
-        )}
-
-        {/* Form Actions */}
-        <div className="self-stretch inline-flex justify-end items-center gap-4 mt-8">
+        {/* Footer Buttons */}
+        <div className="mt-10 flex justify-end gap-4">
           <button
-            type="button"
-            onClick={() => navigate('/customers')}
-            className="w-[156px] px-6 py-4 bg-white rounded-2xl outline-1 outline-offset-[-1px] outline-red-500 flex justify-center items-center gap-3 hover:bg-red-50 transition-colors"
+            onClick={handleCancel}
+            className="flex items-center gap-2 border border-red-500 text-red-500 px-4 py-2 rounded-lg hover:bg-red-100"
           >
-            <div className="w-8 h-8 relative">
-              {/* Cancel icon SVG would go here */}
-            </div>
-            <span className="justify-start text-red-500 text-xl font-bold font-['Urbanist']">
-              Cancel
-            </span>
+            <XCircleIcon className="w-5 h-5" />
+            Cancel
           </button>
           <button
-            type="submit"
-            disabled={loading}
-            className="w-[156px] px-6 py-4 bg-[#4078ec] rounded-2xl flex justify-center items-center gap-3 hover:bg-[#3068dc] transition-colors disabled:opacity-70"
+            onClick={handleSubmit}
+            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
           >
-            {loading ? (
-              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-            ) : (
-              <>
-                <div className="w-8 h-8 relative">
-                  {/* Save icon SVG would go here */}
-                </div>
-                <span className="justify-start text-white text-xl font-bold font-['Urbanist']">
-                  Save
-                </span>
-              </>
-            )}
+            <PlusCircleIcon className="w-5 h-5" />
+            Save
           </button>
         </div>
-      </form>
+      </div>
     </div>
   );
 };
 
-export default AddCustomer;
+export default AddCustomerModal;

@@ -137,14 +137,43 @@ const addNewCustomer = async (req, res) => {
 };
 const getAllCustomers = async (req, res) => {
   try {
-    // Retrieve all customers from the database
-    const customers = await Customer.find({});
-    return res.status(200).json({ customers });
+    // Parse query parameters for pagination; default to page=1 and limit=10 if not provided.
+    let { page, limit } = req.query;
+    page = parseInt(page, 10) || 1;
+    limit = parseInt(limit, 10) || 10;
+
+    // Calculate the number of documents to skip for pagination
+    const skip = (page - 1) * limit;
+
+    // Create a query to retrieve customers with pagination settings
+    const customersPromise = Customer.find({})
+      .skip(skip)
+      .limit(limit);
+
+    // Count the total number of customers in the database
+    const totalPromise = Customer.countDocuments({});
+
+    // Execute both queries in parallel
+    const [customers, total] = await Promise.all([customersPromise, totalPromise]);
+
+    // Calculate total pages
+    const totalPages = Math.ceil(total / limit);
+
+    // Return the paginated response
+    return res.status(200).json({
+      customers,
+      total,
+      totalPages,
+      currentPage: page
+    });
   } catch (error) {
-    console.log(error);
+    console.error("Error fetching customers:", error);
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
+ // Make sure to export all controllers as needed
+
 const deleteCustomer = async (req, res) => {
   try {
     const { id } = req.params;

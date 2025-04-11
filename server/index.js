@@ -1,7 +1,7 @@
 require("dotenv").config();
 const express = require("express");
 const app = express();
-const PORT = process.env.PORT || 3500;
+const PORT = process.env.PORT || 3503;
 const cookieParser=require("cookie-parser")
 const connectDb = require("./config/connectDB");
 const cors=require("cors")
@@ -10,6 +10,7 @@ const corsOptions = require("./config/corsOptions");
 app.use(cors(corsOptions));
 
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 app.use("/welcome", (req, res) => {
@@ -22,6 +23,7 @@ app.use("/admin/supplier", require("./routes/admin/supplier/adminSupplierRoutes"
 app.use("/admin/employee", require("./routes/admin/employee/adminEmployeeRoutes"));
 app.use("/admin/item", require("./routes/admin/item/adminItemRoutes"));
 app.use("/admin/purchase", require("./routes/admin/purchase/purchaseRoutes"));
+app.use("/admin/customer",require("./routes/admin/customer/adminCustomerRoutes"));
 
 
 connectDb()

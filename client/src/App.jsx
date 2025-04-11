@@ -10,7 +10,7 @@ import AddItem from './Pages/AddItem'
 import AddCommission from './Pages/AddCommission'
 import AddExpense from './Pages/AddExpense'
 import AddCompany from './Pages/AddCompany'
-import Otp from './Pages/Otp'
+// import Otp from './Pages/Otp'
 import ForgetPassword from './Pages/ForgetPassword'
 import ResetPassword from './Pages/ResetPassword'
 function App() {
@@ -20,7 +20,7 @@ function App() {
       <Routes>
         <Route path='/login' element={<Login />} />
         <Route path='/additem' element={<AddItem />} />
-        <Route path='/otp' element={<Otp />} />
+        {/* <Route path='/otp' element={<Otp />} /> */}
         <Route path='/forgot-password' element={<ForgetPassword />} />
         <Route path='/reset-password' element={<ResetPassword />} />
         <Route path='/commission' element={<AddCommission />} />

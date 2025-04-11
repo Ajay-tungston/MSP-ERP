@@ -174,4 +174,7 @@ const deleteSuppliers=async(req,res)=>{
     }
 }
 
+
+
+
 module.exports = { addNewSupplier,getAllSuppliers,deleteSuppliers};

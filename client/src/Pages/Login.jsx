@@ -68,13 +68,13 @@ function Login() {
             <div className="w-full sm:w-[90%] md:w-[400px] lg:w-[500px] xl:w-[600px] px-6 sm:px-8 md:px-10 py-6 sm:py-8 md:py-10 bg-white rounded-[27px] shadow-lg flex flex-col justify-start items-center gap-6 sm:gap-8 md:gap-10">
                 
                 <img
-                    src="/images/logo.jpeg"  // Use the path relative to the public folder
+                    src="/images/msplogo.png"  // Use the path relative to the public folder
                     alt="Logo"
-                    className="w-[126px] h-[126px] mb-1"  // Tailwind classes for width, height, and margin bottom
+                    className="w-[400px] h-[400px] mb-0.5"  // Tailwind classes for width, height, and margin bottom
                 />
                 
                 {/* Welcome Title and Subtitle */}
-                <div className="text-center">
+                <div className="text-center -mt-24">
                     <div className="text-black text-2xl sm:text-3xl md:text-4xl font-bold font-['Urbanist']">
                         Welcome back!
                     </div>

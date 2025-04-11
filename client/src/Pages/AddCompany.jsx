@@ -1,6 +1,8 @@
-import { useState } from "react";
+import { useState, } from "react";
 import { XCircleIcon, PlusCircleIcon } from '@heroicons/react/24/outline';
 import { FaCalendarAlt } from "react-icons/fa";  // Import the FaCalendarAlt icon
+import { useNavigate } from 'react-router-dom';
+
 
 export default function AddCompanyForm() {
     const [date, setDate] = useState("");
@@ -38,6 +40,12 @@ export default function AddCompanyForm() {
         }
         return '';
     };
+    const navigate = useNavigate();
+
+    const handleCancel = () => {
+
+        navigate('/company'); // Replace with your desired path
+    };
 
     // Handle form submission
     const handleSubmit = (e) => {
@@ -66,7 +74,6 @@ export default function AddCompanyForm() {
         setCompanyCapital('');
         setOpeningCash('');
     };
-
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-100">
             <div
@@ -170,7 +177,10 @@ export default function AddCompanyForm() {
                         <div className="self-stretch flex justify-end items-center gap-4 mt-8 md:mr-25">
                             <div className="flex gap-4">
                                 {/* Cancel Button */}
-                                <button className="flex items-center gap-2 border border-red-500 text-red-500 px-4 py-2 rounded-lg hover:bg-red-100 transition">
+                                <button
+                                    onClick={handleCancel}
+                                    className="flex items-center gap-2 border border-red-500 text-red-500 px-4 py-2 rounded-lg hover:bg-red-100 transition"
+                                >
                                     <XCircleIcon className="w-5 h-5" />
                                     Cancel
                                 </button>
@@ -188,6 +198,6 @@ export default function AddCompanyForm() {
                     </div>
                 </div>
             </div>
-            </div>
-            );
+        </div>
+    );
 }

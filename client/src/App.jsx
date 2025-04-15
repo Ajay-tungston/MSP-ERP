@@ -22,7 +22,9 @@ import Company from './Pages/Company'
 import Commission from './Pages/Commission'
 import Item from "./Pages/Item"
 import RouteExpense from "./Pages/RouteExpense"
-import Sample from "./Pages/Sample"
+import IndividualReports from './Pages/IndividualReports'
+import SalesTransaction from './Pages/SalesTransaction'
+import Newsales from './Pages/Newsales'
 function App() {
 
   return (
@@ -38,7 +40,8 @@ function App() {
   <Route path='/commission' element={<Commission/>}/>
   <Route path='/item' element={<Item />} />
   <Route path='/route-expense' element={<RouteExpense />} />
-  <Route path='/sample' element={<Sample/>}/>     
+<Route path='/individual-report'element={<IndividualReports />} />  
+<Route path='/sales-transaction' element={<SalesTransaction/>}/>
         </Route>
         <Route path='/login' element={<Login />} />
         <Route path='/add-item' element={<AddItem />} />
@@ -48,12 +51,12 @@ function App() {
         <Route path='/add-commission' element={<AddCommission />} />
         <Route path='/add-company' element={<AddCompany />} />
         <Route path='/expense' element={<AddExpense />} />
-      <Route path='/sample' element={<Sample/>}/>
         <Route path='/add-employe' element={<Addemploye />} />
     <Route path="/purchase-transaction" element={<Purchasetransaction/>}/>
         <Route path='/add-customer' element={<AddCustomer />} />
         <Route path='/add-supplier' element={<AddSupplier />} />
         <Route path='/company' element={<Company/>}/>
+        <Route path='/newsales' element={<Newsales/>}/>
 
       </Routes>
     </>

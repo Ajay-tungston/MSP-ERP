@@ -7,14 +7,23 @@ export default function Navbar() {
   // Custom titles for specific routes
   const routeTitles = {
     "/": "Master",
-    "/reports": "Reports",
-    "/transactions": "Transactions",
-    "/transactions/add": "Add Transaction",
+    "/mastercustomer": "Master",
+    "/route-customer": "Master",
+    "/supplier":"Master",
+    "/route-expense":"Master",
+    "/commission":"Master",
+    "/company":"Master",
+    "/purchase-transaction": "Transaction",                                                                                                                                  
     "/transactions/edit": "Edit Transaction",
     "/print": "Print",
     "/customers/add": "Add Customer",
     "/suppliers/edit": "Edit Supplier",
-  };
+    "/item":"Master",
+    "/employee":"Master",
+    "/individual-report":"Reports",
+    "/sales-transaction":"Transaction",
+ 
+  };          
 console.log(location.pathname)
   const pageTitle = routeTitles[location.pathname] || "Page";
 

@@ -31,14 +31,14 @@ export default function Sidebar() {
   const [isTransactionOpen, setIsTransactionOpen] = useState(false);
 const transactionItemRoutes = {
   "Purchase": "/purchase-transaction",
-  "Sales": "/transactions/purchases",
+  "Sales": "/sales-transaction",
   "Route": "/transactions/returns",
   "Cashbook": "/transactions/payments"
 };
 const [isReportsOpen, setIsReportsOpen] = useState(false);
 const reportItemRoutes = {
   "Purchase Report": "/reports/daily",
-  "Ind.Purchase Report": "/reports/monthly",
+  "Ind.Purchase Report": "/individual-report",
   "Local Sales Report": "/reports/route",
   "Route Sales Report": "/reports/expense",
     "Trial Sales Report": "/reports/expense"

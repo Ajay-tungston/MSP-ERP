@@ -167,8 +167,8 @@ function Employe() {
     navigate("/employee"); // ✅ Redirect to the target route
   };
   return (
-   <div 
-     className="w-full h-full p-4 md:p-8 lg:p-12 bg-white
+    <div
+      className="w-full h-full p-4 md:p-8 lg:p-12 bg-white
       rounded-3xl flex flex-col justify-start items-start gap-12 overflow-hidden fixed inset-0">
       <div className="w-full pb-6 border-b border-[#a1a5b6] flex justify-start items-center gap-2.5">
         <div className="text-[#151d48] text-[24px] sm:text-[28px] md:text-[32px] font-bold font-['Urbanist'] leading-[44.80px]">
@@ -393,18 +393,16 @@ function Employe() {
 
         <div className="flex flex-wrap justify-start sm:justify-end items-center ml-auto">
           <button
-            className={`${
-              salaryType === "daily" ? "bg-blue-100" : ""
-            } w-full sm:w-[175px] text-[#4078ec] text-center py-4 rounded-l-xl 
+            className={`${salaryType === "daily" ? "bg-blue-100" : ""
+              } w-full sm:w-[175px] text-[#4078ec] text-center py-4 rounded-l-xl 
            hover:text-blue-700 hover:scale-105 cursor-pointer transition-all duration-200`}
             onClick={() => setSalaryType("daily")}
           >
             Daily
           </button>
           <button
-            className={`${
-              salaryType === "monthly" ? "bg-blue-100" : ""
-            } w-full sm:w-[175px] text-[#4078ec] text-center py-4 rounded-r-xl 
+            className={`${salaryType === "monthly" ? "bg-blue-100" : ""
+              } w-full sm:w-[175px] text-[#4078ec] text-center py-4 rounded-r-xl 
        hover:text-blue-700 hover:scale-105 cursor-pointer transition-all duration-200`}
             onClick={() => setSalaryType("monthly")}
           >
@@ -421,9 +419,9 @@ function Employe() {
           <div className="bg-white self-stretch flex justify-end items-center gap-4 -mt-12 md:mr-25">
             <div className="flex gap-4">
               {/* Cancel Button */}
-              <button 
-                   onClick={handleCancel}
-              className="flex items-center gap-2 border border-red-500 text-red-500 px-4 py-2 rounded-lg hover:bg-red-100 transition">
+              <button
+                onClick={handleCancel}
+                className="flex items-center gap-2 border border-red-500 text-red-500 px-4 py-2 rounded-lg hover:bg-red-100 transition">
                 <XCircleIcon className="w-5 h-5" />
                 Cancel
               </button>
@@ -431,7 +429,7 @@ function Employe() {
               {/* Save Button */}
               <button
 
-onClick={handleSubmit}
+                onClick={handleSubmit}
                 className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
               >
                 <PlusCircleIcon className="w-5 h-5" />

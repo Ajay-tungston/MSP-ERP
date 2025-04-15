@@ -7,6 +7,7 @@ import { FaCheckSquare, FaRegSquare } from "react-icons/fa"; // For styled check
 import useAxiosPrivate from "../hooks/useAxiosPrivate";
 import OvalSpinner from "../Components/spinners/OvalSpinner";
 import Swal from "sweetalert2";
+
 export default function CustomerHeader() {
   const [selectedRows, setSelectedRows] = useState([]);
   const [supplier, setSupplier] = useState([]);

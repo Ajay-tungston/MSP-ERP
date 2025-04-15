@@ -1,81 +1,122 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { XCircleIcon, PlusCircleIcon } from '@heroicons/react/24/outline';
-import useAxiosPrivate from '../hooks/useAxiosPrivate';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { XCircleIcon, PlusCircleIcon } from "@heroicons/react/24/outline";
+import useAxiosPrivate from "../hooks/useAxiosPrivate";
+import Swal from "sweetalert2";
 
 const AddItem = () => {
-  const [itemCode, setItemCode] = useState('');
-  const [itemName, setItemName] = useState('');
-  const [itemCodeError, setItemCodeError] = useState('');
-  const [itemNameError, setItemNameError] = useState('');
+  const [itemCode, setItemCode] = useState("");
+  const [itemName, setItemName] = useState("");
+  const [conversionRatio, setConversionRatio] = useState(30);
+  const [itemCodeError, setItemCodeError] = useState("");
+  const [itemNameError, setItemNameError] = useState("");
+  const [conversionRatioError, setConversionRatioError] = useState("");
   const navigate = useNavigate(); // <-- initialize navigation
-  const axiosInstance=useAxiosPrivate()
+  const axiosInstance = useAxiosPrivate();
 
   const itemNameRegex = /^[a-zA-Z0-9\s]+$/;
 
   const validateItemCode = () => {
     if (!itemCode) {
-      setItemCodeError('Item code is required.');
+      setItemCodeError("Item code is required.");
       return false;
     }
     if (!/^[a-zA-Z0-9]+$/.test(itemCode)) {
-      setItemCodeError('Item code must be alphanumeric.');
+      setItemCodeError("Item code must be alphanumeric.");
       return false;
     }
     if (itemCode.length < 3 || itemCode.length > 10) {
-      setItemCodeError('Item code must be between 3 and 10 characters.');
+      setItemCodeError("Item code must be between 3 and 10 characters.");
       return false;
     }
-    setItemCodeError('');
+    setItemCodeError("");
     return true;
   };
 
   const validateItemName = () => {
     if (!itemName.match(itemNameRegex)) {
-      setItemNameError('Item name can only contain letters, numbers, and spaces.');
+      setItemNameError(
+        "Item name can only contain letters, numbers, and spaces."
+      );
       return false;
     }
-    setItemNameError('');
+    setItemNameError("");
     return true;
   };
 
-  const handleSubmit =async (e) => {
+  const validateConversionRatio = () => {
+    if (!conversionRatio || isNaN(conversionRatio) || conversionRatio <= 0) {
+      setConversionRatioError("Conversion ratio must be a positive number.");
+      return false;
+    }
+    setConversionRatioError("");
+    return true;
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!validateItemCode() || !validateItemName()) return;
+    if (
+      !validateItemCode() ||
+      !validateItemName() ||
+      !validateConversionRatio()
+    )
+      return;
 
-    // try {
-    //   const response= await axiosInstance.post("/admin/item/add",{
-    //     itemCode,
-    //     itemName
-
-    //   })
-    //   console.log(first)
-    // } catch (error) {
-    //   console.log(error)
-    // }
-    alert('Item added successfully!');
-    setItemCode('');
-    setItemName('');
+    try {
+      const response = await axiosInstance.post("/admin/item/add", {
+        itemCode,
+        itemName,
+        conversionRatio,
+      });
+      Swal.fire({
+        title: "New Item Added Successfully!",
+        icon: "success",
+        draggable: true,
+      });
+      setItemCode("");
+      setItemName("");
+      setConversionRatio(30);
+    } catch (error) {
+      if (error?.response?.status === 400) {
+        Swal.fire({
+          title: error?.response?.data?.message,
+          icon: "error",
+          draggable: true,
+        });
+      } else {
+        Swal.fire({
+          title: "Something went wrong!",
+          icon: "error",
+          draggable: true,
+        });
+      }
+    }
   };
 
   const handleCancel = () => {
-    setItemCode('');
-    setItemName('');
-    setItemCodeError('');
-    setItemNameError('');
-    navigate('/item'); // <-- change route to your desired page
+    setItemCode("");
+    setItemName("");
+    setItemCodeError("");
+    setItemNameError("");
+    setConversionRatio(30);
+    setConversionRatioError("");
+    navigate("/item"); // <-- change route to your desired page
   };
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
       <div className="w-full sm:w-[480px] md:w-[640px] lg:w-[800px] xl:w-[1280px] h-auto bg-white rounded-[24px] p-[24px] sm:p-[32px] md:p-[48px] shadow-lg gap-12 absolute top-[170px] left-1/2 transform -translate-x-1/2">
-        <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-gray-900">Add New Item</h2>
+        <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-gray-900">
+          Add New Item
+        </h2>
         <hr className="my-3 border-gray-300" />
 
         <div className="grid grid-cols-1 sm:grid-cols-2 items-center gap-4">
           {/* Item Code */}
           <div className="flex flex-col w-full">
-            {itemCodeError && <p className="text-red-500 text-sm mb-2">{itemCodeError}</p>}
+            {itemCodeError && (
+              <p className="text-red-500 text-sm mb-2">{itemCodeError}</p>
+            )}
             <div className="flex items-center gap-x-4">
               <label className="text-gray-600">Item code</label>
               <input
@@ -91,9 +132,13 @@ const AddItem = () => {
 
           {/* Item Name */}
           <div className="flex flex-col">
-            {itemNameError && <p className="text-red-500 text-sm mb-2">{itemNameError}</p>}
+            {itemNameError && (
+              <p className="text-red-500 text-sm mb-2">{itemNameError}</p>
+            )}
             <div className="flex items-center gap-4">
-              <label className="text-gray-600">Item Name <span className="text-red-500">*</span></label>
+              <label className="text-gray-600">
+                Item Name <span className="text-red-500">*</span>
+              </label>
               <input
                 type="text"
                 placeholder="Enter here"
@@ -103,6 +148,31 @@ const AddItem = () => {
                 className="w-[350px] h-[56px] gap-2 rounded-[12px] pt-4 pr-6 pb-4 pl-6 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
+          </div>
+        </div>
+        <div className="flex flex-col pr-32 pt-6 items-end">
+          {/* Error message */}
+          {conversionRatioError && (
+            <p className="text-red-500 text-sm mb-2 text-right w-[350px]">
+              {conversionRatioError}
+            </p>
+          )}
+
+          {/* Label + Input */}
+          <div className="flex items-center gap-4">
+            <label className="text-gray-600">
+              Conversion Ratio<span className="text-red-500">*</span>
+            </label>
+            <span className="text-gray-600">1 Box =</span>
+            <input
+              type="number"
+              placeholder="Enter here"
+              value={conversionRatio}
+              onChange={(e) => setConversionRatio(e.target.value)}
+              onBlur={validateConversionRatio}
+              className="w-[150px] h-[56px] gap-2 rounded-[12px] pt-4 pr-6 pb-4 pl-6 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <span className="text-gray-600">kg</span>
           </div>
         </div>
 

@@ -104,7 +104,6 @@ function Employe() {
           openingBalance,
           salaryType,
         });
-        console.log(response);
         Swal.fire({
           title: "Employee Added Successfully!",
           icon: "success",

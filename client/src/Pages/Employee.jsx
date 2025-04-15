@@ -5,81 +5,41 @@ import { GoTrash } from "react-icons/go";
 import { FaCheckSquare, FaRegSquare } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import useAxiosPrivate from "../hooks/useAxiosPrivate";
+import { format, parseISO } from "date-fns";
+import OvalSpinner from "../Components/spinners/OvalSpinner";
 
-export default function CustomerHeader() {
+export default function Employee() {
   const navigate = useNavigate();
   const [selectedRows, setSelectedRows] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [employee, setEmployee] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const limit = 2;
   const axiosInstance = useAxiosPrivate();
-  console.log(employee);
-//   useEffect(() => {
-//     const fetchEmployee = async () => {
-//       try {
-//         setIsLoading(true);
-//         const response = await axiosInstance.get(
-//           `/admin/employee?page=${currentPage}&limit=${limit}`
-//         );
-//         console.log(response);
-//         setEmployee(response?.data);
-//       } catch (error) {
-//         console.log(error);
-//       } finally {
-//         setIsLoading(false);
-//       }
-//     };
-//     fetchEmployee();
-//   }, [currentPage]);
-  const customers = [
-    {
-      id: "001",
-      name: "GreenMart",
-      address: "123 Main St",
-      phone: "987654321",
-      whatsapp: "987654321",
-      bal: "$200.00",
-      date: "15/01/2024",
-      salary: "$1200.00",
-    },
-    {
-      id: "002",
-      name: "LocalMart",
-      address: "123 Main St",
-      phone: "987654321",
-      whatsapp: "987654321",
-      bal: "$300.00",
-      date: "12/02/2024",
-      salary: "$2200.00",
-    },
-    {
-      id: "003",
-      name: "GreenMart",
-      address: "123 Main St",
-      phone: "987654321",
-      whatsapp: "987654321",
-      bal: "$200.00",
-      date: "25/06/2024",
-      salary: "$2100.00",
-    },
-    {
-      id: "004",
-      name: "LocalMart",
-      address: "123 Main St",
-      phone: "987654321",
-      whatsapp: "987654321",
-      bal: "$200.00",
-      date: "05/01/2024",
-      salary: "$2200.00",
-    },
-  ];
+
+  useEffect(() => {
+    const fetchEmployee = async () => {
+      try {
+        setIsLoading(true);
+        const response = await axiosInstance.get(
+          `/admin/employee?page=${currentPage}&limit=${limit}`
+        );
+        setEmployee(response?.data);
+      } catch (error) {
+        console.log(error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchEmployee();
+  }, [currentPage]);
 
   // First define all functions
   const toggleAllRows = () => {
-    if (selectedRows.length === customers.length) {
+    if (selectedRows.length === employee?.employees?.length) {
       setSelectedRows([]);
     } else {
-      setSelectedRows(customers.map((customer) => customer.id));
+      setSelectedRows(employee?.employees?.map((i) => i?._id));
     }
   };
 
@@ -128,7 +88,7 @@ export default function CustomerHeader() {
             <tr className="text-left text-gray-900 font-bold border-b-2 border-gray-200 bg-[#F9FAFB]">
               <th className="p-3">
                 <button onClick={toggleAllRows} className="text-blue-600">
-                  {selectedRows.length === customers.length ? (
+                  {selectedRows.length === employee?.employees?.length ? (
                     <FaCheckSquare size={20} />
                   ) : (
                     <FaRegSquare size={20} />
@@ -148,45 +108,82 @@ export default function CustomerHeader() {
 
           {/* Table Body */}
           <tbody>
-            {customers.map((employee) => (
-              <tr
-                key={employee.id}
-                className="border-b border-gray-200 hover:bg-gray-50 bg-white"
-              >
-                <td className="p-3">
-                  <button
-                    onClick={() => toggleRowSelection(employee.id)}
-                    className="text-blue-600"
-                  >
-                    {selectedRows.includes(employee.id) ? (
-                      <FaCheckSquare size={20} />
-                    ) : (
-                      <FaRegSquare size={20} />
-                    )}
-                  </button>
+            {isLoading ? (
+              <tr>
+                <td colSpan="10">
+                  <OvalSpinner />
                 </td>
-                <td className="p-3">{employee.id}</td>
-                <td className="p-3">{employee.name}</td>
-                <td className="p-3">{employee.address}</td>
-                <td className="p-3">{employee.phone}</td>
-                <td className="p-3">{employee.whatsapp}</td>
-                <td className="p-3">{employee.bal}</td>
-                <td className="p-3">{employee.date}</td>
-                <td className="p-3">{employee.salary}</td>
               </tr>
-            ))}
+            ) : !employee?.employees?.length > 0 ? (
+              <tr>
+                <td colSpan="10" className="text-center py-10 text-gray-500">
+                  No data available
+                </td>
+              </tr>
+            ) : (
+              employee?.employees?.map((employee, index) => (
+                <tr
+                  key={employee?._id}
+                  className="border-b border-gray-200 hover:bg-gray-50 bg-white"
+                >
+                  <td className="p-3">
+                    <button
+                      onClick={() => toggleRowSelection(employee?._id)}
+                      className="text-blue-600"
+                    >
+                      {selectedRows.includes(employee?._id) ? (
+                        <FaCheckSquare size={20} />
+                      ) : (
+                        <FaRegSquare size={20} />
+                      )}
+                    </button>
+                  </td>
+                  <td className="p-3">
+                    {" "}
+                    {index + 1 + (currentPage - 1) * limit}
+                  </td>
+                  <td className="p-3">{employee?.employeeName}</td>
+                  <td className="p-3">{employee?.address}</td>
+                  <td className="p-3">{employee?.phone}</td>
+                  <td className="p-3">{employee?.whatsapp}</td>
+                  <td className="p-3">{employee?.openingBalance}</td>
+                  <td className="p-3">
+                    {format(parseISO(employee?.joiningDate), "dd/MM/yyyy")}
+                  </td>
+                  <td className="p-3">{employee?.salary}</td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
 
       {/* Pagination */}
       <div className="flex justify-between items-center mt-68 text-gray-600 ml-10">
-        <span>Page 1 of 10</span>
+        <span>
+          Page {employee?.currentPage}of {employee?.totalPages}
+        </span>
         <div className="flex space-x-2">
-          <button className="px-4 py-2 text-gray-400 border border-gray-300 rounded-lg cursor-not-allowed">
+          <button
+            className={`px-4 py-2 border border-gray-300 rounded-lg ${
+              currentPage === 1
+                ? "text-gray-400 cursor-not-allowed"
+                : "hover:bg-gray-100"
+            }`}
+            disabled={currentPage === 1}
+            onClick={() => setCurrentPage((prev) => prev - 1)}
+          >
             Previous
           </button>
-          <button className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100">
+          <button
+            className={`px-4 py-2 border border-gray-300 rounded-lg ${
+              currentPage === employee?.totalPages
+                ? "text-gray-400 cursor-not-allowed"
+                : "hover:bg-gray-100"
+            }`}
+            disabled={currentPage === employee?.totalPages}
+            onClick={() => setCurrentPage((prev) => prev + 1)}
+          >
             Next
           </button>
         </div>

@@ -28,12 +28,33 @@ export default function Sidebar() {
     "Commission": "/commission",
     "Company": "/company"
   };
-  
+  const [isTransactionOpen, setIsTransactionOpen] = useState(false);
+const transactionItemRoutes = {
+  "Purchase": "/purchase-transaction",
+  "Sales": "/sales-transaction",
+  "Route": "/transactions/returns",
+  "Cashbook": "/transactions/payments"
+};
+const [isReportsOpen, setIsReportsOpen] = useState(false);
+const reportItemRoutes = {
+  "Purchase Report": "/reports/daily",
+  "Ind.Purchase Report": "/individual-report",
+  "Local Sales Report": "/reports/route",
+  "Route Sales Report": "/reports/expense",
+    "Trial Sales Report": "/reports/expense"
+};
+const [isPrintOpen, setIsPrintOpen] = useState(false);
+
+const printItemRoutes = {
+  "Individual Sales": "/print/invoice",
+  "Route Sales": "/print/daily-summary",
+  "Weekly Route Sales": "/print/customer-copy",
+
+};
+
+
   const navigate = useNavigate();
   const menuItems = [
-    { label: "Transactions", icon: <FiClock /> },
-    { label: "Reports", icon: <FiPrinter /> },
-    { label: "Print", icon: <FiPrinter /> },
     { label: "WhatsApp", icon: <FiGrid /> },
     { label: "Settings", icon: <FiSettings /> }
   ];
@@ -98,9 +119,118 @@ export default function Sidebar() {
               ))}
             </div>
           )}
+{/* 👉 Add Transactions Dropdown Right Below Master Items */}
+{/* Transaction Section */}
+<div
+  className={`rounded-lg p-3 flex items-center justify-between cursor-pointer transition ${
+    selectedMainItem === "Transactions" ? "bg-indigo-500 text-white" : "text-gray-500 hover:bg-indigo-500 hover:text-white"
+  }`}
+  onClick={() => {
+    setSelectedMainItem("Transactions");
+    setIsTransactionOpen(!isTransactionOpen);
+  }}
+>
+  <span className="flex items-center gap-3">
+    <FiClock /> Transactions
+  </span>
+  {isTransactionOpen ? <FiChevronDown /> : <FiChevronRight />}
+</div>
+
+{/* Transaction Sub-Items */}
+{isTransactionOpen && (
+  <div className="flex flex-col pl-6 gap-3 text-gray-500">
+    {Object.keys(transactionItemRoutes).map((item, index) => (
+      <div
+        key={index}
+        className={`flex items-center gap-3 cursor-pointer transition ${
+          selectedItem === item ? "text-indigo-500 font-bold" : "hover:text-indigo-500 hover:font-bold"
+        }`}
+        onClick={() => {
+          setSelectedItem(item);
+          navigate(transactionItemRoutes[item]);
+        }}
+      >
+        <span className={`w-2.5 h-2.5 border rounded-full ${selectedItem === item ? "bg-indigo-500 border-indigo-500" : "border-gray-500"}`}></span>
+        {item}
+      </div>
+    ))}
+  </div>
+)}
+{/* Reports Section */}
+<div
+  className={`rounded-lg p-3 flex items-center justify-between cursor-pointer transition ${
+    selectedMainItem === "Reports" ? "bg-indigo-500 text-white" : "text-gray-500 hover:bg-indigo-500 hover:text-white"
+  }`}
+  onClick={() => {
+    setSelectedMainItem("Reports");
+    setIsReportsOpen(!isReportsOpen);
+  }}
+>
+  <span className="flex items-center gap-3">
+    <FiPrinter /> Reports
+  </span>
+  {isReportsOpen ? <FiChevronDown /> : <FiChevronRight />}
+</div>
+
+{/* Reports Sub-Items */}
+{isReportsOpen && (
+  <div className="flex flex-col pl-6 gap-3 text-gray-500">
+    {Object.keys(reportItemRoutes).map((item, index) => (
+      <div
+        key={index}
+        className={`flex items-center gap-3 cursor-pointer transition ${
+          selectedItem === item ? "text-indigo-500 font-bold" : "hover:text-indigo-500 hover:font-bold"
+        }`}
+        onClick={() => {
+          setSelectedItem(item);
+          navigate(reportItemRoutes[item]);
+        }}
+      >
+        <span className={`w-2.5 h-2.5 border rounded-full ${selectedItem === item ? "bg-indigo-500 border-indigo-500" : "border-gray-500"}`}></span>
+        {item}
+      </div>
+    ))}
+  </div>
+)}
+{/* Print Section */}
+<div
+  className={`rounded-lg p-3 flex items-center justify-between cursor-pointer transition ${
+    selectedMainItem === "Print" ? "bg-indigo-500 text-white" : "text-gray-500 hover:bg-indigo-500 hover:text-white"
+  }`}
+  onClick={() => {
+    setSelectedMainItem("Print");
+    setIsPrintOpen(!isPrintOpen);
+  }}
+>
+  <span className="flex items-center gap-3">
+    <FiPrinter /> Print
+  </span>
+  {isPrintOpen ? <FiChevronDown /> : <FiChevronRight />}
+</div>
+
+{/* Print Sub-Items */}
+{isPrintOpen && (
+  <div className="flex flex-col pl-6 gap-3 text-gray-500">
+    {Object.keys(printItemRoutes).map((item, index) => (
+      <div
+        key={index}
+        className={`flex items-center gap-3 cursor-pointer transition ${
+          selectedItem === item ? "text-indigo-500 font-bold" : "hover:text-indigo-500 hover:font-bold"
+        }`}
+        onClick={() => {
+          setSelectedItem(item);
+          navigate(printItemRoutes[item]);
+        }}
+      >
+        <span className={`w-2.5 h-2.5 border rounded-full ${selectedItem === item ? "bg-indigo-500 border-indigo-500" : "border-gray-500"}`}></span>
+        {item}
+      </div>
+    ))}
+  </div>
+)}
 
           {/* Sidebar Menu */}
-          <div className="flex flex-col gap-3 text-gray-500 mt-6">
+          <div className="flex flex-col gap-3 text-gray-500 ">
             {menuItems.map((item, index) => (
               <div
                 key={index}

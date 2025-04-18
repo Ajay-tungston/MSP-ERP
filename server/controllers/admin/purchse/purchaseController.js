@@ -9,6 +9,7 @@ const createPurchaseEntry = async (req, res) => {
     const { supplierId, items } = req.body;
 
     const supplier = await Supplier.findById(supplierId);
+    
     if (!supplier) {
       return res.status(404).json({ message: "Supplier not found" });
     }
@@ -106,5 +107,6 @@ const getAllPurchaseEntries = async (req, res) => {
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
 
 module.exports = { createPurchaseEntry, getAllPurchaseEntries };

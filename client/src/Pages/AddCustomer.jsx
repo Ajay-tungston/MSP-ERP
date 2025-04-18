@@ -1,81 +1,94 @@
-import React, { useState, useEffect } from "react";
-import axios from "axios";
+import React, { useState } from "react";
+import Swal from "sweetalert2";
+import { useNavigate } from "react-router-dom";
 import { XCircleIcon, PlusCircleIcon } from "@heroicons/react/24/solid";
-import useAxiosPrivate from '../hooks/useAxiosPrivate'
+import useAxiosPrivate from "../hooks/useAxiosPrivate";
+
 const AddCustomerModal = ({ onClose }) => {
-  // Form state; note that we use keys that differ from backend names.
+  const navigate = useNavigate();
+  const axiosInstance = useAxiosPrivate();
+  const safeOnClose = typeof onClose === "function" ? onClose : () => {};
+
   const [formData, setFormData] = useState({
     name: "",
     address: "",
     phone: "",
     whatsapp: "",
     discount: "",
-    discountType: "",      // For discount method (Manual/Auto)
-    discountFrequency: "", // For discount frequency (Weekly/Monthly/Yearly)
+    discountType: "",
+    discountFrequency: "",
     balance: "",
-    route: "",             // "Yes" or "No"
+    route: "",
     routeName: "",
   });
 
-  // State for next customer number; you can fetch from your backend if available.
-  const [customerNumber, setCustomerNumber] = useState("Auto Generated");
-
-  // Optional: Fetch the next customer number if your backend provides an endpoint.
-  useEffect(() => {
-    const fetchNextNumber = async () => {
-      try {
-        // Replace with your actual endpoint if available
-        const response = await axiosInstance.get("/admin/customer/next");
-        // Assume the backend returns { nextNumber: "002" } or similar
-        setCustomerNumber(response.data.nextNumber);
-      } catch (error) {
-        console.error("Error fetching next customer number:", error);
-        // Fallback remains "Auto Generated"
-      }
-    };
-
-    fetchNextNumber();
-  }, []);
-
-  const handleChange = (field, value) => {
+  const handleChange = (field, value) =>
     setFormData((prev) => ({ ...prev, [field]: value }));
+
+  const handleCancel = () => {
+    safeOnClose();
+    navigate('/mastercustomer')
   };
-const axiosInstance = useAxiosPrivate()
-  // Submit handler to call backend API for adding the customer.
+
   const handleSubmit = async () => {
-    // Prepare payload mapping UI fields to backend expected fields.
+    // 1) Front‑end required validation
+    if (!formData.name.trim() || !formData.phone.trim()) {
+      await Swal.fire({
+        icon: "error",
+        title: "Validation Error",
+        text: "Please provide both Customer Name and Mobile number.",
+        confirmButtonColor: "#2563EB",
+      });
+      return;
+    }
+
+    // 2) Build payload
     const payload = {
       customerName: formData.name.trim(),
       address: formData.address.trim(),
       phone: formData.phone.trim(),
       whatsapp: formData.whatsapp.trim(),
       discount: parseFloat(formData.discount) || 0,
-      // discountApplied will be taken from discountFrequency (converted to lowercase).
       discountApplied: formData.discountFrequency.toLowerCase() || "manual",
-      // discountType as extra field from discountMethod (converted to lowercase)
       discountType: formData.discountType.toLowerCase() || "manual",
       openingBalance: parseFloat(formData.balance) || 0,
-      // routeCustomer is true if route is "Yes"
       routeCustomer: formData.route === "Yes",
-      // Use routeName only if routeCustomer is true
-      routeAddress: formData.route === "Yes" ? formData.routeName.trim() : "",
+      routeAddress: formData.routeName.trim(),
     };
 
     try {
-      const response = await axiosInstance.post(
-        "/admin/customer/add",
-        payload
-      );
-      console.log("Customer added successfully:", response.data);
-      onClose();
-    } catch (error) {
-      console.error("Error adding customer:", error.response || error);
-      // Optionally display error feedback to the user (e.g., using a toast or alert)
-    }
-  };
+      await axiosInstance.post("/admin/customer/add", payload);
 
-  const handleCancel = () => {
-    onClose();
+      // 3) Success alert → close → navigate
+      await Swal.fire({
+        icon: "success",
+        title: "Customer Added!",
+        text: "The customer has been added successfully.",
+        confirmButtonColor: "#2563EB",
+      });
+
+      safeOnClose();
+      navigate("/mastercustomer");
+    } catch (err) {
+      console.error("Error adding customer:", err.response || err);
+
+      // extract server‑side message(s)
+      let message = "Something went wrong.";
+      if (err.response?.data) {
+        if (err.response.data.message) {
+          message = err.response.data.message;
+        } else if (Array.isArray(err.response.data.errors)) {
+          message = err.response.data.errors.join("\n");
+        }
+      }
+
+      await Swal.fire({
+        icon: "error",
+        title: "Save Failed",
+        text: message,
+        confirmButtonColor: "#DC2626",
+      });
+    }
   };
 
   return (
@@ -83,7 +96,9 @@ const axiosInstance = useAxiosPrivate()
       <div className="w-full sm:w-[640px] lg:w-[1000px] xl:w-[1200px] bg-white rounded-[24px] p-8 sm:p-10 shadow-xl relative">
         {/* Header */}
         <div className="flex justify-between items-center pb-4 border-b border-gray-300">
-          <h2 className="text-2xl font-bold text-gray-900">Add New Customer</h2>
+          <h2 className="text-2xl font-bold text-gray-900">
+            Add New Customer
+          </h2>
           <button onClick={handleCancel}>
             <XCircleIcon className="w-6 h-6 text-gray-500 hover:text-red-500" />
           </button>
@@ -94,7 +109,7 @@ const axiosInstance = useAxiosPrivate()
           {/* No. */}
           <div className="flex items-center">
             <label className="w-[172px] text-[#737791]">No.</label>
-            <span className="font-bold">{customerNumber}</span>
+            <span className="font-bold">Auto Generated</span>
           </div>
 
           {/* Customer Name */}
@@ -173,35 +188,60 @@ const axiosInstance = useAxiosPrivate()
             />
           </div>
 
-          {/* Discount Frequency */}
-          <div className="flex items-center">
-            <label className="w-[172px] text-[#737791]">Discount Applied</label>
-            <div className="flex">
-              {["Weekly", "Monthly", "Yearly"].map((freq, index) => (
-                <button
-                  key={freq}
-                  onClick={() => handleChange("discountFrequency", freq)}
-                  className={`px-6 py-3 ${
-                    formData.discountFrequency === freq
-                      ? "bg-blue-100 text-blue-700 border border-blue-500"
-                      : "bg-gray-100 text-gray-500 border border-gray-300"
-                  } ${
-                    index === 0
-                      ? "rounded-l-2xl"
-                      : index === 2
-                      ? "rounded-r-2xl"
-                      : "rounded-none"
-                  }`}
-                >
-                  {freq}
-                </button>
-              ))}
+          {/* Discount Applied */}
+          <div className="flex items-start">
+            <label className="w-[172px] text-[#737791] mt-8">
+              Discount Applied
+            </label>
+            <div className="flex flex-col gap-3">
+              <div className="flex">
+                {["Weekly", "Monthly", "Yearly"].map((freq, idx) => (
+                  <button
+                    key={freq}
+                    onClick={() => handleChange("discountFrequency", freq)}
+                    className={`px-6 py-3 ${
+                      formData.discountFrequency === freq
+                        ? "bg-blue-100 text-blue-700 border border-blue-500"
+                        : "bg-gray-100 text-gray-500 border border-gray-300"
+                    } ${
+                      idx === 0
+                        ? "rounded-l-2xl"
+                        : idx === 2
+                        ? "rounded-r-2xl"
+                        : "rounded-none"
+                    }`}
+                  >
+                    {freq}
+                  </button>
+                ))}
+              </div>
+              <div className="flex">
+                {["Manual", "Auto"].map((method, idx) => (
+                  <button
+                    key={method}
+                    onClick={() => handleChange("discountType", method)}
+                    className={`px-6 py-3 ${
+                      formData.discountType === method
+                        ? "bg-blue-100 text-blue-700 border border-blue-500"
+                        : "bg-gray-100 text-gray-500 border border-gray-300"
+                    } ${
+                      idx === 0
+                        ? "rounded-l-xl border-r-0"
+                        : "rounded-r-xl border-l-0"
+                    }`}
+                  >
+                    {method}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
           {/* Opening Balance */}
           <div className="flex items-center">
-            <label className="w-[172px] text-[#737791]">Opening Balance</label>
+            <label className="w-[172px] text-[#737791]">
+              Opening Balance
+            </label>
             <div className="w-[300px] flex items-center px-4 py-3 bg-gray-50 rounded-xl">
               <span className="mr-2 font-bold">$</span>
               <input
@@ -212,48 +252,13 @@ const axiosInstance = useAxiosPrivate()
               />
             </div>
           </div>
-
-          {/* Discount Method */}
-          <div className="flex items-center">
-            <label className="w-[172px] text-[#737791]">Discount Method</label>
-            <div className="flex">
-              {["Manual", "Auto"].map((method, index) => (
-                <button
-                  key={method}
-                  onClick={() => handleChange("discountType", method)}
-                  className={`px-6 py-3 ${
-                    formData.discountType === method
-                      ? "bg-blue-100 text-blue-700 border border-blue-500"
-                      : "bg-gray-100 text-gray-500 border border-gray-300"
-                  } ${
-                    index === 0
-                      ? "rounded-l-xl border-r-0"
-                      : "rounded-r-xl border-l-0"
-                  }`}
-                >
-                  {method}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Route Name */}
-          <div className="flex items-center">
-            <label className="w-[172px] text-[#737791]">Route</label>
-            <input
-              value={formData.routeName}
-              onChange={(e) => handleChange("routeName", e.target.value)}
-              placeholder="Enter here"
-              className="w-[300px] px-4 py-3 bg-gray-50 rounded-xl outline-none"
-            />
-          </div>
         </div>
 
         {/* Route Yes/No */}
         <div className="flex items-center col-span-2 mt-6">
           <label className="w-[172px] text-[#737791]">Route</label>
           <div className="flex">
-            {["Yes", "No"].map((val, index) => (
+            {["Yes", "No"].map((val, idx) => (
               <button
                 key={val}
                 onClick={() => handleChange("route", val)}
@@ -262,7 +267,7 @@ const axiosInstance = useAxiosPrivate()
                     ? "bg-blue-100 text-blue-700 border border-blue-500"
                     : "bg-gray-100 text-gray-500 border border-gray-300"
                 } ${
-                  index === 0
+                  idx === 0
                     ? "rounded-l-xl border-r-0"
                     : "rounded-r-xl border-l-0"
                 }`}

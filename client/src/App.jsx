@@ -1,40 +1,70 @@
-import { Route, Routes } from 'react-router-dom'
-import "./index.css"
-import Login from './Pages/Login'
-// import Sample from './Pages/sample'
-import AddCustomer from './Pages/AddCustomer'
-import AddSupplier from './Pages/AddSupplier'
-import Employe from './Pages/Employe'
-import Va from './Pages/Va'
-import AddItem from './Pages/AddItem'
-import AddCommission from './Pages/AddCommission'
-import AddExpense from './Pages/AddExpense'
-import AddCompany from './Pages/AddCompany'
-import Otp from './Pages/Otp'
-import ForgetPassword from './Pages/ForgetPassword'
-import ResetPassword from './Pages/ResetPassword'
-function App() {
+import { Route, Routes } from "react-router-dom";
+import "./index.css";
+import Login from "./Pages/Login";
 
+import AddCustomer from "./Pages/AddCustomer";
+import AddSupplier from "./Pages/AddSupplier";
+import Addemploye from "./Pages/Addemploye";
+import AddItem from "./Pages/AddItem";
+import AddCommission from "./Pages/AddCommission";
+import AddExpense from "./Pages/AddExpense";
+import AddCompany from "./Pages/AddCompany";
+import Otp from "./Pages/Otp";
+import ForgetPassword from "./Pages/ForgetPassword";
+import ResetPassword from "./Pages/ResetPassword";
+import Layout from "./Components/Layout";
+import Customer from "./Pages/Customer";
+import Supplier from "./Pages/Supplier";
+import Employee from "./Pages/Employee";
+import Routecustomer from "./Pages/Routecustomer";
+import Purchasetransaction from "./Pages/Purchasetransaction";
+import Company from "./Pages/Company";
+import Commission from "./Pages/Commission";
+import Item from "./Pages/Item";
+import RouteExpense from "./Pages/RouteExpense";
+import Dashboard from "./Pages/Dashboard";
+import PersistLogin from "./Components/PersistLogin";
+import RequireAuth from "./Components/RequireAuth";
+function App() {
   return (
     <>
       <Routes>
-        <Route path='/login' element={<Login />} />
-        <Route path='/additem' element={<AddItem />} />
-        <Route path='/otp' element={<Otp />} />
-        <Route path='/forgot-password' element={<ForgetPassword />} />
-        <Route path='/reset-password' element={<ResetPassword />} />
-        <Route path='/commission' element={<AddCommission />} />
-        <Route path='/company' element={<AddCompany />} />
-        <Route path='/expense' element={<AddExpense />} />
-        <Route path='/item' element={<AddItem />} />
-        <Route path='/employe' element={<Employe />} />
-        {/* <Route path='/sample' element={<Sample />} /> */}
-        <Route path='/customer' element={<AddCustomer />} />
-        <Route path='/addsupplier' element={<AddSupplier />} />
-        <Route path='/va' element={<Va />} />
+        <Route element={<PersistLogin />}>
+          <Route element={<RequireAuth />}>
+            <Route path="/" element={<Layout />}>
+              <Route index element={<Dashboard />} />
+              <Route path="/mastercustomer" element={<Customer />} />
+              <Route path="/route-customer" element={<Routecustomer />} />
+              <Route path="/supplier" element={<Supplier />} />
+              <Route path="/employee" element={<Employee />} />
+              <Route
+                path="/purchase-transaction"
+                element={<Purchasetransaction />}
+              />
+              <Route path="/company" element={<Company />} />
+              <Route path="/commission" element={<Commission />} />
+              <Route path="/item" element={<Item />} />
+              <Route path="/route-expense" element={<RouteExpense />} />
+            </Route>
+          </Route>
+        </Route>
+        <Route path="/login" element={<Login />} />
+        <Route path="/add-item" element={<AddItem />} />
+        <Route path="/otp" element={<Otp />} />
+        <Route path="/forgot-password" element={<ForgetPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/add-commission" element={<AddCommission />} />
+        <Route path="/add-company" element={<AddCompany />} />
+        <Route path="/expense" element={<AddExpense />} />
+
+        <Route path="/add-employe" element={<Addemploye />} />
+        <Route path="/purchase-transaction" element={<Purchasetransaction />} />
+        <Route path="/add-customer" element={<AddCustomer />} />
+        <Route path="/add-supplier" element={<AddSupplier />} />
+        <Route path="/company" element={<Company />} />
       </Routes>
     </>
-  )
+  );
 }
 
-export default App
+export default App;

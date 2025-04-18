@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { XCircleIcon, PlusCircleIcon } from "@heroicons/react/24/outline";
 import useAxiosPrivate from "../hooks/useAxiosPrivate";
 import Swal from "sweetalert2";
-
+import { useNavigate } from "react-router-dom";
 function Employe() {
   const [employeeName, setEmployeeName] = useState("");
   const [phone, setPhone] = useState("");
@@ -15,7 +15,7 @@ function Employe() {
   const [salaryType, setSalaryType] = useState("monthly");
 
   const axiosPrivate = useAxiosPrivate();
-
+  const navigate = useNavigate();
   const [errors, setErrors] = useState({
     employeeName: "",
     phone: "",
@@ -162,8 +162,14 @@ function Employe() {
     });
   };
 
+  const handleCancel = () => {
+    resetFields(); // ✅ Clear all fields
+    navigate("/employee"); // ✅ Redirect to the target route
+  };
   return (
-    <div className="w-full h-full p-4 md:p-8 lg:p-12 bg-white rounded-3xl flex flex-col justify-start items-start gap-12 overflow-hidden">
+    <div
+      className="w-full h-full p-4 md:p-8 lg:p-12 bg-white
+      rounded-3xl flex flex-col justify-start items-start gap-12 overflow-hidden fixed inset-0">
       <div className="w-full pb-6 border-b border-[#a1a5b6] flex justify-start items-center gap-2.5">
         <div className="text-[#151d48] text-[24px] sm:text-[28px] md:text-[32px] font-bold font-['Urbanist'] leading-[44.80px]">
           Add New Employee
@@ -387,18 +393,16 @@ function Employe() {
 
         <div className="flex flex-wrap justify-start sm:justify-end items-center ml-auto">
           <button
-            className={`${
-              salaryType === "daily" ? "bg-blue-100" : ""
-            } w-full sm:w-[175px] text-[#4078ec] text-center py-4 rounded-l-xl 
+            className={`${salaryType === "daily" ? "bg-blue-100" : ""
+              } w-full sm:w-[175px] text-[#4078ec] text-center py-4 rounded-l-xl 
            hover:text-blue-700 hover:scale-105 cursor-pointer transition-all duration-200`}
             onClick={() => setSalaryType("daily")}
           >
             Daily
           </button>
           <button
-            className={`${
-              salaryType === "monthly" ? "bg-blue-100" : ""
-            } w-full sm:w-[175px] text-[#4078ec] text-center py-4 rounded-r-xl 
+            className={`${salaryType === "monthly" ? "bg-blue-100" : ""
+              } w-full sm:w-[175px] text-[#4078ec] text-center py-4 rounded-r-xl 
        hover:text-blue-700 hover:scale-105 cursor-pointer transition-all duration-200`}
             onClick={() => setSalaryType("monthly")}
           >
@@ -411,26 +415,27 @@ function Employe() {
         {/* Other content here */}
 
         {/* Action buttons */}
-        <div className="self-stretch flex justify-end items-center gap-4  md:mr-25">
-          <div className="w-full flex justify-end items-center gap-4 mt-8">
-            <button
-              type="button"
-              onClick={resetFields}
-              className="w-[180px] py-4 px-8 bg-[#f6f8ff] text-[#747dff] font-medium text-lg rounded-xl flex justify-center items-center gap-3"
-            >
-              <XCircleIcon className="w-6 h-6 text-[#747dff]" />
-              Cancel
-            </button>
+        <div className="w-full h-full p-2 md:p-8 lg:p-12 bg-white rounded-3xl flex flex-col justify-start items-start gap-12 overflow-hidden ">
+          <div className="bg-white self-stretch flex justify-end items-center gap-4 -mt-12 md:mr-25">
+            <div className="flex gap-4">
+              {/* Cancel Button */}
+              <button
+                onClick={handleCancel}
+                className="flex items-center gap-2 border border-red-500 text-red-500 px-4 py-2 rounded-lg hover:bg-red-100 transition">
+                <XCircleIcon className="w-5 h-5" />
+                Cancel
+              </button>
 
-            {/* Save Button */}
-            <button
-              type="submit"
-              onClick={handleSubmit}
-              className="w-[180px] py-4 px-8 bg-[#747dff] text-white font-medium text-lg rounded-xl flex justify-center items-center gap-3"
-            >
-              <PlusCircleIcon className="w-6 h-6 text-white" />
-              Save
-            </button>
+              {/* Save Button */}
+              <button
+
+                onClick={handleSubmit}
+                className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+              >
+                <PlusCircleIcon className="w-5 h-5" />
+                Save
+              </button>
+            </div>
           </div>
         </div>
       </div>

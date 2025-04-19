@@ -152,6 +152,7 @@ const getAllSuppliers = async (req, res) => {
   }
 };
 
+//need to add logic for check the supplier has any transcations
 const deleteSuppliers=async(req,res)=>{
     try {
         const {supplierIds} = req.body;

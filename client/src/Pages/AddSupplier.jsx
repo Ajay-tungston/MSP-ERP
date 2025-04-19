@@ -104,7 +104,7 @@ function AddSupplier() {
           icon: "success",
           draggable: true,
         });
-        navigate("/suppliers"); // Navigate after successful submission
+        navigate("/supplier"); // Navigate after successful submission
       }
     } catch (error) {
       console.log(error);

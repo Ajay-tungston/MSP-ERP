@@ -5,74 +5,72 @@ const Item = require("../../../models/Item");
 const PurchaseEntry = require("../../../models/PurchaseEntry");
 const getNextCounterNumber = require("../../../utils/counter");
 
+const mongoose = require("mongoose");
+
 const createSaleTransaction = async (req, res) => {
   try {
-    const { customerId, items, discount = 0, status = "completed" } = req.body;
+    const sales = Array.isArray(req.body) ? req.body : [req.body];
+    const results = [];
 
-    // 1. Validate customer
-    const customer = await Customer.findById(customerId);
-    if (!customer) {
-      return res.status(404).json({ message: "Customer not found" });
-    }
+    for (const saleData of sales) {
+      const { customerId, items, discount = 0, status = "completed" } = saleData;
 
-    // 2. Generate new transaction number
-    const transactionNumber = await getNextCounterNumber("saleTransaction");
-
-    let totalAmount = 0;
-    let totalQuantity = 0;
-    const saleItems = [];
-
-    for (const itemData of items) {
-      const { itemName, supplierId, quantity, unitPrice } = itemData;
-
-      const item = await Item.findOne({ itemName });
-      if (!item) {
-        return res
-          .status(404)
-          .json({ message: `Item "${itemName}" not found` });
+      // Convert customerId to ObjectId and validate
+      const customer = await Customer.findById(new mongoose.Types.ObjectId(customerId));
+      if (!customer) {
+        return res.status(404).json({ message: `Customer with ID ${customerId} not found` });
       }
 
-      const supplier = await Supplier.findById(supplierId);
-      if (!supplier) {
-        return res
-          .status(404)
-          .json({ message: `Supplier with ID ${supplierId} not found` });
+      const transactionNumber = await getNextCounterNumber("saleTransaction");
+
+      let totalAmount = 0;
+      let totalQuantity = 0;
+      const saleItems = [];
+
+      for (const itemData of items) {
+        const { itemName, supplierId, quantity, unitPrice } = itemData;
+
+        const item = await Item.findOne({ itemName });
+        if (!item) {
+          return res.status(404).json({ message: `Item "${itemName}" not found` });
+        }
+
+        const supplier = await Supplier.findById(new mongoose.Types.ObjectId(supplierId));
+        if (!supplier) {
+          return res.status(404).json({ message: `Supplier with ID ${supplierId} not found` });
+        }
+
+        const totalCost = unitPrice * quantity;
+
+        saleItems.push({
+          item: item._id,
+          supplier: supplier._id,
+          quantity,
+          unitPrice,
+          totalCost,
+        });
+
+        totalAmount += totalCost;
+        totalQuantity += quantity;
       }
 
-      const totalCost = unitPrice * quantity;
+      const finalAmount = totalAmount - discount;
 
-      saleItems.push({
-        item: item._id,
-        supplier: supplier._id,
-        quantity,
-        unitPrice,
-        totalCost,
+      const newSale = new SalesEntry({
+        transactionNumber,
+        customer: customer._id,
+        items: saleItems,
+        totalAmount: finalAmount,
+        totalQuantity,
+        discount,
+        status,
       });
 
-      totalAmount += totalCost;
-      totalQuantity += quantity;
-
-      // Optional: Deduct from inventory (PurchaseEntry logic here if needed)
+      await newSale.save();
+      results.push(newSale);
     }
 
-    // 3. Apply discount
-    const finalAmount = totalAmount - discount;
-
-    const newSale = new SalesEntry({
-      transactionNumber,
-      customer: customer._id,
-      items: saleItems,
-      totalAmount: finalAmount,
-      totalQuantity,
-      discount,
-      status,
-    });
-
-    await newSale.save();
-
-    return res
-      .status(201)
-      .json({ message: "Sale transaction recorded", sale: newSale });
+    return res.status(201).json({ message: "Sales transactions recorded", sales: results });
   } catch (error) {
     console.error("Sale creation error:", error);
 
@@ -84,6 +82,7 @@ const createSaleTransaction = async (req, res) => {
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
 
 const getSalesEntries = async (req, res) => {
   try {

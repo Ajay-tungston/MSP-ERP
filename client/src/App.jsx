@@ -25,6 +25,7 @@ import RouteExpense from "./Pages/RouteExpense";
 import Dashboard from "./Pages/Dashboard";
 import PersistLogin from "./Components/PersistLogin";
 import RequireAuth from "./Components/RequireAuth";
+import SalesRegister from "./Pages/SalesTransaction";
 function App() {
   return (
     <>
@@ -62,6 +63,7 @@ function App() {
         <Route path="/add-customer" element={<AddCustomer />} />
         <Route path="/add-supplier" element={<AddSupplier />} />
         <Route path="/company" element={<Company />} />
+        <Route path="/sales-register" element={<SalesRegister/>}/>
       </Routes>
     </>
   );

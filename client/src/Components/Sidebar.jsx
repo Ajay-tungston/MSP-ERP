@@ -33,13 +33,13 @@ const transactionItemRoutes = {
   "Purchase": "/purchase-transaction",
   "Sales": "/sales-transaction",
   "Route": "/transactions/returns",
-  "Cashbook": "/transactions/payments"
+  "Cashbook": "/cashbook"
 };
 const [isReportsOpen, setIsReportsOpen] = useState(false);
 const reportItemRoutes = {
-  "Purchase Report": "/reports/daily",
+  "Purchase Report": "/purchase-report",
   "Ind.Purchase Report": "/individual-report",
-  "Local Sales Report": "/reports/route",
+  "Local Sales Report": "/localsales-report",
   "Route Sales Report": "/reports/expense",
     "Trial Sales Report": "/reports/expense"
 };

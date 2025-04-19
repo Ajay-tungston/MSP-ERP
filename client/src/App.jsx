@@ -24,7 +24,12 @@ import Item from "./Pages/Item"
 import RouteExpense from "./Pages/RouteExpense"
 import IndividualReports from './Pages/IndividualReports'
 import SalesTransaction from './Pages/SalesTransaction'
-import Newsales from './Pages/Newsales'
+import Sales from './Pages/Sales'
+import Sample from './Pages/Sample'
+import Cashbook from './Pages/Cashbook'
+import PurchaseReport from './Pages/PurchaseReport'
+import LocalsalesReport from './Pages/LocalsalesReport'
+
 function App() {
 
   return (
@@ -42,7 +47,13 @@ function App() {
   <Route path='/route-expense' element={<RouteExpense />} />
 <Route path='/individual-report'element={<IndividualReports />} />  
 <Route path='/sales-transaction' element={<SalesTransaction/>}/>
+<Route path='/sales' element={<Sales/>}/>
+<Route path='/cashbook' element={<Cashbook/>}/>
+<Route path='/purchase-report' element={<PurchaseReport/>}/>
+<Route path='/localsales-report' element={<LocalsalesReport/>}/>
         </Route>
+        <Route path='/sample' element={<Sample/>}/>
+        <Route path="/sales" element={<Sales />} />
         <Route path='/login' element={<Login />} />
         <Route path='/add-item' element={<AddItem />} />
         <Route path='/otp' element={<Otp />} />
@@ -56,7 +67,7 @@ function App() {
         <Route path='/add-customer' element={<AddCustomer />} />
         <Route path='/add-supplier' element={<AddSupplier />} />
         <Route path='/company' element={<Company/>}/>
-        <Route path='/newsales' element={<Newsales/>}/>
+
 
       </Routes>
     </>

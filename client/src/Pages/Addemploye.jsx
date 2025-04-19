@@ -104,7 +104,6 @@ function Employe() {
           openingBalance,
           salaryType,
         });
-        console.log(response);
         Swal.fire({
           title: "Employee Added Successfully!",
           icon: "success",
@@ -118,6 +117,7 @@ function Employe() {
         setJoiningDate("");
         setOpeningBalance("");
         setResponseError("");
+        navigate("/employee")
       } catch (error) {
         console.log(error);
         if (error?.response?.status === 400) {

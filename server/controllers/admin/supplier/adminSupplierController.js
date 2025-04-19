@@ -152,6 +152,7 @@ const getAllSuppliers = async (req, res) => {
   }
 };
 
+//need to add logic for check the supplier has any transcations
 const deleteSuppliers=async(req,res)=>{
     try {
         const {supplierIds} = req.body;
@@ -173,5 +174,8 @@ const deleteSuppliers=async(req,res)=>{
         return res.status(500).json({ message: "Error deleting suppliers" });
     }
 }
+
+
+
 
 module.exports = { addNewSupplier,getAllSuppliers,deleteSuppliers};

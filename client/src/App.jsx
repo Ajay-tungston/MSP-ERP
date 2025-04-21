@@ -33,6 +33,7 @@ import RequireAuth from "./Components/RequireAuth";
 import LocalsalesReport from "./Pages/LocalsalesReport";
 
 import Sample from './Pages/Sample'
+import Whatsapp from "./Pages/Whatsapp";
 function App() {
   return (
     <>
@@ -54,6 +55,7 @@ function App() {
 <Route path='/purchase-report' element={<PurchaseReport/>}/>
 <Route path='/localsales-report' element={<LocalsalesReport/>}/>
 <Route path='/sample' element={<Sample/>}/>
+<Route path='/whatsapp' element={<Whatsapp/>}/>
         </Route>
        
         <Route path="/sales" element={<Sales />} />
@@ -94,7 +96,7 @@ function App() {
         <Route path="/add-commission" element={<AddCommission />} />
         <Route path="/add-company" element={<AddCompany />} />
         <Route path="/expense" element={<AddExpense />} />
-
+<Route path='/whatsapp' element={<Whatsapp/>}/>
         <Route path="/add-employe" element={<Addemploye />} />
         <Route path="/purchase-transaction" element={<Purchasetransaction />} />
     

@@ -1,3 +1,4 @@
+const Counter = require("../../../models/Counter");
 const Item = require("../../../models/Item");
 const PurchaseEntry = require("../../../models/PurchaseEntry");
 const Supplier = require("../../../models/Supplier");
@@ -108,5 +109,15 @@ const getAllPurchaseEntries = async (req, res) => {
   }
 };
 
+const getPurchaseCounter=async(req,res)=>{
+  try {
+    const purchaseNo=await Counter.find({name:"purchaseNumber"})
+    res.status(200).json({ count: purchaseNo ? purchaseNo[0].value : 0 });
+    
+  } catch (error) {
+    console.log(error)
+    res.status(500).json({ message: "Server error" });
+  }
+}
 
-module.exports = { createPurchaseEntry, getAllPurchaseEntries };
+module.exports = { createPurchaseEntry, getAllPurchaseEntries,getPurchaseCounter };

@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { XCircleIcon, PlusCircleIcon } from "@heroicons/react/24/solid";
 import useAxiosPrivate from "../hooks/useAxiosPrivate";
 
-const AddCustomerModal = ({ onClose }) => {
+const AddCustomerModal = ({ onClose ,setPopup}) => {
   const navigate = useNavigate();
   const axiosInstance = useAxiosPrivate();
   const safeOnClose = typeof onClose === "function" ? onClose : () => {};
@@ -27,10 +27,12 @@ const AddCustomerModal = ({ onClose }) => {
 
   const handleCancel = () => {
     safeOnClose();
-    navigate('/mastercustomer')
+    setPopup(false)
+    
   };
 
   const handleSubmit = async () => {
+    
     // 1) Front‑end required validation
     if (!formData.name.trim() || !formData.phone.trim()) {
       await Swal.fire({
@@ -38,6 +40,7 @@ const AddCustomerModal = ({ onClose }) => {
         title: "Validation Error",
         text: "Please provide both Customer Name and Mobile number.",
         confirmButtonColor: "#2563EB",
+       
       });
       return;
     }
@@ -68,7 +71,7 @@ const AddCustomerModal = ({ onClose }) => {
       });
 
       safeOnClose();
-      navigate("/mastercustomer");
+      setPopup(false)
     } catch (err) {
       console.error("Error adding customer:", err.response || err);
 
@@ -92,7 +95,7 @@ const AddCustomerModal = ({ onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-white bg-opacity-30 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-opacity-30 backdrop-blur-sm">
       <div className="w-full sm:w-[640px] lg:w-[1000px] xl:w-[1200px] bg-white rounded-[24px] p-8 sm:p-10 shadow-xl relative">
         {/* Header */}
         <div className="flex justify-between items-center pb-4 border-b border-gray-300">

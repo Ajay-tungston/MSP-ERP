@@ -202,6 +202,7 @@ const Sales = () => {
                         customers.map((customer, i) => (
                           <option key={i} value={customer.value}>
                             {customer.label}
+                            
                           </option>
                         ))
                       )}

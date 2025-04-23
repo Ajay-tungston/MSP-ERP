@@ -25,6 +25,7 @@ import RouteExpense from "./Pages/RouteExpense";
 import Dashboard from "./Pages/Dashboard";
 import PersistLogin from "./Components/PersistLogin";
 import RequireAuth from "./Components/RequireAuth";
+import IndividualSales from "./Pages/IndividualSales";
 function App() {
   return (
     <>
@@ -37,6 +38,8 @@ function App() {
               <Route path="/route-customer" element={<Routecustomer />} />
               <Route path="/supplier" element={<Supplier />} />
               <Route path="/employee" element={<Employee />} />
+              <Route path="/individualsales" element={<IndividualSales />} />
+
               <Route
                 path="/purchase-transaction"
                 element={<Purchasetransaction />}

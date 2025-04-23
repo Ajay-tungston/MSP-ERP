@@ -11,7 +11,6 @@ function Whatsapp() {
                         <div className="justify-start text-slate-500 text-xl font-normal font-['Urbanist'] inline-flex items-center">
                             Master <FaChevronRight className="ml-2" /> Company
                         </div>
-
                     </div>
                     <div className="left-[48px] top-[118px] absolute justify-start text-indigo-950 text-4xl font-bold font-['Urbanist'] leading-[50.40px]">Company</div>
                     <div className="left-[697px] top-[194px] absolute inline-flex justify-start items-center gap-12">
@@ -47,11 +46,7 @@ function Whatsapp() {
                                 <option value="contact2">Jane Smith</option>
                                 <option value="contact3">Alex Johnson</option>
                             </select>
-
-
-
-
-                        </div>
+                           </div>
                     </div>
 
                     <div className="w-[1415px] h-[740px] left-[48px] top-[307px] absolute inline-flex justify-start items-start gap-6">
@@ -77,7 +72,7 @@ function Whatsapp() {
                     </button>
 
                 </div>
-            </div>.
+            </div>
         </div>
     )
 }

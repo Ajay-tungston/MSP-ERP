@@ -13,15 +13,20 @@ export default function Navbar() {
     "/route-expense":"Master",
     "/commission":"Master",
     "/company":"Master",
-    "/purchase-transaction": "Transaction",                                                                                                                                  
-    "/sales": "Transaction",
+    "/purchase-transaction": "Transaction",      
+    "/sales-transaction":"Transaction",                                                                                                                          
+     "/sales": "Transaction",
     "/cashbook": "Transaction",
     "/purchase-report": "Reports",
     "/localsales-report": "Reports",
+    "/trialsales-report":"Reports",
+    "/individual-print":"Print",
+    "/routeprint":"Print",
+    "weeklyprint":"Print",
     "/item":"Master",
     "/employee":"Master",
     "/individual-report":"Reports",
-    "/sales-transaction":"Transaction",
+    "/whatsapp":"Whatsapp",
  
   };          
 console.log(location.pathname)

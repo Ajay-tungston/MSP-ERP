@@ -11,7 +11,7 @@ export default function Item() {
   const [itemData, setItemData] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const limit = 5;
+  const limit = 8;
 
   const axiosInstance = useAxiosPrivate();
   const navigate = useNavigate();

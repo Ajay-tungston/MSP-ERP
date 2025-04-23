@@ -1,435 +1,185 @@
-// import React, { useState } from "react";
-// import { XCircleIcon, PlusCircleIcon } from "@heroicons/react/24/outline";
-// import validator from "validator";
+import {useEffect,useState} from 'react'
+import { FaChevronRight } from "react-icons/fa6";
+import { CiCirclePlus } from "react-icons/ci";
+import { CiFilter } from "react-icons/ci";
+import { GoTrash } from "react-icons/go";
+import useAxiosPrivate from "../hooks/useAxiosPrivate";
+import { FaCheckSquare, FaRegSquare } from "react-icons/fa";
+import OvalSpinner from "../Components/spinners/OvalSpinner";
+import Swal from "sweetalert2";
 
-// import Swal from "sweetalert2";
-// import { useNavigate } from "react-router-dom";
-// import useAxiosPrivate from "../hooks/useAxiosPrivate";
-// function AddSupplier() {
-//   const axiosPrivate = useAxiosPrivate();
+function Sample() {
+    const [selectedRows, setSelectedRows] = useState([]);
+  const [itemData, setItemData] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+ 
+  const limit = 8;
+  const items = itemData?.items ?? [];
+  const axiosInstance = useAxiosPrivate();
+  useEffect(() => {
+    const fetchItemData = async () => {
+      try {
+        setIsLoading(true);
+        const response = await axiosInstance.get(
+          `/admin/item?page=${currentPage}&limit=${limit}`
+        );
+        setItemData(response?.data);
+      } catch (error) {
+        console.log(error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchItemData();
+  }, [currentPage]);
 
+  const toggleRowSelection = (id) => {
+    setSelectedRows((prev) =>
+      prev.includes(id) ? prev.filter((rowId) => rowId !== id) : [...prev, id]
+    );
+  };
 
-//   // State to manage form values
-//   const [formData, setFormData] = useState({
-//     supplierCode: "",
-//     supplierName: "",
-//     phone: "",
-//     address: "",
-//     whatsapp: "",
-//     advance: "",
-//     advanceDeducted: "",
-//     commission: "",
-//   });
+  const toggleAllRows = () => {
+    if (selectedRows.length === itemData?.items?.length) {
+      setSelectedRows([]);
+    } else {
+      setSelectedRows(itemData?.items?.map((item) => item?._id));
+    }
+  };
+  const handlePrevious = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
 
-//   // State to manage errors
-//   const [errors, setErrors] = useState({
-//     supplierCode: "",
-//     supplierName: "",
-//     phone: "",
-//     whatsapp: "",
-//     requiredFields: "",
-//   });
+  const handleNext = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+  return (
+    <div>
+      <div className=" h-full relative bg-gray-50  outline-1 outline-offset-[-1px] outline-white overflow-hidden mt-10">
+ </div>
+    <div className="w-[1511px] h-[1095px]  absolute bg-white rounded-3xl overflow-hidden">
+        <div className="left-[48px] top-[66px] absolute inline-flex justify-start items-center gap-3">
+        <div className="inline-flex items-center gap-1 text-slate-500 text-xl font-normal font-['Urbanist']">
+  <span>Master</span>
+  <FaChevronRight />
+  <span>Item</span>
+</div>
+  </div>   
 
-//   const [responseError, setResponseError] = useState("");
+       <div className="w-80 h-[64px] px-6 py-4 left-[1143px] top-[32px] absolute bg-indigo-500 rounded-2xl inline-flex justify-center items-center gap-3" 
+    //    onClick={()=>setPopup(true)}
+       >
+                        <div className="w-8 h-8 relative">
+                          <CiCirclePlus className="w-7 h-7 left-[2.67px] top-[2.67px] absolute text-white" />
+                          <div className="w-8 h-8 left-[32px] top-[32px] absolute origin-top-left -rotate-180 opacity-0" />
+                        </div>
+                        <div className="justify-start text-white text-xl font-bold font-['Urbanist']">Add New Items</div>
+                       </div>
 
-//   // State to manage "Same as Phone" checkbox
-//   const [sameAsPhone, setSameAsPhone] = useState(false);
+ <div className="w-36 h-[64px] px-6 py-4 left-[1303px] top-[124px] absolute bg-white hover:bg-gray-100 rounded-2xl  outline-1 outline-offset-[-1px] outline-gray-300/30 inline-flex justify-center items-center gap-3">
+               <button className=" text-[#4079ED] px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-gray-100">
+                 <CiFilter className="text-lg" /> Filter
+               </button>
+                   
+                   </div>
+        <div className="w-36 h-[64px] px-6 py-4 left-[1150px] top-[124px] absolute bg-white hover:bg-red-100 rounded-2xl  outline-1 outline-offset-[-1px] outline-red-500 inline-flex justify-center items-center gap-3">
+                <button className=" border-red-500 text-red-500 px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-red-100 font-Urbanist">
+                  <GoTrash className="text-lg" /> Delete
+                </button>
+                </div>
 
-//   // Handle change for form inputs
-//   const handleChange = (e) => {
-//     const { name, value } = e.target;
-//     setFormData({
-//       ...formData,
-//       [name]: value,
-//     });
-//   };
+        <div className="w-[1511px] left-0 top-[216px] absolute inline-flex flex-col justify-start items-start">
+        <table className="w-full border-collapse text-gray-900">
+  {/* Header */}
+  <thead>
+             <tr className="text-left text-gray-900 font-bold border-b-2 border-gray-200 bg-[#F9FAFB]">
+               <th className="p-3">
+                 <button onClick={toggleAllRows} className="text-blue-600">
+                   {selectedRows.length === itemData?.items?.length ? (
+                     <FaCheckSquare size={20} />
+                   ) : (
+                     <FaRegSquare size={20} />
+                   )}
+                 </button>
+               </th>
+               <th className="p-3">No.</th>
+               <th className="p-3">Item Code</th>
+               <th className="p-3">Item Name</th>
+             </tr>
+           </thead>
 
-//   // Handle checkbox change for "Same as Phone"
-//   const handleSameAsPhoneChange = () => {
-//     setSameAsPhone(!sameAsPhone);
-//     if (!sameAsPhone) {
-//       setFormData({
-//         ...formData,
-//         whatsapp: formData.phone,
-//       });
-//     } else {
-//       setFormData({
-//         ...formData,
-//         whatsapp: "",
-//       });
-//     }
-//   };
+  {/* Body */}
+  <tbody>
+    {isLoading ? (
+      <tr>
+        <td colSpan="3">
+          <OvalSpinner />
+        </td>
+      </tr>
+    ) : items.length === 0 ? (
+      <tr>
+        <td colSpan="3" className="text-center py-10 text-gray-500">
+          No items available
+        </td>
+      </tr>
+    ) : (
+      items.map((item, index) => (
+        <tr
+          key={item.id}
+          className="border-b border-gray-200 hover:bg-gray-50 bg-white"
+        >
+          <td className="p-3">
+            <button
+              onClick={() => toggleRowSelection(item.id)}
+              className="text-blue-600"
+            >
+              {selectedRows.includes(item.id)
+                ? <FaCheckSquare size={20}/>
+                : <FaRegSquare size={20}/>}
+            </button>
+          </td>
+          <td className="p-3">
+            {index + 1 + (currentPage - 1) * limit}
+          </td>
+          <td className="p-3">{item?.itemCode}</td>
+          <td className="p-3">{item.itemName}</td>
+        </tr>
+      ))
+    )}
+  </tbody>
+</table>
 
-//   // Handle form submission
-//   const handleSubmit = async (e) => {
-//     e.preventDefault();
-
-//     // Reset errors
-//     setErrors({
-//       supplierCode: "",
-//       supplierName: "",
-//       phone: "",
-//       whatsapp: "",
-//       requiredFields: "",
-//     });
-
-//     // Validation logic (unchanged from your original code)
-//     const newErrors = {};
-//     if (!formData.supplierCode.trim()) {
-//       newErrors.supplierCode = "Supplier Code is required.";
-//     }
-//     // ... (rest of your validation logic)
-
-//     if (Object.keys(newErrors).length > 0) {
-//       setErrors(newErrors);
-//       return;
-//     }
-
-//     try {
-//       const response = await axiosPrivate.post("/admin/supplier/add", formData);
-//       if (response.status === 201) {
-//         setFormData({
-//           supplierCode: "",
-//           supplierName: "",
-//           phone: "",
-//           address: "",
-//           whatsapp: "",
-//           advance: "",
-//           advanceDeducted: "",
-//           commission: "",
-//         });
-//         setResponseError("");
-//         Swal.fire({
-//           title: "Supplier Added Successfully!",
-//           icon: "success",
-//           draggable: true,
-//         });
-//         navigate("/supplier"); // Navigate after successful submission
-//       }
-//     } catch (error) {
-//       console.log(error);
-//       if (error?.response?.status === 400) {
-//         setResponseError(error?.response?.data?.message);
-//       } else {
-//         Swal.fire({
-//           title: "Something went wrong!",
-//           icon: "error",
-//           draggable: true,
-//         });
-//       }
-//     }
-//   };
-
-//   // Updated handleCancel with navigation
-//   const handleCancel = () => {
-//     setFormData({
-//       supplierCode: "",
-//       supplierName: "",
-//       phone: "",
-//       address: "",
-//       whatsapp: "",
-//       advance: "",
-//       advanceDeducted: "",
-//       commission: "",
-//     });
-//     setErrors({
-//       supplierCode: "",
-//       supplierName: "",
-//       phone: "",
-//       whatsapp: "",
-//       requiredFields: "",
-//     });
-//     setSameAsPhone(false);
-//     setResponseError("");
-//     navigate("/supplier"); // Navigate to suppliers list
-//   };
-
-
-
-//   return (
+         </div>
+         <div className="left-[48px] top-[118px] absolute justify-start text-indigo-950 text-4xl font-bold font-['Urbanist'] leading-[50.40px]">Item</div>
+         <div className="flex justify-between items-center mt-[730px] text-gray-600 ml-10 mr-30">
+          <span>Page {currentPage} of {totalPages}</span>
+          <div className="flex space-x-2">
+            <button
+              onClick={handlePrevious}
+              disabled={currentPage === 1}
+              className={`w-36 h-[64px] px-4 py-2 border border-gray-300 rounded-lg ${currentPage === 1 ? 'text-gray-400 cursor-not-allowed' : 'hover:bg-gray-100'}`}
+            >
+              Previous
+            </button>
+            <button
+              onClick={handleNext}
+              disabled={currentPage === totalPages}
+              className={`w-36 h-[64px] px-4 py-2 border border-gray-300 rounded-lg ${currentPage === totalPages ? 'text-gray-400 cursor-not-allowed' : 'hover:bg-gray-100'}`}
+            >
+              Next
+            </button>
+          </div>
+        </div>
+    </div>
+</div>
    
-//       <div className="w-[1280px] p-12 relative bg-white rounded-3xl inline-flex flex-col justify-start items-start gap-12">
-//     <div className="w-[1184px] pb-6 border-b border-zinc-100 inline-flex justify-start items-center gap-2.5">
-//         <div className="justify-start text-indigo-950 text-3xl font-bold font-['Urbanist'] leading-10">Add New Supplier</div>
-//     </div>
-//     {responseError && <p className="text-red-500"> {responseError}</p>}
+  )
+}
 
-//       <form
-//         onSubmit={handleSubmit}
-//         className="w-full flex flex-wrap justify-between items-start gap-12 md:px-8 lg:px-40"
-//       >
-
-//     <div className="self-stretch inline-flex justify-between items-start flex-wrap content-start">
-//         <div className="w-[570px] h-14 flex justify-start items-center gap-12">
-//             <div className="min-w-44 justify-start text-slate-500/40 text-xl font-normal font-['Urbanist']">No.</div>
-//             <div className="w-20 text-center justify-start text-indigo-950 text-xl font-bold font-['Urbanist']">001</div>
-//         </div>
-        
-
-
-
-//         <div className="w-[570px] h-14 flex justify-start items-center gap-12 mt-5">
-//         {errors.supplierCode && (
-//             <p className="text-red-500 text-sm">{errors.supplierCode}</p>
-//           )}
-//   <label htmlFor="supplierCode" className="min-w-44 justify-start">
-//     <span className="text-slate-500/40 text-xl font-normal font-['Urbanist']">Supplier Code </span>
-//     <span className="text-red-500 text-xl font-normal font-['Urbanist']">*</span>
-//   </label>
-//   <div className="w-80 px-6 py-4 bg-gray-50 rounded-xl flex justify-start items-center gap-2 ml-6">
-//     <input
-//       type="text"
-//       id="supplierCode"
-//       name="supplierCode"
-//       placeholder="Enter here"
-//       className={`bg-transparent w-full outline-none text-zinc-100 text-xl font-normal font-['Urbanist'] placeholder-zinc-300  ${errors.supplierCode ? "border-red-500" : ""
-//                 }`}
-//                 value={formData.supplierCode}
-//                 onChange={handleChange}
-//     />
-//   </div>
-// </div>
-//      {/* Supplier Name */}
-// <div className="flex justify-start items-center gap-12 mt-5">
-// {errors.supplierName && (
-//             <p className="text-red-500 text-sm">{errors.supplierName}</p>
-//           )}
-//   <label htmlFor="supplierName" className="min-w-44 justify-start">
-//     <span className="text-slate-500/40 text-xl font-normal font-['Urbanist']">Supplier Name </span>
-//     <span className="text-red-500 text-xl font-normal font-['Urbanist']">*</span>
-//   </label>
-//   <div className="w-80 px-6 py-4 bg-gray-50 rounded-xl flex justify-start items-center gap-2">
-//     <input
-//       type="text"
-//       id="supplierName"
-//       name="supplierName"
-//       placeholder="Enter here"
-//       className={`bg-transparent w-full outline-none text-zinc-100 text-xl font-normal font-['Urbanist'] placeholder-zinc-300 ${errors.supplierName ? "border-red-500" : ""
-//                 }`}
-//       value={formData.supplierName}
-//       onChange={handleChange}
-//    />
-//   </div>
-// </div>
-
-// <div className="flex justify-start items-center gap-12 mt-5">
-// {errors.address && (
-//             <p className="text-red-500 text-sm">{errors.address}</p>
-//           )}
-//   <label htmlFor="address" className="min-w-44 justify-start text-slate-500/40 text-xl font-normal font-['Urbanist']">
-//     Address
-//   </label>
-//   <div className="w-80 px-6 py-4 bg-gray-50 rounded-xl flex justify-start items-center gap-2">
-//     <input
-//       type="text"
-//       id="address"
-//       name="address"
-//       placeholder="Enter here"
-//       className={`bg-transparent w-full outline-none text-zinc-100 text-xl font-normal font-['Urbanist'] placeholder-zinc-300 ${errors.address ? "border-red-500" : ""
-//       }`}
-//         value={formData.address}
-//       onChange={handleChange}
-//    />
-//   </div>
-// </div>
-
-// <div className="flex justify-start items-center gap-12 mt-5">
-// {errors.phone && (
-//             <p className="text-red-500 text-sm">{errors.phone}</p>
-//           )}
-
-//   <label htmlFor="phone" className="min-w-44 justify-start">
-//     <span className="text-slate-500/40 text-xl font-normal font-['Urbanist']">Phone </span>
-//     <span className="text-red-500 text-xl font-normal font-['Urbanist']">*</span>
-//   </label>
-//   <div className="w-80 px-6 py-4 bg-gray-50 rounded-xl flex justify-start items-center gap-2">
-//     <input
-//       type="text"
-//       id="phone"
-//       name="phone"
-//       placeholder="Enter here"
-//       className={`bg-transparent w-full outline-none text-zinc-100 text-xl font-normal font-['Urbanist'] placeholder-zinc-300 ${errors.phone ? "border-red-500" : ""
-//       }`} 
-//       required
-//       value={formData.phone}
-//       onChange={handleChange}
-//   />
-//   </div>
-// </div>
-
-// <div className="flex justify-start items-center gap-12 mt-5">
-//   <label htmlFor="whatsapp" className="w-44 min-w-44 justify-start text-slate-500/40 text-xl font-normal font-['Urbanist']">
-//     WhatsApp
-//   </label>
-//   <div className="inline-flex flex-col justify-center items-start gap-3">
-//     <div className="w-80 px-6 py-4 bg-gray-50 rounded-xl inline-flex justify-start items-center gap-2">
-//       <input
-//         type="text"
-//         id="whatsapp"
-//         name="whatsapp"
-//         placeholder="Enter here"
-//         className="bg-transparent w-full outline-none text-zinc-100 text-xl font-normal font-['Urbanist'] placeholder-zinc-300"
-//       />
-//     </div>
-//     <label className="inline-flex justify-start items-center gap-2 cursor-pointer">
-//       <input
-//         type="checkbox"
-//         name="sameAsPhone"
-//         className="accent-blue-500 w-4 h-4 rounded opacity-0 absolute"
-//         style={{ zIndex: 2 }}
-//       />
-//       <div className="w-4 h-4 relative">
-//         <div className="w-3.5 h-3.5 left-[1.33px] top-[1.33px] absolute  outline-1 outline-offset-[-0.50px] outline-blue-500" />
-//         <div className="w-1.5 h-1 left-[5.17px] top-[6.11px] absolute  outline-1 outline-offset-[-0.50px] outline-blue-500" />
-//         <div className="w-4 h-4 left-0 top-0 absolute opacity-0" />
-//       </div>
-//       <span className="justify-start text-zinc-100 text-base font-normal font-['Urbanist']">Same as Phone</span>
-//     </label>
-//   </div>
-// </div>
-
-// <div className="flex flex-col w-full sm:w-[570px] mt-5">
-//   {/* Display Error Message Above Input if any */}
-//   {errors.advance && (
-//     <p className="text-red-500 text-sm mb-1">{errors.advance}</p>
-//   )}
-
-//   {/* Label and Input aligned as per your design */}
-//   <div className="flex justify-start items-center gap-12">
-//     <label
-//       htmlFor="advance"
-//       className="w-44 min-w-44 justify-start text-slate-500/40 text-xl font-normal font-['Urbanist']"
-//     >
-//       Advance
-//     </label>
-//     <div className="w-80 px-6 py-4 bg-gray-50 rounded-xl flex justify-start items-center gap-3">
-//       <span className="text-indigo-950 text-xl font-bold font-['Urbanist']">$</span>
-//       <input
-//         type="text"
-//         id="advance"
-//         name="advance"
-//         inputMode="decimal"
-//         placeholder="Enter here"
-//         className={`bg-transparent w-full outline-none text-zinc-100 text-xl font-normal font-['Urbanist'] placeholder-zinc-300 ${errors.advance ? "border-b border-red-500" : ""
-//           }`}
-//         value={formData.advance}
-//         onChange={handleChange}
-//       />
-//     </div>
-//   </div>
-// </div>
-
-
-// <div className="flex flex-col w-full sm:w-[570px] mt-5">
-//   {/* Display Error Message Above Input if any */}
-//   {errors.advanceDeducted && (
-//     <p className="text-red-500 text-sm mb-1">{errors.advanceDeducted}</p>
-//   )}
-
-//   {/* Label and Input aligned as per your design */}
-//   <div className="flex justify-start items-center gap-12">
-//     <label
-//       htmlFor="advanceDeducted"
-//       className="w-44 min-w-44 justify-start text-slate-500/40 text-xl font-normal font-['Urbanist']"
-//     >
-//       Advance Deducted
-//     </label>
-//     <div className="w-80 px-6 py-4 bg-gray-50 rounded-xl flex justify-start items-center gap-3">
-//       <span className="text-indigo-950 text-xl font-bold font-['Urbanist']">$</span>
-//       <input
-//         type="text"
-//         id="advanceDeducted"
-//         name="advanceDeducted"
-//         placeholder="Enter here"
-//         inputMode="decimal"
-//         className={`bg-transparent w-full outline-none text-zinc-100 text-xl font-normal font-['Urbanist'] placeholder-zinc-300 ${errors.advanceDeducted ? "border-b border-red-500" : ""
-//           }`}
-//         value={formData.advanceDeducted}
-//         onChange={handleChange}
-//       />
-//     </div>
-//   </div>
-// </div>
-
-
-// <div className="flex flex-col w-full sm:w-[570px] mt-5">
-//   {/* Display Error Message Above Input if any */}
-//   {errors.commission && (
-//     <p className="text-red-500 text-sm mb-1">{errors.commission}</p>
-//   )}
-
-//   {/* Label and Styled Input */}
-//   <div className="flex justify-start items-center gap-12">
-//     <label
-//       htmlFor="commissionType"
-//       className="min-w-44 justify-start text-slate-500/40 text-xl font-normal font-['Urbanist']"
-//     >
-//       Commission Type
-//     </label>
-
-//     <div className="w-80 px-6 py-4 bg-gray-50 rounded-tl-xl rounded-tr-xl flex justify-between items-center">
-//       <input
-//         type="text"
-//         id="commissionType"
-//         name="commission"
-//         placeholder="Enter"
-//         className={`bg-transparent w-full outline-none text-zinc-100 text-xl font-normal font-['Urbanist'] placeholder-zinc-300 ${
-//           errors.commission ? "border-b border-red-500" : ""
-//         }`}
-//         value={formData.commission}
-//         onChange={handleChange}
-//       />
-//       <div className="w-6 h-6 relative pointer-events-none -ml-6">
-//         <div className="w-4 h-2 left-[4.08px] top-[7.95px] absolute outline-[1.5px] outline-offset-[-0.75px] outline-zinc-100" />
-//         <div className="w-6 h-6 left-[24px] top-[24px] absolute origin-top-left -rotate-180 opacity-0" />
-//       </div>
-//     </div>
-//   </div>
-
-//   {/* Optional: Global required field error */}
-//   {errors.requiredFields && (
-//     <p className="text-red-500 text-sm mt-4">{errors.requiredFields}</p>
-//   )}
-// </div>
-
-
-//     </div>
-//     <div className="self-stretch inline-flex justify-end items-center gap-4">
-//         <div className="w-40 px-6 py-4 bg-white rounded-2xl  outline-1 outline-offset-[-1px] outline-red-500 flex justify-center items-center gap-3">
-//             <div className="w-8 h-8 relative">
-//                 <div className="w-2 h-2 left-[12.23px] top-[12.23px] absolute  outline-2 outline-offset-[-1px] outline-red-500" />
-//                 <div className="w-2 h-2 left-[12.23px] top-[12.23px] absolute  outline-2 outline-offset-[-1px] outline-red-500" />
-//                 <div className="w-7 h-7 left-[2.67px] top-[2.67px] absolute  outline-2 outline-offset-[-1px] outline-red-500" />
-//                 <div className="w-8 h-8 left-0 top-0 absolute opacity-0" />
-//             </div>
-//             <div className="justify-start text-red-500 text-xl font-bold font-['Urbanist']">Cancel</div>
-//         </div>
-//         <div className="w-40 px-6 py-4 bg-blue-500 rounded-2xl flex justify-center items-center gap-3">
-//             <div className="w-8 h-8 relative">
-//                 <div className="w-7 h-7 left-[2.67px] top-[2.67px] absolute  outline-2 outline-offset-[-1px] outline-white" />
-//                 <div className="w-2.5 h-0 left-[10.67px] top-[16px] absolute  outline-2 outline-offset-[-1px] outline-white" />
-//                 <div className="w-0 h-2.5 left-[16px] top-[10.67px] absolute  outline-2 outline-offset-[-1px] outline-white" />
-//                 <div className="w-8 h-8 left-0 top-0 absolute opacity-0" />
-//             </div>
-//             <div className="justify-start text-white text-xl font-bold font-['Urbanist']">Save</div>
-//         </div>
-//     </div>
-//    </form>
-// </div>
- 
-//   )
-// }
-
-// export default AddSupplier;
- import React from 'react'
- 
- function Sample() {
-   return (
-     <div>
-       
-     </div>
-   )
- }
- 
- export default Sample
- 
+export default Sample

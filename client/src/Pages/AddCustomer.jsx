@@ -1,11 +1,10 @@
 import React, { useState } from "react";
 import Swal from "sweetalert2";
-import { useNavigate } from "react-router-dom";
 import { XCircleIcon, PlusCircleIcon } from "@heroicons/react/24/solid";
 import useAxiosPrivate from "../hooks/useAxiosPrivate";
 
 const AddCustomerModal = ({ onClose ,setPopup}) => {
-  const navigate = useNavigate();
+  
   const axiosInstance = useAxiosPrivate();
   const safeOnClose = typeof onClose === "function" ? onClose : () => {};
 

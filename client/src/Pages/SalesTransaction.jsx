@@ -2,6 +2,7 @@
 import { Plus, } from "lucide-react";
 import { useState } from "react";
 import { Bookmark, X } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 const SalesRegister = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -23,7 +24,7 @@ const SalesRegister = () => {
       subtotal: "$200.00",
     },
   ];
-
+const navigate=useNavigate()
   return (
     <div className="p-6 bg-white mt-10">
       <div className="flex items-center justify-between mb-6">
@@ -113,7 +114,7 @@ const SalesRegister = () => {
                       <td className="px-4 py-2">{item.address}</td>
                       <td className="px-4 py-2">{item.date}</td>
                       <td className="px-4 py-2 text-center">
-                        <button className="text-purple-500 hover:text-purple-700">
+                        <button className="text-[#ec2626] hover:text-purple-700" onClick={()=>navigate('/sales')}>
                           <Bookmark size={18} />
                         </button>
                       </td>

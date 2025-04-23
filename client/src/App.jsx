@@ -105,7 +105,7 @@ function App() {
 
 
 
-        <Route path='/sample'element={<Sample/>}/> 
+        
       </Routes>
     </>
   );

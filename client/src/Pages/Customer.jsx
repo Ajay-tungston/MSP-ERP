@@ -7,7 +7,7 @@ import useAxiosPrivate from '../hooks/useAxiosPrivate';
 import { FaChevronRight } from "react-icons/fa6";
 
 
-function Sample() {
+const CustomHeader=()=>{
     // State for dynamic customers list and selected rows
     const [customers, setCustomers] = useState([]);
     const [selectedRows, setSelectedRows] = useState([]);
@@ -192,4 +192,4 @@ function Sample() {
   )
 }
 
-export default Sample
+export default CustomHeader

@@ -126,7 +126,7 @@ const getItemList = async (req, res) => {
         }
       : {};
     const items = await Item.find(query).select(
-      "itemName itemCode"
+      "itemName itemCode "
     );
     return res.status(200).json(items);
   } catch (error) {

@@ -3,22 +3,41 @@ const Item = require("../../../models/Item");
 const PurchaseEntry = require("../../../models/PurchaseEntry");
 const Supplier = require("../../../models/Supplier");
 const getNextCounterNumber = require("../../../utils/counter");
+const validator=require("validator")
 
 const createPurchaseEntry = async (req, res) => {
   //added validation in schema
   try {
-    const { supplierId, items } = req.body;
+    const { supplierId, items, dateOfPurchase } = req.body;
+    console.log(req.body)
+    if (!supplierId || !items || !dateOfPurchase) {
+      return res.status(400).json({ error: "all feilds are required" });
+    }
 
     const supplier = await Supplier.findById(supplierId);
-    
+
     if (!supplier) {
       return res.status(404).json({ message: "Supplier not found" });
+    }
+    if (!validator.isISO8601(dateOfPurchase)) {
+      return res.status(400).json({ error: "Invalid date format" });
+    }
+    
+    // Optional: Check if the date is not in the future
+    const inputDate = new Date(dateOfPurchase);
+    const now = new Date();
+    
+    if (inputDate > now) {
+      return res
+        .status(400)
+        .json({ error: "Date of purchase cannot be in the future" });
     }
 
     const newPurchaseNumber = await getNextCounterNumber("purchaseNumber");
 
     let totalAmount = 0;
-    let totalQuantity = 0;
+    let totalKg = 0;
+    let totalBox=0
     const purchaseItems = [];
 
     for (let itemDetails of items) {
@@ -29,21 +48,22 @@ const createPurchaseEntry = async (req, res) => {
         return res.status(404).json({ message: `Item ${itemName} not found` });
       }
 
-      const convertedQuantity =
-        unitType === "box" ? quantity * item.conversionRatio : quantity;
+      // const convertedQuantity =
+      //   unitType === "box" ? quantity * item.conversionRatio : quantity;
 
-      const totalCost = convertedQuantity * unitPrice;
+      const totalCost = quantity * unitPrice;
 
       purchaseItems.push({
         item: item._id,
-        quantity: convertedQuantity,
-        remainingQuantity: convertedQuantity,
+        quantity: quantity,
+        quantityType:unitType,
+        remainingQuantity: quantity,
         unitPrice,
         totalCost,
       });
-
       totalAmount += totalCost;
-      totalQuantity += convertedQuantity;
+      unitType==="kg"?
+      totalKg += quantity:totalBox+=quantity
     }
 
     const commissionPaid = (totalAmount * supplier.commission) / 100;
@@ -53,8 +73,10 @@ const createPurchaseEntry = async (req, res) => {
       supplier: supplier._id,
       items: purchaseItems,
       totalAmount,
-      totalQuantity,
+      totalBox,
+      totalKg,
       commissionPaid,
+      dateOfPurchase,
     });
 
     await purchaseEntry.save();
@@ -86,8 +108,9 @@ const getAllPurchaseEntries = async (req, res) => {
       filter.dateOfPurchase = {
         $gte: new Date(startDate),
         $lte: endDate
-        ? new Date(new Date(endDate).setUTCHours(23, 59, 59, 999))
-        : new Date()      };
+          ? new Date(new Date(endDate).setUTCHours(23, 59, 59, 999))
+          : new Date(),
+      };
     }
     const purchaseEntries = await PurchaseEntry.find(filter)
       .populate("supplier items.item")
@@ -109,15 +132,18 @@ const getAllPurchaseEntries = async (req, res) => {
   }
 };
 
-const getPurchaseCounter=async(req,res)=>{
+const getPurchaseCounter = async (req, res) => {
   try {
-    const purchaseNo=await Counter.find({name:"purchaseNumber"})
+    const purchaseNo = await Counter.find({ name: "purchaseNumber" });
     res.status(200).json({ count: purchaseNo ? purchaseNo[0].value : 0 });
-    
   } catch (error) {
-    console.log(error)
+    console.log(error);
     res.status(500).json({ message: "Server error" });
   }
-}
+};
 
-module.exports = { createPurchaseEntry, getAllPurchaseEntries,getPurchaseCounter };
+module.exports = {
+  createPurchaseEntry,
+  getAllPurchaseEntries,
+  getPurchaseCounter,
+};

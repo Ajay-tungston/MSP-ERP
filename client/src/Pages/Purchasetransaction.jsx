@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import useAxiosPrivate from "../hooks/useAxiosPrivate";
 import {
   Combobox,
@@ -6,14 +6,18 @@ import {
   ComboboxOption,
   ComboboxOptions,
 } from "@headlessui/react";
+import { Trash2 } from "lucide-react";
+import { debounce } from "lodash";
+import OvalSpinner from "../Components/spinners/OvalSpinner";
+import { useNavigate } from "react-router-dom";
+import Swal from "sweetalert2";
 
 function Purchasetransaction() {
   const [items, setItems] = useState([
     {
-      id: 1,
       name: "",
-      qty: "",
-      unit: "box",
+      kg: "",
+      box: "",
       price: "",
       total: "0.00",
     },
@@ -26,61 +30,105 @@ function Purchasetransaction() {
     const updatedItems = [...items];
     const item = { ...updatedItems[index], [name]: value };
 
-    const quantity = parseFloat(item.qty || 0);
-    const price = parseFloat(item.price || 0);
-    item.total = (quantity * price).toFixed(2);
+    let quantity = 0;
+    if (item.kg) {
+      quantity = parseFloat(item.kg) || 0;
+    } else if (item.box) {
+      quantity = parseFloat(item.box) || 0;
+    }
+    item.total = (quantity * item.price).toFixed(2);
 
     updatedItems[index] = item;
     setItems(updatedItems);
     setError("");
   };
+
   const [supplierSearch, setSupplierSearch] = useState("");
   const [supplierList, setSupplierList] = useState([]);
   const [selectedSupplier, setSelectedSupplier] = useState(null);
+  const [supplierLoading, setSupplierLoading] = useState(false);
+  const [supplierNameInputFocused, setSupplierNameInputFocused] =
+    useState(false);
+  const [supplierCodeInputFocused, setSupplierCodeInputFocused] =
+    useState(false);
 
   const [itemSearch, setItemSearch] = useState("");
   const [itemList, setItemList] = useState([]);
+  const [itemLoading, setItemLoading] = useState(false);
+  const [itemInputFocused, setItemInputFocused] = useState(false);
 
-  const [purchaseCount, setPurchaseCount]=useState(1)
+  const [purchaseCount, setPurchaseCount] = useState(1);
+  const [submitLoading, setSubmitloading] = useState(false);
+
+  const [dateOfPurchase, setDateOfPurchase] = useState(
+    new Date().toLocaleDateString("en-CA")
+  );
 
   const axiosInstance = useAxiosPrivate();
+  const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchSupplier = async () => {
+  const debouncedFetchSupplier = useCallback(
+    debounce(async (searchTerm) => {
+      setSupplierLoading(true);
       try {
         const response = await axiosInstance(
-          `/admin/supplier/list?search=${supplierSearch}`
+          `/admin/supplier/list?search=${searchTerm}`
         );
         setSupplierList(response.data);
         console.log(response.data);
       } catch (error) {
         console.log(error);
+      } finally {
+        setSupplierLoading(false);
       }
-    };
-    fetchSupplier();
-  }, [supplierSearch]);
+    }, 300),
+    []
+  );
 
   useEffect(() => {
-    const fetchItem = async () => {
+    if (supplierSearch) {
+      debouncedFetchSupplier(supplierSearch);
+    } else {
+      setSupplierList([]);
+    }
+    return () => {
+      debouncedFetchSupplier.cancel();
+    };
+  }, [supplierSearch, debouncedFetchSupplier]);
+
+  const debouncedFetchItem = useCallback(
+    debounce(async (searchTerm) => {
+      setItemLoading(true);
       try {
         const response = await axiosInstance(
-          `/admin/item/list?search=${itemSearch}`
+          `/admin/item/list?search=${searchTerm}`
         );
         setItemList(response.data);
         console.log(response.data);
       } catch (error) {
         console.log(error);
+      } finally {
+        setItemLoading(false);
       }
+    }, 300),
+    []
+  );
+
+  useEffect(() => {
+    if (itemSearch) {
+      debouncedFetchItem(itemSearch);
+    } else {
+      setItemList([]);
+    }
+    return () => {
+      debouncedFetchItem.cancel();
     };
-    fetchItem();
-  }, [itemSearch]);
+  }, [itemSearch, debouncedFetchItem]);
 
   useEffect(() => {
     const fetchPurchaseCount = async () => {
       try {
-        const response = await axiosInstance(
-          `/admin/purchase/count`
-        );
+        const response = await axiosInstance(`/admin/purchase/count`);
         setPurchaseCount((Number(response?.data?.count) || 0) + 1);
       } catch (error) {
         console.log(error);
@@ -89,30 +137,9 @@ function Purchasetransaction() {
     fetchPurchaseCount();
   }, []);
 
-  const handleAddItem = () => {
-    const lastItem = items[items.length - 1];
-
-    if (!lastItem) {
-      setItems([
-        ...items,
-        { id: "", name: "", kg: "", box: "", price: "", total: "" },
-      ]);
-      return;
-    }
-
-    const requiredFields = ["id", "name", "kg", "box", "price"];
-    const isComplete = requiredFields.every((field) => lastItem[field] !== "");
-
-    if (!isComplete) {
-      setError(" ");
-      return;
-    }
-
-    setItems([
-      ...items,
-      { id: "", name: "", kg: "", box: "", price: "", total: "" },
-    ]);
-    setError("");
+  const handleDeleteItem = (indexToDelete) => {
+    const updatedItems = items.filter((_, index) => index !== indexToDelete);
+    setItems(updatedItems);
   };
 
   const handleKeyDown = (e, rowIndex, colIndex) => {
@@ -133,235 +160,362 @@ function Purchasetransaction() {
     );
   }, [items]);
 
-  const totalQuantity = items.reduce((acc, item) => {
-    const qty = parseFloat(item.qty);
+  const totalQuantityInKg = items.reduce((acc, item) => {
+    const qty = parseFloat(item.kg);
     return acc + (isNaN(qty) ? 0 : qty);
   }, 0);
-  
-  const totalPrice = items.reduce((acc, item) => {
-    const qty = parseFloat(item.qty);
-    const price = parseFloat(item.price);
-    const subtotal = (!isNaN(qty) && !isNaN(price)) ? qty * price : 0;
-    return acc + subtotal;
+  const totalQuantityInBox = items.reduce((acc, item) => {
+    const qty = parseFloat(item.box);
+    return acc + (isNaN(qty) ? 0 : qty);
   }, 0);
 
+  const totalPrice = items
+    .reduce((acc, item) => {
+      const total = parseFloat(item.total);
+      return acc + (isNaN(total) ? 0 : total);
+    }, 0)
+    .toFixed(2);
+
+  const marketFee =
+    totalQuantityInBox * selectedSupplier?.marketFee +
+    totalQuantityInKg * (selectedSupplier?.marketFee / 30); //set 1box=30kg
+  const commission = selectedSupplier?.commission
+    ? totalPrice * (selectedSupplier.commission / 100)
+    : 0;
+
+  const totalDeduction = Number(marketFee) + Number(commission);
+
   const handleSubmit = async () => {
+    setSubmitloading(true);
     try {
       const formattedItems = items.map((item) => ({
         itemName: item.name,
-        quantity: Number(item.qty),
+        quantity: Number(item.kg ? item.kg : item.box),
         unitPrice: Number(item.price),
-        unitType: item.unit,
+        unitType: item.kg ? "kg" : "box",
       }));
       const response = await axiosInstance.post("/admin/purchase/add", {
         supplierId: selectedSupplier?._id,
         items: formattedItems,
+        dateOfPurchase,
       });
-      alert("sgfsaug")
-      console.log(response)
+      Swal.fire({
+        title: "Purchase transaction added successfully!",
+        icon: "success",
+        draggable: true,
+      });
+      setItems([
+        {
+          name: "",
+          kg: "",
+          box: "",
+          price: "",
+          total: "0.00",
+        },
+      ]);
+      setSupplierSearch("");
+      setSupplierList([]);
+      setSelectedSupplier("");
+      setItemSearch("");
+      setItemList([]);
+      navigate("/");
     } catch (error) {
-      console.log(error)
+      Swal.fire({
+        title: "Something went wrong!",
+        icon: "error",
+        draggable: true,
+      });
+      console.log(error);
+    } finally {
+      setSubmitloading(false);
     }
   };
 
   return (
-    <div className="w-full min-h-screen bg-white rounded-3xl p-8 overflow-x-hidden mt-10">
-      <div className="max-w-screen-xl mx-auto flex flex-col gap-12">
-        {/* Page Header */}
-        <div className="pb-6 border-b border-gray-400">
-          <h1 className="text-indigo-950 text-4xl font-bold font-['Urbanist']">
-            Add New Purchase Transaction
-          </h1>
+    <>
+      {submitLoading ? (
+        <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50">
+          <OvalSpinner />
         </div>
-
-        {/* Top Form Fields */}
-        <div className="flex flex-col gap-8">
-          {/* First Row */}
-          <div className="flex gap-8 flex-wrap">
-            <div className="flex items-center gap-6 w-full md:w-[48%]">
-              <label className="min-w-44 text-slate-500 text-xl font-normal">
-                Purchase No.
-              </label>
-              <div className="flex-1 px-6 py-4 bg-gray-50 rounded-xl text-indigo-950 text-xl font-bold">
-                {purchaseCount}
-              </div>
+      ) : (
+        <div className="w-full min-h-screen bg-white rounded-3xl p-8 overflow-x-hidden mt-10">
+          <div className="max-w-screen-xl mx-auto flex flex-col gap-12">
+            {/* Page Header */}
+            <div className="pb-6 border-b border-gray-400">
+              <h1 className="text-indigo-950 text-4xl font-bold font-['Urbanist']">
+                Add New Purchase Transaction
+              </h1>
             </div>
-            <div className="flex items-center gap-6 w-full md:w-[48%]">
-              <label className="min-w-44 text-slate-500 text-xl font-normal">
-                Date of Purchase <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="date"
-                className="flex-1 px-6 py-4 bg-gray-50 rounded-xl text-gray-400 text-xl"
-                placeholder="DD/MM/YYYY"
-              />
-            </div>
-          </div>
 
-          {/* Second Row */}
-          <div className="flex gap-8 flex-wrap">
-            {/* Supplier Code */}
-            <div className="flex items-center gap-6 w-full md:w-[48%]">
-              <label className="min-w-44 text-slate-500 text-xl font-normal">
-                Supplier Code <span className="text-red-500">*</span>
-              </label>
-              <div className="flex-1 relative">
-                <Combobox
-                  value={selectedSupplier}
-                  onChange={setSelectedSupplier}
-                  onClose={() => setSupplierSearch("")}
-                >
-                  <ComboboxInput
-                    aria-label="Supplier Code"
-                    displayValue={(supplier) => supplier?.supplierCode}
-                    onChange={(e) => setSupplierSearch(e.target.value)}
-                    placeholder="Search by code..."
-                    className="w-full px-6 py-4 bg-gray-50 rounded-xl text-gray-800 text-xl "
+            {/* Top Form Fields */}
+            <div className="flex flex-col gap-8">
+              {/* First Row */}
+              <div className="flex gap-8 flex-wrap">
+                <div className="flex items-center gap-6 w-full md:w-[48%]">
+                  <label className="min-w-44 text-slate-500 text-xl font-normal">
+                    Purchase No.
+                  </label>
+                  <div className="flex-1 px-6 py-4 bg-gray-50 rounded-xl text-indigo-950 text-xl font-bold">
+                    {purchaseCount}
+                  </div>
+                </div>
+                <div className="flex items-center gap-6 w-full md:w-[48%]">
+                  <label className="min-w-44 text-slate-500 text-xl font-normal">
+                    Date of Purchase <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="date"
+                    value={dateOfPurchase}
+                    onChange={(e) => setDateOfPurchase(e.target.value)}
+                    className="flex-1 px-6 py-4 bg-gray-50 rounded-xl text-gray-400 text-xl"
+                    placeholder="DD/MM/YYYY"
                   />
-                  <div className="absolute left-0 right-0 mt-1 z-10">
-                    <ComboboxOptions className="w-full border border-gray-200 rounded-xl bg-white max-h-60 overflow-y-auto shadow-lg empty:invisible">
-                      {supplierList.map((supplier) => (
-                        <ComboboxOption
-                          key={supplier._id}
-                          value={supplier}
-                          className="px-6 py-3 cursor-pointer text-gray-700 hover:bg-gray-100 data-[focus]:bg-blue-100"
-                        >
-                          {supplier.supplierCode}
-                        </ComboboxOption>
-                      ))}
-                    </ComboboxOptions>
+                </div>
+              </div>
+
+              {/* Second Row */}
+              <div className="flex gap-8 flex-wrap">
+                {/* Supplier Code */}
+                <div className="flex items-center gap-6 w-full md:w-[48%]">
+                  <label className="min-w-44 text-slate-500 text-xl font-normal">
+                    Supplier Code <span className="text-red-500">*</span>
+                  </label>
+                  <div className="flex-1 relative">
+                    <Combobox
+                      value={selectedSupplier}
+                      onChange={setSelectedSupplier}
+                      onClose={() => setSupplierSearch("")}
+                    >
+                      <ComboboxInput
+                        aria-label="Supplier Code"
+                        displayValue={(supplier) => supplier?.supplierCode}
+                        onChange={(e) => setSupplierSearch(e.target.value)}
+                        onFocus={() => setSupplierCodeInputFocused(true)}
+                        onBlur={() => setSupplierCodeInputFocused(false)}
+                        autoComplete="off"
+                        placeholder="Search by code..."
+                        className="w-full px-6 py-4 bg-gray-50 rounded-xl text-gray-800 text-xl "
+                      />
+                      <div className="absolute left-0 right-0 mt-1 z-10">
+                        {supplierLoading ? (
+                          supplierCodeInputFocused && (
+                            <div className="w-full border border-gray-200 rounded-xl bg-white max-h-60 overflow-y-auto shadow-lg px-6 py-3 text-gray-700">
+                              <OvalSpinner
+                                width="w-6"
+                                height="h-6"
+                                border="border-2"
+                              />
+                            </div>
+                          )
+                        ) : supplierList?.length > 0 ? (
+                          <ComboboxOptions className="w-full border border-gray-200 rounded-xl bg-white max-h-60 overflow-y-auto shadow-lg empty:invisible">
+                            {supplierList?.map((supplier) => (
+                              <ComboboxOption
+                                key={supplier._id}
+                                value={supplier}
+                                className="px-6 py-3 cursor-pointer text-gray-700 hover:bg-gray-100 data-[focus]:bg-blue-100"
+                              >
+                                {supplier.supplierCode}
+                              </ComboboxOption>
+                            ))}
+                          </ComboboxOptions>
+                        ) : (
+                          supplierCodeInputFocused &&
+                          !selectedSupplier && (
+                            <div className="w-full border border-gray-200 rounded-xl bg-white max-h-60 overflow-y-auto shadow-lg px-6 py-3 text-gray-700">
+                             No matching suppliers
+                            </div>
+                          )
+                        )}
+                      </div>
+                    </Combobox>
                   </div>
-                </Combobox>
+                </div>
+
+                {/* Supplier Name */}
+                <div className="flex items-center gap-6 w-full md:w-[48%]">
+                  <label className="min-w-44 text-slate-500 text-xl font-normal">
+                    Supplier Name <span className="text-red-500">*</span>
+                  </label>
+                  <div className="flex-1 relative">
+                    <Combobox
+                      value={selectedSupplier}
+                      onChange={setSelectedSupplier}
+                      onClose={() => setSupplierSearch("")}
+                    >
+                      <ComboboxInput
+                        aria-label="Supplier Name"
+                        displayValue={(supplier) => supplier?.supplierName}
+                        onChange={(e) => setSupplierSearch(e.target.value)}
+                        onFocus={() => setSupplierNameInputFocused(true)}
+                        onBlur={() => setSupplierNameInputFocused(false)}
+                        placeholder="Search by name..."
+                        autoComplete="off"
+                        className="w-full px-6 py-4 bg-gray-50 rounded-xl text-gray-800 text-xl "
+                      />
+                      <div className="absolute left-0 right-0 mt-1 z-10">
+                        {supplierLoading ? (
+                          supplierNameInputFocused && (
+                            <div className="w-full border border-gray-200 rounded-xl bg-white max-h-60 overflow-y-auto shadow-lg px-6 py-3 text-gray-700">
+                              <OvalSpinner
+                                width="w-6"
+                                height="h-6"
+                                border="border-2"
+                              />
+                            </div>
+                          )
+                        ) : supplierList?.length > 0 ? (
+                          <ComboboxOptions className="w-full border border-gray-200 rounded-xl bg-white max-h-60 overflow-y-auto shadow-lg empty:invisible">
+                            {supplierList.map((supplier) => (
+                              <ComboboxOption
+                                key={supplier._id}
+                                value={supplier}
+                                className="px-6 py-3 cursor-pointer text-gray-700 hover:bg-gray-100 data-[focus]:bg-blue-100"
+                              >
+                                {supplier.supplierName}
+                              </ComboboxOption>
+                            ))}
+                          </ComboboxOptions>
+                        ) : (
+                          supplierNameInputFocused &&
+                          !selectedSupplier && (
+                            <div className="w-full border border-gray-200 rounded-xl bg-white max-h-60 overflow-y-auto shadow-lg px-6 py-3 text-gray-700">
+                             No matching suppliers
+                            </div>
+                          )
+                        )}
+                      </div>
+                    </Combobox>
+                  </div>
+                </div>
               </div>
             </div>
 
-            {/* Supplier Name */}
-            <div className="flex items-center gap-6 w-full md:w-[48%]">
-              <label className="min-w-44 text-slate-500 text-xl font-normal">
-                Supplier Name <span className="text-red-500">*</span>
-              </label>
-              <div className="flex-1 relative">
-                <Combobox
-                  value={selectedSupplier}
-                  onChange={setSelectedSupplier}
-                  onClose={() => setSupplierSearch("")}
+            {/* Item Table Section */}
+            <div className="flex flex-col">
+              <div className="pb-6 border-b border-gray-400">
+                <h2 className="text-indigo-950 text-3xl font-semibold">
+                  Item Details
+                </h2>
+              </div>
+
+              {/* Table Header */}
+              <div className="w-full grid grid-cols-12 gap-4 bg-gray-50 px-6 py-4 font-bold text-indigo-950 text-xl border-b">
+                <div className="col-span-1">No.</div>
+                <div className="col-span-3">Item Name</div>
+                <div className="col-span-2">Qty (KG)</div>
+                <div className="col-span-2">Qty (Box)</div>
+                <div className="col-span-2">Unit Price</div>
+                <div className="col-span-1">Subtotal</div>
+              </div>
+
+              {/* Dynamic Item Rows */}
+              {items.map((item, index) => (
+                <div
+                  key={index}
+                  className="relative w-full grid grid-cols-12 gap-4  px-6 py-4 text-xl border-b hover:bg-gray-100 group"
                 >
-                  <ComboboxInput
-                    aria-label="Supplier Name"
-                    displayValue={(supplier) => supplier?.supplierName}
-                    onChange={(e) => setSupplierSearch(e.target.value)}
-                    placeholder="Search by name..."
-                    className="w-full px-6 py-4 bg-gray-50 rounded-xl text-gray-800 text-xl "
+                  {/* No. */}
+                  <input
+                    type="number"
+                    name="id"
+                    value={index + 1}
+                    // onChange={(e) => handleInputChange(index, e)}
+                    readOnly
+                    onKeyDown={(e) => handleKeyDown(e, index, 0)}
+                    ref={(el) => {
+                      if (!inputRefs.current[index])
+                        inputRefs.current[index] = [];
+                      inputRefs.current[index][0] = el;
+                    }}
+                    className="col-span-1 bg-white border-none outline-none placeholder:text-gray-400 w-full"
+                    placeholder="No."
                   />
-                  <div className="absolute left-0 right-0 mt-1 z-10">
-                    <ComboboxOptions className="w-full border border-gray-200 rounded-xl bg-white max-h-60 overflow-y-auto shadow-lg empty:invisible">
-                      {supplierList.map((supplier) => (
-                        <ComboboxOption
-                          key={supplier._id}
-                          value={supplier}
-                          className="px-6 py-3 cursor-pointer text-gray-700 hover:bg-gray-100 data-[focus]:bg-blue-100"
-                        >
-                          {supplier.supplierName}
-                        </ComboboxOption>
-                      ))}
-                    </ComboboxOptions>
+
+                  {/* Item Name */}
+                  <div className="col-span-3">
+                    <Combobox
+                      value={item.name}
+                      onChange={(selectedItem) => {
+                        const updatedItems = [...items];
+                        updatedItems[index].name = selectedItem.itemName;
+                        setItems(updatedItems);
+                      }}
+                    >
+                      <div className="relative w-full">
+                        <ComboboxInput
+                          onChange={(e) => setItemSearch(e.target.value)}
+                          displayValue={(item) => item}
+                          autoComplete="off"
+                          placeholder="Item Name"
+                          onFocus={() => setItemInputFocused(index)}
+                          onBlur={() => setItemInputFocused(false)}
+                          className="bg-white border-none outline-none placeholder:text-gray-400 w-full h-full"
+                        />
+                        {itemLoading ? (
+                          itemInputFocused === index && (
+                            <div className="absolute z-10 w-full border border-gray-200 rounded-xl bg-white max-h-60 overflow-y-auto shadow-lg px-6 py-3 text-gray-700">
+                              <OvalSpinner
+                                width="w-6"
+                                height="h-6"
+                                border="border-2"
+                              />
+                            </div>
+                          )
+                        ) : itemList?.length > 0 ? (
+                          <ComboboxOptions className="absolute z-10 w-full mt-1 border border-gray-200 rounded-xl bg-white max-h-60 overflow-y-auto shadow-lg empty:invisible">
+                            {itemList.map((itemOption) => (
+                              <ComboboxOption
+                                key={itemOption._id}
+                                value={itemOption}
+                                className="px-6 py-3 cursor-pointer text-gray-700 hover:bg-gray-100 data-[focus]:bg-blue-100"
+                              >
+                                {itemOption.itemName}
+                              </ComboboxOption>
+                            ))}
+                          </ComboboxOptions>
+                        ) : (
+                          itemInputFocused === index &&
+                          !item.name && (
+                            <div className="absolute z-10 w-full border border-gray-200 rounded-xl bg-white max-h-60 overflow-y-auto shadow-lg px-6 py-3 text-gray-700">
+                              No matching items.
+                            </div>
+                          )
+                        )}
+                      </div>
+                    </Combobox>
                   </div>
-                </Combobox>
-              </div>
-            </div>
-          </div>
-        </div>
 
-        {/* Item Table Section */}
-        <div className="flex flex-col gap-6">
-          <div className="pb-6 border-b border-gray-400">
-            <h2 className="text-indigo-950 text-3xl font-semibold">
-              Item Details
-            </h2>
-          </div>
+                  {/* Quantity */}
+                  <input
+                    type="number"
+                    name="kg"
+                    value={item.kg}
+                    disabled={
+                      !itemList.some((option) => option.itemName === item.name)
+                    }
+                    onChange={(e) => handleInputChange(index, e)}
+                    onKeyDown={(e) => handleKeyDown(e, index, 2)}
+                    ref={(el) => (inputRefs.current[index][2] = el)}
+                    className="col-span-2 bg-white border-none outline-none placeholder:text-gray-400 w-full"
+                    placeholder="Qty(Kg)"
+                  />
 
-          {/* Table Header */}
-          <div className="w-full grid grid-cols-12 gap-4 bg-gray-50 px-6 py-4 font-bold text-indigo-950 text-xl border-b">
-            <div className="col-span-1">No.</div>
-            <div className="col-span-4">Item Name</div>
-            <div className="col-span-2">Qty</div>
-            <div className="col-span-1">Unit</div>
-            <div className="col-span-2">Unit Price</div>
-            <div className="col-span-1">Subtotal</div>
-          </div>
-
-          {/* Dynamic Item Rows */}
-          {items.map((item, index) => (
-            <div
-              key={index}
-              className="w-full grid grid-cols-12 gap-4 bg-white px-6 py-4 text-xl border-b"
-            >
-              {/* No. */}
-              <input
-                type="number"
-                name="id"
-                value={item.id}
-                onChange={(e) => handleInputChange(index, e)}
-                onKeyDown={(e) => handleKeyDown(e, index, 0)}
-                ref={(el) => {
-                  if (!inputRefs.current[index]) inputRefs.current[index] = [];
-                  inputRefs.current[index][0] = el;
-                }}
-                className="col-span-1 bg-white border-none outline-none placeholder:text-gray-400 w-full"
-                placeholder="No."
-              />
-
-              {/* Item Name */}
-              <div className="col-span-4">
-                <Combobox
-                  value={item.name}
-                  onChange={(selectedItem) => {
-                    const updatedItems = [...items];
-                    updatedItems[index].name = selectedItem.itemName; // Assuming selectedItem contains itemName
-                    updatedItems[index].price = selectedItem.price; // Update price as well
-                    setItems(updatedItems);
-                  }}
-                >
-                  <div className="relative w-full">
-                    <ComboboxInput
-                      onChange={(e) => setItemSearch(e.target.value)}
-                      displayValue={(item) => item}
-                      placeholder="Item Name"
-                      className="bg-white border-none outline-none placeholder:text-gray-400 w-full h-full"
-                    />
-
-                    <ComboboxOptions className="absolute z-10 w-full mt-1 border border-gray-200 rounded-xl bg-white max-h-60 overflow-y-auto shadow-lg empty:invisible">
-                      {itemList.map((itemOption) => (
-                        <ComboboxOption
-                          key={itemOption._id}
-                          value={itemOption}
-                          className="px-6 py-3 cursor-pointer text-gray-700 hover:bg-gray-100 data-[focus]:bg-blue-100"
-                        >
-                          {itemOption.itemName}
-                        </ComboboxOption>
-                      ))}
-                    </ComboboxOptions>
-                  </div>
-                </Combobox>
-              </div>
-
-              {/* Quantity */}
-              <input
-                type="number"
-                name="qty"
-                value={item.qty}
-                disabled={
-                  !itemList.some((option) => option.itemName === item.name)
-                }
-                onChange={(e) => handleInputChange(index, e)}
-                onKeyDown={(e) => handleKeyDown(e, index, 2)}
-                ref={(el) => (inputRefs.current[index][2] = el)}
-                className="col-span-2 bg-white border-none outline-none placeholder:text-gray-400 w-full"
-                placeholder="Quantity"
-              />
-
-              {/* Unit Selector */}
-              <select
+                  <input
+                    type="number"
+                    name="box"
+                    value={item.box}
+                    disabled={
+                      !itemList.some((option) => option.itemName === item.name)
+                    }
+                    onChange={(e) => handleInputChange(index, e)}
+                    onKeyDown={(e) => handleKeyDown(e, index, 3)}
+                    ref={(el) => (inputRefs.current[index][3] = el)}
+                    className="col-span-2 bg-white border-none outline-none placeholder:text-gray-400 w-full"
+                    placeholder="Qty(Box)"
+                  />
+                  {/* Unit Selector */}
+                  {/* <select
                 name="unit"
                 value={item.unit}
                 disabled={
@@ -372,141 +526,169 @@ function Purchasetransaction() {
               >
                 <option value="box">Box</option>
                 <option value="kg">Kg</option>
-              </select>
+              </select> */}
 
-              {/* Price */}
-              <input
-                type="number"
-                name="price"
-                disabled={
-                  !itemList.some((option) => option.itemName === item.name)
-                }
-                value={item.price}
-                onChange={(e) => handleInputChange(index, e)}
-                onKeyDown={(e) => handleKeyDown(e, index, 4)}
-                ref={(el) => (inputRefs.current[index][4] = el)}
-                className="col-span-2 bg-white border-none outline-none placeholder:text-gray-400 w-full"
-                placeholder="Unit Price"
-              />
+                  {/* Price */}
+                  <input
+                    type="number"
+                    name="price"
+                    disabled={
+                      !itemList.some((option) => option.itemName === item.name)
+                    }
+                    value={item.price}
+                    onChange={(e) => handleInputChange(index, e)}
+                    onKeyDown={(e) => handleKeyDown(e, index, 4)}
+                    ref={(el) => (inputRefs.current[index][4] = el)}
+                    className="col-span-2 bg-white border-none outline-none placeholder:text-gray-400 w-full"
+                    placeholder="Unit Price"
+                  />
 
-              {/* Total (Read Only) */}
-              <input
-                type="text"
-                name="total"
-                disabled={
-                  !itemList.some((option) => option.itemName === item.name)
-                }
-                value={item.total}
-                readOnly
-                onKeyDown={(e) => handleKeyDown(e, index, 5)}
-                ref={(el) => (inputRefs.current[index][5] = el)}
-                className="col-span-2 bg-white border-none outline-none placeholder:text-gray-400 w-full"
-                placeholder="Subtotal"
-              />
-            </div>
-          ))}
-
-          {error && (
-            <div className="text-red-600 text-lg font-medium px-6">{error}</div>
-          )}
-
-          <div
-            className="col-span-6 rounded-lg px-6 py-4 cursor-pointer flex items-center justify-center gap-3 text-indigo-900 text-xl hover:bg-gray-100 transition"
-            // onClick={handleAddItem}
-            onClick={() => {
-              const nextId = items.length + 1;
-              setItems((prev) => [
-                ...prev,
-                {
-                  id: nextId,
-                  name: "",
-                  qty: "",
-                  unit: "box",
-                  price: "",
-                  total: "0.00",
-                },
-              ]);
-            }}
-          >
-            <span className="text-2xl">＋</span> Add another item
-          </div>
-
-          {/* Totals Row */}
-          <div className="w-full bg-teal-50 px-6 py-6 border-b text-xl font-bold text-indigo-950 grid grid-cols-6">
-            <div>Total</div>
-            <div className="col-span-2"></div>
-            <div className="col-span-2">{totalQuantity}</div>
-            <div>{totalPrice}</div>
-          </div>
-        </div>
-
-        {/* Deductions */}
-        <div className="flex flex-col gap-6">
-          <div className="pb-6 border-b border-gray-400">
-            <h2 className="text-indigo-950 text-3xl font-semibold">
-              Deductions
-            </h2>
-          </div>
-
-          <div className="flex flex-wrap gap-8 border-b pb-6">
-            {[
-              {label:"Commission (%)",value:`${selectedSupplier?.commission}%`},
-              {label:"Market Fee ($/KG)",value:""},
-              {label:"Coolie Rate ($/KG)",value:""},
-              {label:"Total Deductions",value:""},
-            ].map((label, idx) => (
-              <div
-                key={idx}
-                className="flex items-center gap-6 w-full md:w-[48%]"
-              >
-                <label className="min-w-44 text-slate-500 text-xl">
-                  {label.label}
-                </label>
-                <div className="w-full md:w-80 px-6 py-4 bg-gray-50 rounded-xl flex items-center gap-2">   
-                  <span className="text-xl text-gray-400">
-                   {label?.value&&label.value}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="flex flex-wrap gap-8">
-            {[
-              { label: "Advance Deduction", value: "Apply Advance" },
-              { label: "Advance Amount", value: "Fetch from Supplier Master" },
-              { label: "Net Payable", value: "Auto calculated", prefix: "$" },
-            ].map((item, idx) => (
-              <div
-                key={idx}
-                className="flex items-center gap-6 w-full md:w-[48%]"
-              >
-                <label className="min-w-44 text-slate-500 text-xl">
-                  {item.label}
-                </label>
-                <div className="w-full md:w-80 px-6 py-4 bg-gray-50 rounded-xl flex items-center gap-2">
-                  {item.prefix && (
-                    <span className="text-indigo-950 font-bold">
-                      {item.prefix}
-                    </span>
-                  )}
-                  <span
-                    className={`text-xl ${
-                      item.label === "Net Payable"
-                        ? "text-indigo-950 font-bold"
-                        : "text-gray-400"
-                    }`}
+                  {/* Total (Read Only) */}
+                  <input
+                    type="text"
+                    name="total"
+                    disabled={
+                      !itemList.some((option) => option.itemName === item.name)
+                    }
+                    value={item.total}
+                    readOnly
+                    onKeyDown={(e) => handleKeyDown(e, index, 5)}
+                    ref={(el) => (inputRefs.current[index][5] = el)}
+                    className="col-span-2 bg-white border-none outline-none placeholder:text-gray-400 w-full"
+                    placeholder="Subtotal"
+                  />
+                  <div
+                    className="hidden absolute right-0 top-4 group-hover:flex"
+                    onClick={() => handleDeleteItem(index)}
                   >
-                    {item.value}
-                  </span>
+                    <Trash2 />
+                  </div>
                 </div>
+              ))}
+
+              {error && (
+                <div className="text-red-600 text-lg font-medium px-6">
+                  {error}
+                </div>
+              )}
+
+              <div
+                className="col-span-6 rounded-lg px-6 py-4 cursor-pointer flex items-center justify-center gap-3 text-indigo-900 text-xl hover:bg-gray-100 transition"
+                // onClick={handleAddItem}
+                onClick={() => {
+                  setItems((prev) => [
+                    ...prev,
+                    {
+                      name: "",
+                      kg: "",
+                      box: "",
+                      price: "",
+                      total: "0.00",
+                    },
+                  ]);
+                }}
+              >
+                <span className="text-2xl">＋</span> Add another item
               </div>
-            ))}
-            <button className="bg-blue-800" onClick={handleSubmit}>save</button>
+
+              {/* Totals Row */}
+              <div className="w-full bg-teal-50 px-6 py-6 border-b text-xl font-bold text-indigo-950 grid grid-cols-12">
+                <div className="col-span-4">Total</div>
+                <div className="col-span-2">{totalQuantityInKg}(kg)</div>
+                <div className="col-span-2 ">{totalQuantityInBox}(Box)</div>
+                <div className="col-span-3 text-end">{totalPrice}</div>
+              </div>
+            </div>
+
+            {/* Deductions */}
+            <div className="flex flex-col gap-6">
+              <div className="pb-6 border-b border-gray-400">
+                <h2 className="text-indigo-950 text-3xl font-semibold">
+                  Deductions
+                </h2>
+              </div>
+
+              <div className="flex flex-wrap gap-8 border-b pb-6">
+                {[
+                  {
+                    label: "Commission",
+                    value: `₹ ${commission ? commission.toFixed(2) : 0}`,
+                  },
+                  {
+                    label: "Market Fee/Coolie Rate",
+                    value: `₹ ${marketFee ? marketFee.toFixed(2) : 0}`,
+                  },
+                  // { label: " ($/KG)", value: "0" },
+                  {
+                    label: "Total Deductions",
+                    value: `₹ ${
+                      totalDeduction ? totalDeduction.toFixed(2) : 0
+                    }`,
+                  },
+                ].map((label, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-center gap-6 w-full md:w-[48%]"
+                  >
+                    <label className="min-w-44 text-slate-500 text-xl">
+                      {label.label}
+                    </label>
+                    <div className="w-full md:w-80 px-6 py-4 bg-gray-50 rounded-xl flex items-center gap-2">
+                      <span className="text-xl text-gray-400">
+                        {label?.value}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex flex-wrap gap-8">
+                {[
+                  { label: "Advance Deduction", value: "0" },
+                  { label: "Advance Amount", value: "0" },
+                  {
+                    label: "Net Payable",
+                    value:
+                      totalPrice && totalDeduction
+                        ? (totalPrice - totalDeduction).toFixed(2)
+                        : 0,
+                    prefix: "₹",
+                  },
+                ].map((item, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-center gap-6 w-full md:w-[48%]"
+                  >
+                    <label className="min-w-44 text-slate-500 text-xl">
+                      {item.label}
+                    </label>
+                    <div className="w-full md:w-80 px-6 py-4 bg-gray-50 rounded-xl flex items-center gap-2">
+                      {item.prefix && (
+                        <span className="text-indigo-950 font-bold">
+                          {item.prefix}
+                        </span>
+                      )}
+                      <span
+                        className={`text-xl ${
+                          item.label === "Net Payable"
+                            ? "text-indigo-950 font-bold"
+                            : "text-gray-400"
+                        }`}
+                      >
+                        {item.value}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+                <button className="bg-blue-800" onClick={handleSubmit}>
+                  save
+                </button>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
+      )}
+    </>
   );
 }
 

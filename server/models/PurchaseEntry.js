@@ -11,6 +11,11 @@ const purchaseItemSchema = new mongoose.Schema({
     required: true,
     min: [1, "Quantity must be at least 1"],
   },
+  quantityType: {
+    type: String,
+    enum: ["kg", "box"],
+    required: true,
+  },
   soldQuantity: {
     type: Number,
     default: 0, // Tracks how much has been sold
@@ -58,9 +63,15 @@ const purchaseEntrySchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
-    totalQuantity: {
+    totalKg: {
       type: Number,
-      required: true, // Saves total items purchased
+      required: true,
+      default: 0,
+    },
+    totalBox: {
+      type: Number,
+      required: true,
+      default: 0,
     },
     commissionPaid: {
       type: Number,

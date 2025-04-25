@@ -12,6 +12,7 @@ const addNewSupplier = async (req, res) => {
       advance,
       advanceDeducted,
       commission,
+      marketFee
     } = req.body;
 
     //required feilds
@@ -112,6 +113,7 @@ const addNewSupplier = async (req, res) => {
       advance,
       advanceDeducted,
       commission,
+      marketFee
     });
     await newSupplier.save();
     return res
@@ -192,7 +194,7 @@ const getSupplierList = async (req, res) => {
         }
       : {};
     const suppliers = await Supplier.find(query).select(
-      "supplierName supplierCode commission"
+      "supplierName supplierCode commission marketFee"
     );
     return res.status(200).json(suppliers);
   } catch (error) {

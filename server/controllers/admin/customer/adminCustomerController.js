@@ -193,32 +193,43 @@ const deleteCustomer = async (req, res) => {
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
+const escapeRegex = (string) => string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 const getCustomerNames = async (req, res) => {
   try {
     const { q } = req.query;
-
-    // Build base query
     const filter = {};
+
     if (q && q.trim()) {
-      // case‑insensitive partial match on customerName
-      filter.customerName = { $regex: q.trim(), $options: "i" };
+      filter.customerName = { 
+        $regex: escapeRegex(q.trim()), 
+        $options: "i" 
+      };
     }
 
-    // Fetch only the customerName field (and _id), sorted A→Z
     const customers = await Customer.find(filter, "customerName")
       .sort({ customerName: 1 })
+      .limit(100) // Prevent excessive results
+      .lean() // Faster if just converting to objects
       .exec();
 
-    // Map into a lightweight array
     const customerList = customers.map(c => ({
       id: c._id,
       name: c.customerName
     }));
 
-    return res.status(200).json({ customers: customerList });
+    return res.status(200).json({ 
+      success: true,
+      count: customerList.length,
+      customers: customerList 
+    });
   } catch (error) {
     console.error("Error fetching customer names:", error);
-    return res.status(500).json({ message: "Internal Server Error" });
+    return res.status(500).json({ 
+      success: false,
+      message: "Internal Server Error",
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 };
 

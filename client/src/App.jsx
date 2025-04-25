@@ -35,7 +35,6 @@ import PersistLogin from "./Components/PersistLogin";
 import RequireAuth from "./Components/RequireAuth";
 import LocalsalesReport from "./Pages/LocalsalesReport";
 
-import Sample from './Pages/Sample'
 
 function App() {
   return (
@@ -57,7 +56,6 @@ function App() {
           <Route path='/cashbook' element={<Cashbook />} />
           <Route path='/purchase-report' element={<PurchaseReport />} />
           <Route path='/localsales-report' element={<LocalsalesReport />} />
-          <Route path='/sample' element={<Sample />} />
           <Route path='/whatsapp' element={<Whatsapp />} />
         </Route>
 
@@ -107,7 +105,7 @@ function App() {
 
 
 
-        <Route path='/sample' element={<Sample />} />
+    
       </Routes>
     </>
   );

@@ -59,7 +59,7 @@ const [fromDate, setFromDate] = useState('');
                     </thead>
                     <tbody>
                         {rows.map((i) => (
-                            <tr key={i} className="px-12 py-2 bg-white border-b border-gray-200 inline-flex justify-start items-center gap-16 w-full">
+                            <tr key={i} className="px-12 py-3 bg-white border-b border-gray-200 inline-flex justify-start items-center gap-16 w-full">
                                 <td className="w-8">
                                     <button onClick={() => toggleRowSelection(i)}>
                                         {selectedRows.includes(i) ? (
@@ -85,7 +85,7 @@ const [fromDate, setFromDate] = useState('');
                     <div className="w-[1104px] min-w-32 justify-center text-slate-500/40 text-xl font-normal font-['Urbanist'] tracking-wide">Total</div>
                     <div className="min-w-32 justify-center text-slate-900 text-xl font-bold font-['Urbanist'] tracking-wide">$3,750.00 </div>
                               </div>
-                     <div className="w-[1495px] px-12 py-2 left-0 top-[650px] absolute bg-white border-b border-gray-200 inline-flex justify-between items-center">
+                     <div className="w-[1495px] px-12 py-2 left-0 top-[680px] absolute bg-white border-b border-gray-200 inline-flex justify-between items-center">
                     <div className="flex justify-start items-center gap-32">
                         <div className="justify-center text-slate-500/40 text-xl font-normal font-['Urbanist'] tracking-wide">Commission</div>
                         <div className="justify-center text-slate-900 text-xl font-bold font-['Urbanist'] tracking-wide">$200.00 </div>
@@ -99,7 +99,7 @@ const [fromDate, setFromDate] = useState('');
                         <div className="justify-center text-slate-900 text-xl font-bold font-['Urbanist'] tracking-wide">$50.00 </div>
                      </div>
                           </div>
-                      <div className="w-[1495px] px-12 py-3 left-0 top-[546px] absolute border-b border-gray-200 inline-flex justify-between items-center">
+                      <div className="w-[1495px] px-12 py-3 left-0 top-[586px] absolute border-b border-gray-200 inline-flex justify-between items-center">
                      <div className="flex justify-start items-center gap-4">
                         <div className="text-center justify-center text-slate-900 text-xl font-normal font-['Urbanist'] tracking-wide">Page 1 of 10</div>
                       </div>

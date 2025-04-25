@@ -1,16 +1,18 @@
 import React from 'react';
 import { MdKeyboardArrowRight } from "react-icons/md";
+import { FaChevronRight } from "react-icons/fa6";
+
 function IndividualReports() {
     return (
         <div>
             <div className="w-[1511px] h-[790px]  absolute bg-white rounded-3xl overflow-hidden mt-10">
                 <div className="left-[48px] top-[48px] absolute inline-flex justify-start items-center gap-3">
                     <div className="flex items-center gap-1 text-slate-500 text-xl font-normal font-['Urbanist']">
-                        Reports <MdKeyboardArrowRight /> Individual Purchase Report
+                        Reports <FaChevronRight /> Individual Purchase Report
                     </div>
                 </div>
 
-                <div className="left-[48px] top-[80px] absolute justify-start text-indigo-950 text-4xl font-bold font-['Urbanist'] leading-[50.40px]">Individual Purchase Report</div>
+                <div className="left-[48px] top-[80px] absolute justify-start text-indigo-950 text-4xl font-bold font-['Urbanist'] leading-[50.40px]">Individual  Purchase Report</div>
 
                 <div className="px-8 py-4 left-[1313px] top-[66px] absolute bg-gray-50 rounded-xl inline-flex justify-start items-center gap-3">
                     <div className="w-8 h-8 relative">

@@ -33,13 +33,13 @@ const transactionItemRoutes = {
   "Purchase": "/purchase-transaction",
   "Sales": "/sales-transaction",
   "Route": "/transactions/returns",
-  "Cashbook": "/transactions/payments"
+  "Cashbook": "/cashbook"
 };
 const [isReportsOpen, setIsReportsOpen] = useState(false);
 const reportItemRoutes = {
-  "Purchase Report": "/reports/daily",
+  "Purchase Report": "/purchase-report",
   "Ind.Purchase Report": "/individual-report",
-  "Local Sales Report": "/reports/route",
+  "Local Sales Report": "/localsales-report",
   "Route Sales Report": "/reports/expense",
     "Trial Sales Report": "/reports/expense"
 };
@@ -52,10 +52,17 @@ const printItemRoutes = {
 
 };
 
+const [isWhatsAppOpen, setIsWhatsAppOpen] = useState(false);
+
+const whatsappItemRoutes = {
+  "Send Invoice": "/whatsapp/invoice",
+  "Send Daily Summary": "/whatsapp/daily-summary",
+  "Send Customer Copy": "/whatsapp/customer-copy",
+};
 
   const navigate = useNavigate();
   const menuItems = [
-    { label: "WhatsApp", icon: <FiGrid /> },
+    { label: "WhatsApp", icon: <FiGrid />, path: "/whatsapp" },
     { label: "Settings", icon: <FiSettings /> }
   ];
   const masterItems = Object.keys(masterItemRoutes);
@@ -228,20 +235,28 @@ const printItemRoutes = {
     ))}
   </div>
 )}
-
-          {/* Sidebar Menu */}
-          <div className="flex flex-col gap-3 text-gray-500 ">
-            {menuItems.map((item, index) => (
-              <div
-                key={index}
-                className={`flex items-center justify-between cursor-pointer transition ${
-                  selectedMainItem === item.label ? "bg-indigo-500 text-white p-3 rounded-lg" : "hover:bg-indigo-500 hover:text-white p-3 rounded-lg"
-                }`}
-              >
-                <span className="flex items-center gap-3">{item.icon} {item.label}</span>
-              </div>
-            ))}
-          </div>
+ <div className="flex flex-col gap-3 text-gray-500">
+  {menuItems.map((item, index) => (
+    <div
+      key={index}
+      className={`flex items-center justify-between cursor-pointer transition ${
+        selectedMainItem === item.label
+          ? "bg-indigo-500 text-white p-3 rounded-lg"
+          : "hover:bg-indigo-500 hover:text-white p-3 rounded-lg"
+      }`}
+      onClick={() => {
+        setSelectedMainItem(item.label);
+        navigate(item.path); // ✅ This will navigate to /whatsapp
+      }}
+    >
+      <span className="flex items-center gap-3">
+        {item.icon} {item.label}
+      </span>
+    </div>
+  ))}
+</div>
+       
+       
         </div>
       </div>
 

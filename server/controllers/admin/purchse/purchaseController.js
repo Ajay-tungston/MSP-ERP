@@ -9,7 +9,6 @@ const createPurchaseEntry = async (req, res) => {
   //added validation in schema
   try {
     const { supplierId, items, dateOfPurchase } = req.body;
-    console.log(req.body)
     if (!supplierId || !items || !dateOfPurchase) {
       return res.status(400).json({ error: "all feilds are required" });
     }

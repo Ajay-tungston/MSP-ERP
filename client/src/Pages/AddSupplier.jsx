@@ -19,6 +19,7 @@ function AddSupplier({setPopup}) {
     advance: "",
     advanceDeducted: "",
     commission: "",
+    marketFee:""
   });
 
   // State to manage errors
@@ -97,6 +98,7 @@ function AddSupplier({setPopup}) {
           advance: "",
           advanceDeducted: "",
           commission: "",
+          marketFee:""
         });
         setResponseError("");
         Swal.fire({
@@ -131,6 +133,7 @@ function AddSupplier({setPopup}) {
       advance: "",
       advanceDeducted: "",
       commission: "",
+      marketFee:""
     });
     setErrors({
       supplierCode: "",
@@ -321,6 +324,23 @@ function AddSupplier({setPopup}) {
               className="w-full sm:w-[350px] px-6 py-4 bg-gray-50 rounded-xl outline-none"
             />
           </div>
+          <div className="flex justify-start items-center gap-6 sm:gap-12">
+            <label
+              className="min-w-[120px] sm:min-w-[172px] text-[#737791] text-xl font-normal font-['Urbanist']"
+              htmlFor="marketFee"
+            >
+              marketFee (%)
+            </label>
+            <input
+              id="marketFee"
+              name="marketFee"
+              type="number"
+              className={`w-full sm:w-[350px] px-6 py-4 bg-gray-50 rounded-xl text-xl font-normal font-['Urbanist'] ${errors.marketFee ? "border-red-500" : ""
+                }`}
+              value={formData.marketFee}
+              onChange={handleChange}
+            />
+          </div>
 
           {/* Required-fields error */}
           {errors.requiredFields && (
@@ -347,6 +367,9 @@ function AddSupplier({setPopup}) {
             <PlusCircleIcon className="w-5 h-5" />
             Save
           </button>
+
+    
+
         </div>
       </div>
     </div>

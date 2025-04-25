@@ -113,4 +113,26 @@ const deleteItems = async (req, res) => {
   }
 };
 
-module.exports={addItem,getAllItems,deleteItems}
+//select item in transaction bill
+const getItemList = async (req, res) => {
+  try {
+    const search = req.query.search || "";
+    const query = search
+      ? {
+          $or: [
+            { itemName: { $regex: search, $options: "i" } },
+            { itemCode: { $regex: search, $options: "i" } },
+          ],
+        }
+      : {};
+    const items = await Item.find(query).select(
+      "itemName itemCode "
+    );
+    return res.status(200).json(items);
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: "Error getting suppliers" });
+  }
+};
+
+module.exports={addItem,getAllItems,deleteItems,getItemList}

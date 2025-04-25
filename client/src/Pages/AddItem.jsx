@@ -4,7 +4,7 @@ import { XCircleIcon, PlusCircleIcon } from "@heroicons/react/24/outline";
 import useAxiosPrivate from "../hooks/useAxiosPrivate";
 import Swal from "sweetalert2";
 
-const AddItem = () => {
+const AddItem = ({setPopup}) => {
   const [itemCode, setItemCode] = useState("");
   const [itemName, setItemName] = useState("");
   const [conversionRatio, setConversionRatio] = useState(30);
@@ -74,8 +74,10 @@ const AddItem = () => {
         draggable: true,
       });
       setItemCode("");
+
       setItemName("");
       setConversionRatio(30);
+      setPopup(false)
     } catch (error) {
       if (error?.response?.status === 400) {
         Swal.fire({
@@ -95,6 +97,7 @@ const AddItem = () => {
 
   const handleCancel = () => {
     setItemCode("");
+    setPopup(false)
     setItemName("");
     setItemCodeError("");
     setItemNameError("");
@@ -104,7 +107,7 @@ const AddItem = () => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75">
       <div className="w-full sm:w-[480px] md:w-[640px] lg:w-[800px] xl:w-[1280px] h-auto bg-white rounded-[24px] p-[24px] sm:p-[32px] md:p-[48px] shadow-lg gap-12 absolute top-[170px] left-1/2 transform -translate-x-1/2">
         <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-gray-900">
           Add New Item

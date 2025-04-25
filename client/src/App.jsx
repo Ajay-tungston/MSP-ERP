@@ -31,7 +31,7 @@ import Dashboard from "./Pages/Dashboard";
 import PersistLogin from "./Components/PersistLogin";
 import RequireAuth from "./Components/RequireAuth";
 import LocalsalesReport from "./Pages/LocalsalesReport";
-
+import TrialBalance from "./Pages/TrialBalance";
 import Sample from './Pages/Sample'
 import Whatsapp from "./Pages/Whatsapp";
 function App() {
@@ -44,7 +44,7 @@ function App() {
           <Route path="/supplier" element={<Supplier />} />
           <Route path='/employee' element={<Employee />} />
           <Route path="/purchase-transaction" element={<Purchasetransaction />} />
-          <Route path='/company' element={<Company />} />
+
           <Route path='/commission' element={<Commission />} />
           <Route path='/item' element={<Item />} />
           <Route path='/route-expense' element={<RouteExpense />} />
@@ -56,6 +56,7 @@ function App() {
           <Route path='/localsales-report' element={<LocalsalesReport />} />
           <Route path='/sample' element={<Sample />} />
           <Route path='/whatsapp' element={<Whatsapp />} />
+          <Route path="/trail" element={<TrialBalance />}/>
         </Route>
 
         <Route path="/sales" element={<Sales />} />
@@ -71,7 +72,7 @@ function App() {
         <Route path="/purchase-transaction" element={<Purchasetransaction />} />
         <Route path='/add-customer' element={<AddCustomer />} />
         <Route path='/add-supplier' element={<AddSupplier />} />
-        <Route path='/company' element={<Company />} />
+
 
         <Route element={<PersistLogin />}>
           <Route element={<RequireAuth />}>
@@ -102,7 +103,7 @@ function App() {
 
         {/* <Route path="/add-supplier" element={<AddSuppconsole.log('App component rendered');lier />} /> */}
         <Route path="/company" element={<Company />} />
-
+<Route path="/trail" element={<TrialBalance />}/>
 
 
         <Route path='/sample' element={<Sample />} />

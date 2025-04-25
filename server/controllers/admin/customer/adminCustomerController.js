@@ -233,5 +233,34 @@ const getCustomerNames = async (req, res) => {
   }
 };
 
+const updateCustomer = async (req, res) => {
+  try {
+    const { customerId } = req.params;  // Get the customerId from the request parameters
+    const updates = req.body;  // Get the updates from the request body
 
-module.exports = { addNewCustomer,getAllCustomers, deleteCustomer,getCustomerNames };
+    // Make sure the customer exists before attempting to update
+    const customer = await Customer.findById(customerId);
+    if (!customer) {
+      return res.status(404).json({ message: `Customer with ID ${customerId} not found` });
+    }
+
+    // Apply the updates to the customer document
+    Object.keys(updates).forEach((key) => {
+      if (updates[key] !== undefined) {
+        customer[key] = updates[key];
+      }
+    });
+
+    // Save the updated customer document to the database
+    await customer.save();
+
+    return res.status(200).json({ message: 'Customer updated successfully', customer });
+  } catch (error) {
+    console.error('Error updating customer:', error);
+    return res.status(500).json({ message: 'Internal Server Error' });
+  }
+};
+
+
+
+module.exports = { addNewCustomer,getAllCustomers, deleteCustomer,getCustomerNames,updateCustomer };

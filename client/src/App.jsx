@@ -34,7 +34,7 @@ import Dashboard from "./Pages/Dashboard";
 import PersistLogin from "./Components/PersistLogin";
 import RequireAuth from "./Components/RequireAuth";
 import LocalsalesReport from "./Pages/LocalsalesReport";
-
+import EditCustomerModal from "./Pages/EditCustomer";
 
 function App() {
   return (
@@ -99,7 +99,7 @@ function App() {
         <Route path="/expense" element={<AddExpense />} />
         <Route path="/add-employe" element={<Addemploye />} />
         <Route path="/purchase-transaction" element={<Purchasetransaction />} />
-
+        <Route path='/updatecustomer' element={<EditCustomerModal/>}/>
         {/* <Route path="/add-supplier" element={<AddSuppconsole.log('App component rendered');lier />} /> */}
         <Route path="/company" element={<Company />} />
 

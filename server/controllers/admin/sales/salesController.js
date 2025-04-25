@@ -137,7 +137,7 @@ const getSalesEntries = async (req, res) => {
 };
 
 
-module.exports = {
+module.exports = { 
   createSaleTransaction,
   getSalesEntries,
 };

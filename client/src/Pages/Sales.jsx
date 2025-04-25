@@ -8,7 +8,8 @@ import {
 import useAxiosPrivate from "../hooks/useAxiosPrivate";
 import { ChevronDownIcon } from "lucide-react";
 import debounce from "lodash/debounce";
-
+import Swal from "sweetalert2";
+import { useNavigate } from "react-router-dom";
 
 const Sales = () => {
   const [customers, setCustomers] = useState([]);
@@ -44,7 +45,7 @@ const Sales = () => {
 
   // refs for each row’s dropdown container (to detect outside clicks)
   const wrapperRefs = useRef([]);
-  
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchCustomers = async (query) => {
@@ -68,9 +69,9 @@ const Sales = () => {
         setLoading(false);
       }
     };
-  
+
     const debouncedFetch = debounce(fetchCustomers, 300);
-  
+
     if (searchTerm.trim() === "") {
       // Fetch immediately if input is empty
       fetchCustomers("");
@@ -78,17 +79,11 @@ const Sales = () => {
       // Use debounced fetch for search
       debouncedFetch(searchTerm);
     }
-  
+
     return () => {
       debouncedFetch.cancel();
     };
   }, [searchTerm, axiosInstance]);
-  
-  
-  
-  // ─── FETCH WITH DEBOUNCE ────────────────────────────────────────────────
-
-  
 
   const sortAlphabetically = (data) => {
     return [...data].sort((a, b) => a.label.localeCompare(b.label));
@@ -229,6 +224,48 @@ const Sales = () => {
         break;
     }
   };
+
+  const handleAddSale = async (index) => {
+    console.log("Button clicked, index:", index);
+
+    const rowData = rows[index];
+    if (!rowData.customer) {
+      return alert("Please select a customer first.");
+    }
+
+    try {
+      const salePayload = {
+        customerId: rowData.customer, // This is the customer ID
+        itemName: rowData.item,
+        quantity: rowData.quantity,
+        unitPrice: rowData.unitPrice,
+        totalCost: rowData.quantity * rowData.unitPrice,
+        // Add other fields if needed
+      };
+     console.log("Making api reponse")
+      const response = await axiosInstance.post("/admin/sales/add",salePayload);
+
+      console.log("API Response:", response); // Log the response to debug
+
+      if (response.status === 200) {
+        Swal.fire({
+          icon: "success",
+          title: "Sale added successfully",
+          timer: 1500,
+          showConfirmButton: false,
+        });
+        navigate("/sales-transactions");
+      }
+    } catch (err) {
+      console.error("Failed to add sale:", err);
+      Swal.fire({
+        icon: "error",
+        title: "Error adding sale",
+        text: err.response?.data?.message || "Something went wrong.",
+      });
+    }
+  };
+
   return (
     <div>
       <div className="  bg-[#fff] w-full h-screen  ">
@@ -661,7 +698,13 @@ const Sales = () => {
                   </button>
 
                   {/* Save Button */}
-                  <button className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+                  <button
+                    className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+                    onClick={() => {
+                      console.log("Button clicked!");
+                      handleAddSale(index);
+                    }}
+                  >
                     <PlusCircleIcon className="w-5 h-5" />
                     Save
                   </button>

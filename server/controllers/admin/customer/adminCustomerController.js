@@ -262,5 +262,26 @@ const updateCustomer = async (req, res) => {
 };
 
 
+const getSingleCustomer = async (req, res) => {
+  try {
+    const { customerId } = req.params;
 
-module.exports = { addNewCustomer,getAllCustomers, deleteCustomer,getCustomerNames,updateCustomer };
+    // Validate customerId
+    if (!customerId || customerId === "undefined") {
+      return res.status(400).json({ message: "Invalid or missing customer ID" });
+    }
+
+    const customer = await Customer.findById(customerId);
+    if (!customer) {
+      return res.status(404).json({ message: "Customer not found" });
+    }
+
+    res.status(200).json(customer);
+  } catch (error) {
+    console.error("Error fetching customer:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+
+module.exports = { addNewCustomer,getAllCustomers, deleteCustomer,getCustomerNames,updateCustomer,getSingleCustomer };

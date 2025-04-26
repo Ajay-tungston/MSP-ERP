@@ -35,9 +35,7 @@ const EditCustomerModal = ({ customerId, onClose, setPopup }) => {
   useEffect(() => {
     const loadCustomer = async () => {
       try {
-        const { data } = await axiosInstance.get(
-          `/admin/customer/get/${customerId}`
-        );
+        const { data } = await axiosInstance.get(`/admin/customer/get/${customerId}`);
         // assuming { customer: { customerName, address, ... } }
         const c = data.customer;
         setFormData({
@@ -52,6 +50,8 @@ const EditCustomerModal = ({ customerId, onClose, setPopup }) => {
           route: c.routeCustomer ? "Yes" : "No",
           routeName: c.routeAddress || "",
         });
+        console.log(c);
+        
       } catch (err) {
         console.error("Error loading customer:", err);
         Swal.fire({
@@ -96,7 +96,7 @@ const EditCustomerModal = ({ customerId, onClose, setPopup }) => {
 
     try {
       await axiosInstance.put(
-        `/admin/customer/update/${customerId}`,
+        `/admin/customer/updatecustomer/${customerId}`,
         payload
       );
       await Swal.fire({

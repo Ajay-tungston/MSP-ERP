@@ -9,29 +9,24 @@ import useAxiosPrivate from "../hooks/useAxiosPrivate";
 import { ChevronDownIcon } from "lucide-react";
 import debounce from "lodash/debounce";
 import Swal from "sweetalert2";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 const Sales = () => {
+  const { id } = useParams();
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
+  const [purchase, setPurchase] = useState();
   const axiosInstance = useAxiosPrivate();
 
-  const itemList = [
-    { id: 1, name: "Crab", quantity: 50, unit: "KG", unitPrice: 150 },
-    { id: 2, name: "Karimeen", quantity: 140, unit: "KG", unitPrice: 45 },
-    { id: 3, name: "Mathi", quantity: 25, unit: "KG", unitPrice: 30 },
-    { id: 4, name: "Ayala", quantity: 200, unit: "KG", unitPrice: 40 },
-    { id: 5, name: "Choora", quantity: 110, unit: "KG", unitPrice: 50 },
-  ];
   // rows holds each line of the sales form
   const [rows, setRows] = useState([
     {
       id: 1,
       customer: "",
-      customerLabel: "",
-      item: "",
+      supplierId:"",
+      customerName: "",
+      itemName: "",
       quantity: "",
       unit: "",
       unitPrice: "",
@@ -85,6 +80,25 @@ const Sales = () => {
     };
   }, [searchTerm, axiosInstance]);
 
+  useEffect(() => {
+    const fetchPurchaseById = async () => {
+      try {
+        const response = await axiosInstance.get(`/admin/purchase/get/${id}`);
+        console.log(response)
+        setPurchase(response.data);
+      } catch (err) {
+        console.error("Error fetching purchase:", err);
+        setError("Failed to fetch purchase details.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (id) {
+      fetchPurchaseById();
+    }
+  }, [id]);
+
   const sortAlphabetically = (data) => {
     return [...data].sort((a, b) => a.label.localeCompare(b.label));
   };
@@ -135,6 +149,59 @@ const Sales = () => {
       p = parseFloat(price);
     return isNaN(q) || isNaN(p) ? 0 : q * p;
   };
+  const handleItemChange = (index, selectedItemName) => {
+    const updatedRows = [...rows];
+  
+    // Find the selected item object from purchase items
+    const selectedItem = purchase?.items?.find(
+      (item) => item.item.itemName === selectedItemName
+    );
+  
+    if (selectedItem) {
+      updatedRows[index].itemName = selectedItem.item.itemName;
+      updatedRows[index].itemId = selectedItem.item._id;        // ⬅️ SAVE itemId
+      updatedRows[index].supplier = selectedItem.supplierId;    // ⬅️ SAVE supplierId
+    }
+  
+    setRows(updatedRows);
+  };
+  
+
+  //Helper function to calculate remaining quantity
+  const getRemainingQuantity = (itemId, currentIndex = -1) => {
+    const selectedItem = purchase?.items?.find(
+      (i) => i.item.itemName === itemId
+    );
+    if (!selectedItem) return 0;
+
+    // Sum all quantities except the current row
+    const usedQuantity = rows
+      .filter((row, index) => row.item === itemId && index !== currentIndex)
+      .reduce((sum, row) => sum + (parseInt(row.quantity) || 0), 0);
+
+    const remaining = selectedItem.quantity - usedQuantity;
+    return remaining > 0 ? remaining : 0;
+  };
+
+  // Quantity change handler
+  const handleQuantityChange = (index, value) => {
+    const quantity = parseInt(value) || 0;
+    const currentRow = rows[index];
+
+    const remaining = getRemainingQuantity(currentRow.item, index);
+    const selectedItem = purchase?.items?.find(
+      (i) => i.item._id === currentRow.item
+    );
+
+    let error = null;
+    if (selectedItem && quantity > remaining) {
+      error = `Only ${remaining}Kg of ${selectedItem.item.itemName} is available`;
+    }
+
+    setRows(
+      rows.map((row, i) => (i === index ? { ...row, quantity, error } : row))
+    );
+  };
 
   const addRow = () => {
     setRows((r) => [
@@ -143,46 +210,15 @@ const Sales = () => {
         id: r.length + 1,
         customer: "",
         customerLabel: "",
-        item: "",
+        supplierId: "",
+        itemName: "",
         quantity: "",
         unit: "",
         unitPrice: "",
       },
     ]);
   };
-  const handleItemChange = (index, selectedItemName) => {
-    const selectedItem = itemList.find(
-      (item) => item.name === selectedItemName
-    );
 
-    setRows(
-      rows.map((row, i) =>
-        i === index
-          ? {
-              ...row,
-              item: selectedItemName,
-              quantity: 0, // Reset quantity when item changes
-              error: null, // Clear any previous errors
-            }
-          : row
-      )
-    );
-  };
-
-  const handleQuantityChange = (index, value) => {
-    const quantity = parseInt(value) || 0;
-    const currentRow = rows[index];
-    const selectedItem = itemList.find((item) => item.name === currentRow.item);
-
-    let error = null;
-    if (selectedItem && quantity > selectedItem.quantity) {
-      error = `Only ${selectedItem.quantity} ${selectedItem.unit} available`;
-    }
-
-    setRows(
-      rows.map((row, i) => (i === index ? { ...row, quantity, error } : row))
-    );
-  };
   const handleKeyDown = (e, rowIndex) => {
     if (customers.length === 0) return;
 
@@ -224,37 +260,60 @@ const Sales = () => {
         break;
     }
   };
-
   const handleAddSale = async (index) => {
     console.log("Button clicked, index:", index);
 
     const rowData = rows[index];
+    console.log(rowData);
+    // Validation
     if (!rowData.customer) {
-      return alert("Please select a customer first.");
+      return Swal.fire("Error", "Please select a customer first.", "error");
+    }
+    if (!rowData.itemName) {
+      return Swal.fire("Error", "Please select an item.", "error");
+    }
+    if (!rowData.quantity || rowData.quantity <= 0) {
+      return Swal.fire("Error", "Please enter a valid quantity.", "error");
+    }
+    if (!rowData.unitPrice || rowData.unitPrice <= 0) {
+      return Swal.fire("Error", "Invalid unit price.", "error");
     }
 
     try {
+      // Prepare the payload for API request
       const salePayload = {
-        customerId: rowData.customer, // This is the customer ID
-        itemName: rowData.item,
-        quantity: rowData.quantity,
-        unitPrice: rowData.unitPrice,
-        totalCost: rowData.quantity * rowData.unitPrice,
-        // Add other fields if needed
+        customerId: rowData.customer,
+        discount: rowData.discount || 0,
+        status: "completed",
+        items: [
+          {
+            itemName: rowData.itemName,
+            supplierId: purchase.supplier._id, // supplier _id
+            quantity: rowData.quantity,
+            unitPrice: rowData.unitPrice,
+          },
+        ],
       };
-     console.log("Making api reponse")
-      const response = await axiosInstance.post("/admin/sales/add",salePayload);
 
-      console.log("API Response:", response); // Log the response to debug
+      console.log("Sending Payload:", salePayload);
 
-      if (response.status === 200) {
+      // Make API request
+      const response = await axiosInstance.post(
+        "/admin/sales/add",
+        salePayload
+      );
+
+      console.log("API Response:", response);
+
+      // Handle successful response
+      if (response.status === 201) {
         Swal.fire({
           icon: "success",
           title: "Sale added successfully",
           timer: 1500,
           showConfirmButton: false,
         });
-        navigate("/sales-transactions");
+        navigate("/sales-transactions"); // Navigate to sales transactions page after success
       }
     } catch (err) {
       console.error("Failed to add sale:", err);
@@ -292,31 +351,31 @@ const Sales = () => {
               </div>
             </div>
 
-            {itemList.map((item) => {
-              const total = calculateSubtotal(item.quantity, item.unitPrice);
+            {purchase?.items?.map((item, index) => {
+              const total = item.quantity * item.unitPrice;
 
               return (
                 <div
-                  key={item.id}
+                  key={item._id}
                   className="self-stretch px-2.5 py-4 bg-white outline-[0.20px] outline-offset-[-0.20px] outline-slate-600/40 inline-flex justify-start items-center gap-[5px]"
                 >
                   <div className="min-w-8 justify-center text-indigo-950 text-sm font-normal font-['Urbanist'] tracking-wide">
-                    {item.id}
+                    {index + 1}
                   </div>
                   <div className="min-w-32 justify-center text-indigo-950 text-sm font-normal font-['Urbanist'] tracking-wide">
-                    {item.name}
+                    {item.item.itemName}
                   </div>
                   <div className="min-w-32 justify-center text-indigo-950 text-sm font-normal font-['Urbanist'] tracking-wide">
                     {item.quantity}
                   </div>
                   <div className="min-w-32 justify-center text-indigo-950 text-sm font-normal font-['Urbanist'] tracking-wide">
-                    {item.unit}
+                    {item.quantityType}
                   </div>
                   <div className="min-w-32 justify-center text-indigo-950 text-sm font-normal font-['Urbanist'] tracking-wide">
                     ₹{parseFloat(item.unitPrice).toFixed(2)}
                   </div>
                   <div className="w-20 justify-center text-indigo-950 text-sm font-normal font-['Urbanist'] tracking-wide">
-                    ₹ {total.toFixed(2)}
+                    ₹{total.toFixed(2)}
                   </div>
                 </div>
               );
@@ -383,7 +442,6 @@ const Sales = () => {
                   <div className="flex-1 max-w-16 justify-center text-slate-900 text-sm font-normal font-['Urbanist'] tracking-wide">
                     {String(row.id).padStart(3, "0")}
                   </div>
-
                   <div
                     ref={(el) => (wrapperRefs.current[index] = el)}
                     className="min-w-32 -ml-4 justify-center text-slate-900 text-sm font-normal font-['Urbanist'] tracking-wide relative"
@@ -504,51 +562,51 @@ const Sales = () => {
                       </div>
                     )}
                   </div>
-
                   <div className="min-w-32 justify-center text-slate-900 text-sm font-normal font-['Urbanist'] tracking-wide">
                     <select
-                      value={row.item}
+                      value={row.itemName}
                       onChange={(e) => handleItemChange(index, e.target.value)}
                       className="w-20 bg-transparent outline-none text-slate-900 -ml-5"
                     >
                       <option value="" disabled>
                         Select
                       </option>
-                      {itemList.map((item) => (
-                        <option key={item.id} value={item.name}>
-                          {item.name}
+                      {purchase?.items?.map((item) => (
+                        <option key={item._id} value={item.item.itemName}>
+                          {item.item.itemName}
                         </option>
                       ))}
                     </select>
                   </div>
-
                   {/* Quantity Input with Validation */}
+
                   <div className="min-w-32 justify-center text-slate-900 text-sm font-normal font-['Urbanist'] tracking-wide">
                     <div className="flex flex-col">
                       <input
                         type="number"
                         min="0"
                         max={
-                          itemList.find((i) => i.name === row.item)?.quantity ||
-                          0
+                          row.itemName
+                            ? getRemainingQuantity(row.itemName, index)
+                            : undefined
                         }
                         value={row.quantity}
                         onChange={(e) =>
                           handleQuantityChange(index, e.target.value)
                         }
-                        disabled={!row.item} // Disable if no item selected
-                        className={`w-25 bg-[transparent] outline-none text-slate-900 -ml-8 ${
+                        disabled={!row.itemName} // <-- Changed from row.item to row.itemName
+                        className={`w-25 bg-transparent outline-none text-slate-900 -ml-8 ${
                           row.error ? "border-b border-red-500" : ""
                         }`}
                       />
+
                       {row.error && (
-                        <span className="text-red-500 bg-text-xs mt-1 -ml-8">
+                        <span className="text-red-500 text-xs mt-1 -ml-8">
                           {row.error}
                         </span>
                       )}
                     </div>
                   </div>
-
                   <div className="w-20 justify-center text-slate-900 text-sm font-normal font-['Urbanist'] tracking-wide">
                     <select
                       value={row.unit}
@@ -564,7 +622,6 @@ const Sales = () => {
                       <option value="Box">Box</option>
                     </select>
                   </div>
-
                   <div className="w-20 justify-center text-slate-900 text-sm font-normal font-['Urbanist'] tracking-wide">
                     <input
                       type="number"
@@ -577,7 +634,6 @@ const Sales = () => {
                       className="w-full bg-transparent outline-none text-slate-900 -ml-8"
                     />
                   </div>
-
                   <div className="min-w-32 justify-center text-slate-900 text-sm font-normal font-['Urbanist'] tracking-wide">
                     ₹{calculateSubtotal(row.quantity, row.unitPrice).toFixed(2)}
                   </div>
@@ -698,16 +754,17 @@ const Sales = () => {
                   </button>
 
                   {/* Save Button */}
-                  <button
-                    className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
-                    onClick={() => {
-                      console.log("Button clicked!");
-                      handleAddSale(index);
-                    }}
-                  >
-                    <PlusCircleIcon className="w-5 h-5" />
-                    Save
-                  </button>
+
+                  {rows.map((row, index) => (
+                    <div key={index}>
+                      <button
+                        onClick={() => handleAddSale(index)} // This is how index is passed
+                        className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+                      >
+                        Save
+                      </button>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>

@@ -1,12 +1,15 @@
 // import { Plus, X } from "lucide-react";
 import { Plus, } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Bookmark, X } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Await, useNavigate } from "react-router-dom";
+import useAxiosPrivate from "../hooks/useAxiosPrivate";
 const SalesRegister = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+const axiosInstance=useAxiosPrivate()
+const [purchaseData, setPurchaseData] = useState([]);
 
-  const salesData = [
+const salesData = [
     {
       no: "001",
       supplier: "Farm Fresh",
@@ -24,6 +27,23 @@ const SalesRegister = () => {
       subtotal: "$200.00",
     },
   ];
+
+ 
+
+
+  useEffect(() => {
+    const fetchIncompletePurchases = async () => {
+      try {
+        const response = await axiosInstance.get("/admin/purchase/incomplete");
+        setPurchaseData(response.data);
+      } catch (error) {
+        console.log("Error fetching incomplete purchases", error);
+      }
+    };
+
+    fetchIncompletePurchases();
+  }, []);
+  
 const navigate=useNavigate()
   return (
     <div className="p-6 bg-white mt-10">
@@ -90,39 +110,44 @@ const navigate=useNavigate()
             </div>
 
             <div className="overflow-x-auto">
-              <table className="min-w-full rounded-md overflow-hidden text-sm text-left">
-                <thead className="bg-[#EEEEEE] text-black font-semibold">
-                  <tr>
-                    <th className="px-4 py-2">No</th>
-                    <th className="px-4 py-2">Name</th>
-                    <th className="px-4 py-2">Customer C</th>
-                    <th className="px-4 py-2">Address</th>
-                    <th className="px-4 py-2">Date</th>
-                    <th className="px-4 py-2 text-center"></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {salesData.map((item, index) => (
-                    <tr
-                      key={index}
-                      style={{ borderBottom: '0.5px solid #73779166' }}
-                      className={index % 2 === 0 ? 'bg-white' : 'bg-[#EEEEEE]'}
-                    >
-                      <td className="px-4 py-2">{index + 1}</td>
-                      <td className="px-4 py-2">{item.name}</td>
-                      <td className="px-4 py-2">{item.customer}</td>
-                      <td className="px-4 py-2">{item.address}</td>
-                      <td className="px-4 py-2">{item.date}</td>
-                      <td className="px-4 py-2 text-center">
-                        <button className="text-[#ec2626] hover:text-purple-700" onClick={()=>navigate('/sales')}>
-                          <Bookmark size={18} />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+      <table className="min-w-full rounded-md overflow-hidden text-sm text-left">
+        <thead className="bg-[#EEEEEE] text-black font-semibold">
+          <tr>
+            <th className="px-4 py-2">No</th>
+            <th className="px-4 py-2">Purchase No</th>
+            <th className="px-4 py-2">Supplier Name</th>            
+            <th className="px-4 py-2">Supplier Address</th>
+            <th className="px-4 py-2">Date</th>
+            <th className="px-4 py-2 text-center">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {purchaseData.map((item, index) => (
+            <tr
+              key={item._id}
+              style={{ borderBottom: "0.5px solid #73779166" }}
+              className={index % 2 === 0 ? "bg-white" : "bg-[#EEEEEE]"}
+            >
+              <td className="px-4 py-2">{index + 1}</td>
+              <td className="px-4 py-2">{item.purchaseNumber}</td>
+              <td className="px-4 py-2">{item.supplier?.supplierName || "N/A"}</td> 
+              <td className="px-4 py-2">{item.supplier?.address || "N/A"}</td>
+              <td className="px-4 py-2">
+                {new Date(item.dateOfPurchase).toLocaleDateString()}
+              </td>
+              <td className="px-4 py-2 text-center">
+                <button
+                  className="text-[#ec2626] hover:text-purple-700"
+                  onClick={() => navigate(`/sales/${item._id}`)}
+                >
+                  <Bookmark size={18} />
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
 
           </div>
         </div>

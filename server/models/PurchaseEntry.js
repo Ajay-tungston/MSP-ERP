@@ -35,6 +35,10 @@ const purchaseItemSchema = new mongoose.Schema({
     required: true,
     min: [0, "Total cost must be at least 0"],
   },
+  isCompleted: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 

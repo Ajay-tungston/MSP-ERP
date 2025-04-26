@@ -52,7 +52,7 @@ function App() {
           <Route path='/route-expense' element={<RouteExpense />} />
           <Route path='/individual-report' element={<IndividualReports />} />
           <Route path='/sales-transaction' element={<SalesTransaction />} />
-          <Route path='/sales' element={<Sales />} />
+          <Route path='/sales/:id' element={<Sales />} />
           <Route path='/cashbook' element={<Cashbook />} />
           <Route path='/purchase-report' element={<PurchaseReport />} />
           <Route path='/localsales-report' element={<LocalsalesReport />} />
@@ -99,10 +99,10 @@ function App() {
         <Route path="/expense" element={<AddExpense />} />
         <Route path="/add-employe" element={<Addemploye />} />
         <Route path="/purchase-transaction" element={<Purchasetransaction />} />
-        <Route path='/updatecustomer' element={<EditCustomerModal/>}/>
+        <Route path='/updatecustomer/:id' element={<EditCustomerModal/>}/>
         {/* <Route path="/add-supplier" element={<AddSuppconsole.log('App component rendered');lier />} /> */}
         <Route path="/company" element={<Company />} />
-
+      
 
 
     

@@ -8,17 +8,27 @@ const getNextCounterNumber = require("../../../utils/counter");
 const mongoose = require("mongoose");
 
 const createSaleTransaction = async (req, res) => {
+  console.log(req.body);
   try {
     const sales = Array.isArray(req.body) ? req.body : [req.body];
     const results = [];
 
     for (const saleData of sales) {
-      const { customerId, items, discount = 0, status = "completed" } = saleData;
+      const {
+        customerId,
+        items,
+        discount = 0,
+        status = "completed",
+      } = saleData;
 
       // Convert customerId to ObjectId and validate
-      const customer = await Customer.findById(new mongoose.Types.ObjectId(customerId));
+      const customer = await Customer.findById(
+        new mongoose.Types.ObjectId(customerId)
+      );
       if (!customer) {
-        return res.status(404).json({ message: `Customer with ID ${customerId} not found` });
+        return res
+          .status(404)
+          .json({ message: `Customer with ID ${customerId} not found` });
       }
 
       const transactionNumber = await getNextCounterNumber("saleTransaction");
@@ -32,12 +42,18 @@ const createSaleTransaction = async (req, res) => {
 
         const item = await Item.findOne({ itemName });
         if (!item) {
-          return res.status(404).json({ message: `Item "${itemName}" not found` });
+          return res
+            .status(404)
+            .json({ message: `Item "${itemName}" not found` });
         }
 
-        const supplier = await Supplier.findById(new mongoose.Types.ObjectId(supplierId));
-        if (!supplier) {
-          return res.status(404).json({ message: `Supplier with ID ${supplierId} not found` });
+        const supplier = await Supplier.findById(
+          new mongoose.Types.ObjectId(supplierId)
+        );
+        if (!supplierId || !mongoose.Types.ObjectId.isValid(supplierId)) {
+          return res
+            .status(400)
+            .json({ message: `Invalid supplier ID: ${supplierId}` });
         }
 
         const totalCost = unitPrice * quantity;
@@ -70,7 +86,9 @@ const createSaleTransaction = async (req, res) => {
       results.push(newSale);
     }
 
-    return res.status(201).json({ message: "Sales transactions recorded", sales: results });
+    return res
+      .status(201)
+      .json({ message: "Sales transactions recorded", sales: results });
   } catch (error) {
     console.error("Sale creation error:", error);
 
@@ -83,10 +101,18 @@ const createSaleTransaction = async (req, res) => {
   }
 };
 
-
 const getSalesEntries = async (req, res) => {
   try {
-    const { customerId, status, startDate, endDate, page = 1, limit = 10, sortBy = "dateOfSale", sortOrder = "desc" } = req.query;
+    const {
+      customerId,
+      status,
+      startDate,
+      endDate,
+      page = 1,
+      limit = 10,
+      sortBy = "dateOfSale",
+      sortOrder = "desc",
+    } = req.query;
 
     // Build query object
     const query = {};
@@ -129,15 +155,13 @@ const getSalesEntries = async (req, res) => {
       totalPages: Math.ceil(totalEntries / pageSize),
       entries: salesEntries,
     });
-
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Error fetching sales entries." });
   }
 };
 
-
-module.exports = { 
+module.exports = {
   createSaleTransaction,
   getSalesEntries,
 };

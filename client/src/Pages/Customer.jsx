@@ -5,6 +5,7 @@ import { FaCheckSquare, FaRegSquare } from "react-icons/fa";
 import useAxiosPrivate from '../hooks/useAxiosPrivate';
 import { FaChevronRight } from "react-icons/fa6";
 import AddCustomerModal from './AddCustomer';
+import EditCustomerModal from './EditCustomer';
 
 
 const CustomHeader=()=>{
@@ -73,7 +74,7 @@ const CustomHeader=()=>{
       }
     };
     const [popup, setPopup]=useState(false)
-  
+    // const [editup,setEditup]=useState(false)
   return (
   <>
   
@@ -193,6 +194,7 @@ const CustomHeader=()=>{
 </div>
 
     {popup && <AddCustomerModal  setPopup={setPopup}/>}
+    {/* {popup && <EditCustomerModal  setPopup={setPopup}/>} */}
 
     </>
   )

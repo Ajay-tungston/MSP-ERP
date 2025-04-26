@@ -8,14 +8,15 @@ const validator=require("validator")
 const createPurchaseEntry = async (req, res) => {
   //added validation in schema
   try {
-    const { supplierId, items, dateOfPurchase } = req.body;
-    if (!supplierId || !items || !dateOfPurchase) {
+    console.log(req.body)
+    const { supplierId, items, dateOfPurchase,marketFee } = req.body;
+    if (!supplierId || !items || !dateOfPurchase ||!marketFee) {
       return res.status(400).json({ error: "all feilds are required" });
     }
 
     const supplier = await Supplier.findById(supplierId);
 
-    if (!supplier) {
+    if (!supplier) {  
       return res.status(404).json({ message: "Supplier not found" });
     }
     if (!validator.isISO8601(dateOfPurchase)) {
@@ -30,6 +31,11 @@ const createPurchaseEntry = async (req, res) => {
       return res
         .status(400)
         .json({ error: "Date of purchase cannot be in the future" });
+    }
+    if (typeof marketFee !== 'number' || marketFee < 0) {
+      return res
+        .status(400)
+        .json({ error: "Market fee must be a non-negative number" });
     }
 
     const newPurchaseNumber = await getNextCounterNumber("purchaseNumber");
@@ -76,6 +82,7 @@ const createPurchaseEntry = async (req, res) => {
       totalKg,
       commissionPaid,
       dateOfPurchase,
+      marketFee
     });
 
     await purchaseEntry.save();
@@ -96,7 +103,7 @@ const createPurchaseEntry = async (req, res) => {
 
 const getAllPurchaseEntries = async (req, res) => {
   try {
-    const { page = 1, limit = 10, startDate, endDate } = req.query;
+    const { page = 1, limit = 10, startDate, endDate, noPagination } = req.query;
 
     const pageNumber = parseInt(page, 10);
     const limitNumber = parseInt(limit, 10);
@@ -111,17 +118,21 @@ const getAllPurchaseEntries = async (req, res) => {
           : new Date(),
       };
     }
-    const purchaseEntries = await PurchaseEntry.find(filter)
-      .populate("supplier items.item")
-      .sort({ dateOfPurchase: -1 })
-      .skip((pageNumber - 1) * limitNumber)
-      .limit(limitNumber);
+
+    let query = PurchaseEntry.find(filter).populate("supplier items.item").sort({ dateOfPurchase: -1 });
+
+    if (!noPagination) {
+      // Only apply skip and limit if noPagination is false
+      query = query.skip((pageNumber - 1) * limitNumber).limit(limitNumber);
+    }
+
+    const purchaseEntries = await query;
 
     const totalEntries = await PurchaseEntry.countDocuments(filter);
 
     res.status(200).json({
-      totalPages: Math.ceil(totalEntries / limitNumber),
-      currentPage: pageNumber,
+      totalPages: noPagination ? 1 : Math.ceil(totalEntries / limitNumber),
+      currentPage: noPagination ? 1 : pageNumber,
       totalEntries,
       purchaseEntries,
     });
@@ -130,6 +141,51 @@ const getAllPurchaseEntries = async (req, res) => {
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
+
+//for calclute the total amount for the getAllPurchaseEntries search
+const getTotalPurchaseStats = async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+
+    let filter = {};
+
+    if (startDate && endDate) {
+      filter.dateOfPurchase = {
+        $gte: new Date(startDate),
+        $lte: new Date(new Date(endDate).setUTCHours(23, 59, 59, 999)),
+      };
+    }
+
+    const result = await PurchaseEntry.aggregate([
+      { $match: filter },
+      {
+        $group: {
+          _id: null,
+          totalAmount: { $sum: "$totalAmount" },
+          totalCommission: { $sum: "$commissionPaid" },
+          totalBox: { $sum: "$totalBox" },
+          totalKg: { $sum: "$totalKg" },
+          totalMarketFee: { $sum: "$marketFee" }, 
+        },
+      },
+    ]);
+
+    const stats = result[0] || {
+      totalAmount: 0,
+      totalCommission: 0,
+      totalBox: 0,
+      totalKg: 0,
+      totalMarketFee: 0,
+    };
+
+    res.status(200).json(stats);
+  } catch (error) {
+    console.error("Error fetching purchase stats:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
 
 const getPurchaseCounter = async (req, res) => {
   try {
@@ -141,8 +197,10 @@ const getPurchaseCounter = async (req, res) => {
   }
 };
 
+
 module.exports = {
   createPurchaseEntry,
   getAllPurchaseEntries,
   getPurchaseCounter,
+  getTotalPurchaseStats
 };

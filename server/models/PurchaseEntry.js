@@ -82,6 +82,11 @@ const purchaseEntrySchema = new mongoose.Schema(
       type: Date,
       default: Date.now,
     },
+    marketFee:{
+      type: Number,
+      required: true,
+      min: [0, "marketFee cannot be negative"],
+    }
   },
   {
     timestamps: true,

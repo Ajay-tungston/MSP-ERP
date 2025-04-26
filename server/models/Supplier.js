@@ -40,6 +40,10 @@ const supplierSchema = new mongoose.Schema(
       type: Number,
       default: 10
     }, 
+    marketFee:{
+      type:Number,
+      default:40
+    }
   },
   { timestamps: true } 
 );

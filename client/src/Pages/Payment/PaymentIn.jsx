@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { PiPrinterLight } from "react-icons/pi";
 import { CiCirclePlus, } from "react-icons/ci";
+import { FaChevronRight } from "react-icons/fa6";
+import AddPaymentIn from './AddPaymentIn';
 function PaymentIn() {
   const data = [
     { category: 'Employee', name: 'Ajay kumar IPS', date: '12-12 2012', amount: '$5000' },
@@ -15,7 +17,7 @@ function PaymentIn() {
     { category: 'Employee', name: 'Tom Holland', date: '12-12 2012', amount: '$4800' },
     { category: 'Employee', name: 'Benedict Cumberbatch', date: '12-12 2012', amount: '$6900' },
   ];
-
+  const [popup,setPopup]=useState(false);
   const itemsPerPage = 10;
   const [currentPage, setCurrentPage] = useState(1);
   const totalPages = Math.ceil(data.length / itemsPerPage);
@@ -34,18 +36,22 @@ function PaymentIn() {
   };
 
   return (
-    <div>
+<>
       <div className="h-fit relative bg-gray-50 outline-1 outline-offset-[-1px] outline-white mt-10">
         <div className="w-[1471px] h-[1095px] absolute bg-white rounded-3xl overflow-hidden">
           <div className="left-[48px] top-[48px] absolute inline-flex justify-start items-center gap-3">
-            <div className="justify-start text-slate-500 text-xl font-normal font-['Urbanist']">Transactions Payment in</div>
+          <div className="flex items-center text-slate-500 text-xl font-normal font-['Urbanist']">
+  Transactions <FaChevronRight className="ml-2" />
+  Payment in
+</div>
 
-            <div className="w-80 h-[64px] px-6 py-4 left-[1043px] top-[32px] absolute bg-indigo-500 rounded-2xl inline-flex justify-center items-center gap-3">
+
+            <div className="w-80 h-[64px] px-6 py-4 left-[1023px] top-[32px] absolute bg-indigo-500 rounded-2xl inline-flex justify-center items-center gap-3" onClick={()=>setPopup(true)}>
               <div className="w-8 h-8 relative">
                 <CiCirclePlus className="w-7 h-7 left-[2.67px] top-[2.67px] absolute text-white" />
                 <div className="w-8 h-8 left-[32px] top-[32px] absolute origin-top-left -rotate-180 opacity-0" />
               </div>
-              <div className="justify-start text-white text-xl font-bold font-['Urbanist']">Add New Customer</div>
+              <div className="justify-start text-white text-xl font-bold font-['Urbanist']">Payment In</div>
             </div>
           </div>
 
@@ -102,7 +108,9 @@ function PaymentIn() {
           </div>
         </div>
       </div>
-    </div>
+
+    {popup && <AddPaymentIn setPopup={setPopup}/>}
+    </>
   );
 }
 

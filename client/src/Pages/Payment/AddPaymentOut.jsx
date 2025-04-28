@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { XCircleIcon, PlusCircleIcon } from "@heroicons/react/24/solid";
 import { Combobox, ComboboxInput, ComboboxOptions, ComboboxOption } from '@headlessui/react';
 
-function AddPaymentIn({ setPopup }) {
+function AddPaymentOut({ setPopup }) {
   const [category, setCategory] = useState('');
   const [date, setDate] = useState('');
   const [name, setName] = useState('');
@@ -216,4 +216,4 @@ function AddPaymentIn({ setPopup }) {
   );
 }
 
-export default AddPaymentIn;
+export default AddPaymentOut;

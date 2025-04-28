@@ -33,6 +33,8 @@ export default function Sidebar() {
   const transactionItemRoutes = {
     "Purchase": "/purchase-transaction",
     "Sales": "/sales-transaction",
+    "Payment In":"/paymentin",
+    "Payment Out":"/paymentout",
     "Route": "/transactions/returns",
     "Cashbook": "/cashbook"
   };

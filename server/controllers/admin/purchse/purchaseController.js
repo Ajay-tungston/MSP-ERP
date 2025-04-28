@@ -3,14 +3,14 @@ const Item = require("../../../models/Item");
 const PurchaseEntry = require("../../../models/PurchaseEntry");
 const Supplier = require("../../../models/Supplier");
 const getNextCounterNumber = require("../../../utils/counter");
-const validator=require("validator")
+const validator = require("validator");
 
 const createPurchaseEntry = async (req, res) => {
   //added validation in schema
   try {
-    const { supplierId, items, dateOfPurchase } = req.body;
-    console.log(req.body)
-    if (!supplierId || !items || !dateOfPurchase) {
+    console.log(req.body);
+    const { supplierId, items, dateOfPurchase, marketFee } = req.body;
+    if (!supplierId || !items || !dateOfPurchase || !marketFee) {
       return res.status(400).json({ error: "all feilds are required" });
     }
 
@@ -22,22 +22,27 @@ const createPurchaseEntry = async (req, res) => {
     if (!validator.isISO8601(dateOfPurchase)) {
       return res.status(400).json({ error: "Invalid date format" });
     }
-    
+
     // Optional: Check if the date is not in the future
     const inputDate = new Date(dateOfPurchase);
     const now = new Date();
-    
+
     if (inputDate > now) {
       return res
         .status(400)
         .json({ error: "Date of purchase cannot be in the future" });
     }
+    if (typeof marketFee !== "number" || marketFee < 0) {
+      return res
+        .status(400)
+        .json({ error: "Market fee must be a non-negative number" });
+    }
 
     const newPurchaseNumber = await getNextCounterNumber("purchaseNumber");
 
-    let totalAmount = 0;
+    let grossTotalAmount = 0;
     let totalKg = 0;
-    let totalBox=0
+    let totalBox = 0;
     const purchaseItems = [];
 
     for (let itemDetails of items) {
@@ -56,27 +61,29 @@ const createPurchaseEntry = async (req, res) => {
       purchaseItems.push({
         item: item._id,
         quantity: quantity,
-        quantityType:unitType,
+        quantityType: unitType,
         remainingQuantity: quantity,
         unitPrice,
         totalCost,
       });
-      totalAmount += totalCost;
-      unitType==="kg"?
-      totalKg += quantity:totalBox+=quantity
+      grossTotalAmount += totalCost;
+      unitType === "kg" ? (totalKg += quantity) : (totalBox += quantity);
     }
 
-    const commissionPaid = (totalAmount * supplier.commission) / 100;
+    const commissionPaid = (grossTotalAmount * supplier.commission) / 100;
+    const netTotalAmount = grossTotalAmount - (commissionPaid +marketFee);
 
     const purchaseEntry = new PurchaseEntry({
       purchaseNumber: newPurchaseNumber,
       supplier: supplier._id,
       items: purchaseItems,
-      totalAmount,
+      grossTotalAmount,
+      netTotalAmount,
       totalBox,
       totalKg,
       commissionPaid,
       dateOfPurchase,
+      marketFee,
     });
 
     await purchaseEntry.save();
@@ -97,7 +104,13 @@ const createPurchaseEntry = async (req, res) => {
 
 const getAllPurchaseEntries = async (req, res) => {
   try {
-    const { page = 1, limit = 10, startDate, endDate } = req.query;
+    const {
+      page = 1,
+      limit = 10,
+      startDate,
+      endDate,
+      noPagination,
+    } = req.query;
 
     const pageNumber = parseInt(page, 10);
     const limitNumber = parseInt(limit, 10);
@@ -112,22 +125,72 @@ const getAllPurchaseEntries = async (req, res) => {
           : new Date(),
       };
     }
-    const purchaseEntries = await PurchaseEntry.find(filter)
+
+    let query = PurchaseEntry.find(filter)
       .populate("supplier items.item")
-      .sort({ dateOfPurchase: -1 })
-      .skip((pageNumber - 1) * limitNumber)
-      .limit(limitNumber);
+      .sort({ dateOfPurchase: -1 });
+
+    if (!noPagination) {
+      // Only apply skip and limit if noPagination is false
+      query = query.skip((pageNumber - 1) * limitNumber).limit(limitNumber);
+    }
+
+    const purchaseEntries = await query;
 
     const totalEntries = await PurchaseEntry.countDocuments(filter);
 
     res.status(200).json({
-      totalPages: Math.ceil(totalEntries / limitNumber),
-      currentPage: pageNumber,
+      totalPages: noPagination ? 1 : Math.ceil(totalEntries / limitNumber),
+      currentPage: noPagination ? 1 : pageNumber,
       totalEntries,
       purchaseEntries,
     });
   } catch (error) {
     console.error(error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+//for calclute the total amount for the getAllPurchaseEntries search
+const getTotalPurchaseStats = async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+
+    let filter = {};
+
+    if (startDate && endDate) {
+      filter.dateOfPurchase = {
+        $gte: new Date(startDate),
+        $lte: new Date(new Date(endDate).setUTCHours(23, 59, 59, 999)),
+      };
+    }
+
+    const result = await PurchaseEntry.aggregate([
+      { $match: filter },
+      {
+        $group: {
+          _id: null,
+          netTotalAmount: { $sum: "$netTotalAmount" },
+          grossTotalAmount: { $sum: "$grossTotalAmount" },
+          totalCommission: { $sum: "$commissionPaid" },
+          totalBox: { $sum: "$totalBox" },
+          totalKg: { $sum: "$totalKg" },
+          totalMarketFee: { $sum: "$marketFee" },
+        },
+      },
+    ]);
+
+    const stats = result[0] || {
+      netTotalAmount: 0,
+      totalCommission: 0,
+      totalBox: 0,
+      totalKg: 0,
+      totalMarketFee: 0,
+    };
+
+    res.status(200).json(stats);
+  } catch (error) {
+    console.error("Error fetching purchase stats:", error);
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
@@ -146,4 +209,5 @@ module.exports = {
   createPurchaseEntry,
   getAllPurchaseEntries,
   getPurchaseCounter,
+  getTotalPurchaseStats,
 };

@@ -59,7 +59,11 @@ const purchaseEntrySchema = new mongoose.Schema(
         message: "At least one item must be included in the purchase",
       },
     },
-    totalAmount: {
+    grossTotalAmount: {
+      type: Number,
+      required: true,
+    },
+    netTotalAmount: {
       type: Number,
       required: true,
     },
@@ -82,6 +86,11 @@ const purchaseEntrySchema = new mongoose.Schema(
       type: Date,
       default: Date.now,
     },
+    marketFee:{
+      type: Number,
+      required: true,
+      min: [0, "marketFee cannot be negative"],
+    }
   },
   {
     timestamps: true,

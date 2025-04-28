@@ -198,6 +198,7 @@ function Purchasetransaction() {
         supplierId: selectedSupplier?._id,
         items: formattedItems,
         dateOfPurchase,
+        marketFee
       });
       Swal.fire({
         title: "Purchase transaction added successfully!",

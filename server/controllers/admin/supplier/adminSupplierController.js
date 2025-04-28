@@ -99,6 +99,11 @@ const addNewSupplier = async (req, res) => {
         message: "Commission must be a number between 0 and 100 (inclusive)",
       });
     }
+    if (marketFee && (!validator.isNumeric(marketFee.toString()) || marketFee < 0)) {
+      return res
+        .status(400)
+        .json({ message: "marketFee must be a valid non-negative number" });
+    }
 
     // const lastSupplier = await Supplier.findOne().sort({ no: -1 });
     // const nextNo = lastSupplier ? lastSupplier.no + 1 : 1;

@@ -10,7 +10,7 @@ import { openPurchaseRegisterPrintPage } from "../utils/printPurchaseRegister";
 function PurchaseReport() {
   const [totalPages, setTotalPages] = useState(1);
   const [currentPage, setCurrentPage] = useState(1);
-  const limit = 9;
+  const limit = 1;
   const [isLoading, setIsLoading] = useState(false);
   const [startDate, setStartDate] = useState(
     new Date().toLocaleDateString("en-CA")
@@ -19,18 +19,26 @@ function PurchaseReport() {
   const [toDate, setToDate] = useState(new Date().toLocaleDateString("en-CA"));
   const [purchaseData, setPurchaseData] = useState([]);
   const [totalStats, setTotalStats] = useState([]);
+  const [noReports, setNoReports] = useState(false);
   const axiosInstance = useAxiosPrivate();
 
   useEffect(() => {
     const fetchPurchases = async () => {
       setIsLoading(true);
+      setNoReports(false); 
       try {
         const response = await axiosInstance.get(
           `admin/purchase?page=${currentPage}&limit=${limit}&startDate=${startDate}&endDate=${toDate}`
         );
-        console.log(response);
-        setPurchaseData(response?.data);
-        setTotalPages(response?.data?.totalPages);
+        if (response?.data?.purchaseEntries?.length === 0) {
+          setNoReports(true); // Set "no reports" if no entries are found
+        } else {
+          setPurchaseData(response?.data);
+          setTotalPages(response?.data?.totalPages);
+        }
+        // console.log(response);
+        // setPurchaseData(response?.data);
+        // setTotalPages(response?.data?.totalPages);
       } catch (error) {
         console.log(error);
       } finally {
@@ -92,7 +100,7 @@ function PurchaseReport() {
       <div className="w-[1495px] h-fit mb-0 left-[359px]  absolute bg-black rounded-3xl ">
         <table className="w-[1491px] left-0 top-[108px] absolute inline-table">
           <thead>
-            <tr className="px-12 py-3 bg-gray-50 border-b border-gray-200 inline-flex justify-start items-center gap-16 w-full">
+            <tr className="px-4 py-3 bg-gray-50 border-b border-gray-200 inline-flex justify-start items-center gap-16 w-full">
               <th className="min-w-16 text-indigo-950 text-xl font-bold font-['Urbanist'] tracking-wide">
                 No.
               </th>
@@ -122,11 +130,17 @@ function PurchaseReport() {
           <tbody>
             {isLoading ? (
               <OvalSpinner />
+            ) : noReports ? (
+              <tr>
+                <td colSpan="8" className="text-center text-xl font-bold text-red-500">
+                  No more reports available for the selected date range.
+                </td>
+              </tr>
             ) : (
               purchaseData?.purchaseEntries?.map((i, index) => (
                 <tr
                   key={i?._id}
-                  className="px-12 py-2 bg-white border-b border-gray-200 inline-flex justify-start items-center gap-16 w-full"
+                  className="px-10 py-2 bg-white border-b border-gray-200 inline-flex justify-start items-center gap-16 w-full"
                 >
                   <td className="min-w-16 text-slate-900 text-xl font-normal font-['Urbanist'] tracking-wide">
                     {index + 1 + (currentPage - 1) * limit}
@@ -169,7 +183,7 @@ function PurchaseReport() {
           </div>
         </div>
         <div className="w-[1495px] px-12 py-2 left-0 top-[650px] absolute bg-white border-b border-gray-200 inline-flex justify-between items-center">
-          <div className="flex justify-start items-center gap-32">
+          <div className="flex justify-start items-center gap-5">
             <div className="justify-center text-slate-500/40 text-xl font-normal font-['Urbanist'] tracking-wide">
               Commission
             </div>
@@ -177,7 +191,7 @@ function PurchaseReport() {
               {totalStats?.totalCommission?.toFixed(2)}
             </div>
           </div>
-          <div className="flex justify-start items-center gap-32">
+          <div className="flex justify-start items-center gap-5">
             <div className="justify-center text-slate-500/40 text-xl font-normal font-['Urbanist'] tracking-wide">
               Qty(kg)
             </div>
@@ -185,7 +199,7 @@ function PurchaseReport() {
               {totalStats?.totalKg}
             </div>
           </div>
-          <div className="flex justify-start items-center gap-32">
+          <div className="flex justify-start items-center gap-5">
             <div className="justify-center text-slate-500/40 text-xl font-normal font-['Urbanist'] tracking-wide">
               Qty(Box)
             </div>
@@ -193,7 +207,7 @@ function PurchaseReport() {
               {totalStats?.totalBox}
             </div>
           </div>
-          <div className="flex justify-start items-center gap-32">
+          <div className="flex justify-start items-center gap-5">
             <div className="justify-center text-slate-500/40 text-xl font-normal font-['Urbanist'] tracking-wide">
               Expenses
             </div>
@@ -201,7 +215,7 @@ function PurchaseReport() {
               {totalStats?.totalMarketFee?.toFixed(2)}
             </div>
           </div>
-          <div className="flex justify-start items-center gap-32">
+          <div className="flex justify-start items-center gap-5">
             <div className="justify-center text-slate-500/40 text-xl font-normal font-['Urbanist'] tracking-wide">
               Gross Total
             </div>

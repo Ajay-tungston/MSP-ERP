@@ -27,6 +27,8 @@ export default function Navbar() {
     "/employee":"Master",
     "/individual-report":"Reports",
     "/whatsapp":"Whatsapp",
+    "/paymentin":"Transaction",
+    "/paymentout":"Transaction",
  
   };          
 console.log(location.pathname)

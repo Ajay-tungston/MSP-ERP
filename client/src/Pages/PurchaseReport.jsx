@@ -1,17 +1,13 @@
-//
-import React, { useEffect, useRef } from "react";
+import React, { useEffect } from "react";
 import { useState } from "react";
 import { BsPrinter } from "react-icons/bs";
 import { FaChevronRight } from "react-icons/fa6";
-import { FaCheckSquare, FaRegSquare } from "react-icons/fa";
 import useAxiosPrivate from "../hooks/useAxiosPrivate";
 import { format } from "date-fns";
 import OvalSpinner from "../Components/spinners/OvalSpinner";
-import { useReactToPrint } from "react-to-print";
-import PurchasePrint from "../Components/spinners/PurchasePrint";
+import { openPurchaseRegisterPrintPage } from "../utils/printPurchaseRegister";
 
 function PurchaseReport() {
-  const [selectedRows, setSelectedRows] = useState([]);
   const [totalPages, setTotalPages] = useState(1);
   const [currentPage, setCurrentPage] = useState(1);
   const limit = 9;
@@ -21,16 +17,13 @@ function PurchaseReport() {
   );
 
   const [toDate, setToDate] = useState(new Date().toLocaleDateString("en-CA"));
-  const rows = [...Array(8).keys()];
   const [purchaseData, setPurchaseData] = useState([]);
   const [totalStats, setTotalStats] = useState([]);
-  const [printEntries, setPrintEntries] = useState([]);
-  const [readyToPrint, setReadyToPrint] = useState(false); // NEW
-  const componentRef = useRef();
   const axiosInstance = useAxiosPrivate();
 
   useEffect(() => {
     const fetchPurchases = async () => {
+      setIsLoading(true);
       try {
         const response = await axiosInstance.get(
           `admin/purchase?page=${currentPage}&limit=${limit}&startDate=${startDate}&endDate=${toDate}`
@@ -40,6 +33,8 @@ function PurchaseReport() {
         setTotalPages(response?.data?.totalPages);
       } catch (error) {
         console.log(error);
+      } finally {
+        setIsLoading(false);
       }
     };
     fetchPurchases();
@@ -47,6 +42,7 @@ function PurchaseReport() {
 
   useEffect(() => {
     const fetchPurchases = async () => {
+      setIsLoading(true);
       try {
         const response = await axiosInstance.get(
           `admin/purchase/totalStats?startDate=${startDate}&endDate=${toDate}`
@@ -54,6 +50,8 @@ function PurchaseReport() {
         setTotalStats(response?.data);
       } catch (error) {
         console.log(error);
+      } finally {
+        setIsLoading(false);
       }
     };
     fetchPurchases();
@@ -62,129 +60,19 @@ function PurchaseReport() {
   // This function fetches the print data
   const fetchPrintData = async () => {
     try {
-      const response = await axiosInstance.get(`admin/purchase?startDate=${startDate}&endDate=${toDate}&noPagination=true`);
-      setPrintEntries(response?.data?.purchaseEntries || []);
-      openPrintPage(response?.data?.purchaseEntries,totalStats || []);
+      const response = await axiosInstance.get(
+        `admin/purchase?startDate=${startDate}&endDate=${toDate}&noPagination=true`
+      );
+      // setPrintEntries(response?.data?.purchaseEntries || []);
+      openPurchaseRegisterPrintPage(
+        response?.data?.purchaseEntries,
+        totalStats,
+        startDate,
+        toDate
+      );
     } catch (error) {
       console.error("Error fetching print data", error);
     }
-  };
-
-  const openPrintPage = (entries,totalStats) => {
-    const newWindow = window.open('', '', 'width=800,height=600');
-    
-    const printContent = `
-      <html>
-<head>
-  <title>Purchase Register</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 20px;
-    }
-    h1 {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 14px;
-    }
-    th, td {
-      border: 1px solid black;
-      padding: 8px;
-      text-align: center;
-    }
-    th {
-      background-color: #f2f2f2;
-    }
-    tfoot td {
-      font-weight: bold;
-      background-color: #f9f9f9;
-    }
-  </style>
-</head>
-<body>
-  <h1>PURCHASE REGISTER</h1>
-  <h3 style="text-align: center; margin-bottom: 30px;">
-    From: ${format(new Date(startDate), "dd/MM/yyyy")} &nbsp;&nbsp; To: ${format(new Date(toDate), "dd/MM/yyyy")}
-  </h3>
-  <table>
-    <thead>
-      <tr>
-        <th>SlNo</th>
-        <th>Inv Date</th>
-        <th>Sup Name</th>
-        <th>Box Qty</th>
-        <th>KG Qty</th>
-        <th>Gross</th>
-        <th>Comision</th>
-        <th>Expense</th>
-        <th>Total</th>
-      </tr>
-    </thead>
-    <tbody>
-      ${entries.map((entry, index) => `
-        <tr>
-          <td>${index + 1}</td>
-          <td>${format(new Date(entry.dateOfPurchase), "dd/MM/yyyy")|| "-"}</td>
-          
-          <td>${entry?.supplier?.supplierName || "N/A"}</td>
-          <td>${entry?.totalBox || 0}</td>
-          <td>${entry?.totalKg || 0}</td>
-          <td>${entry?.totalAmount?.toFixed(2)}</td>
-          <td>${entry?.commissionPaid?.toFixed(2)}</td>
-          <td>${entry?.marketFee?.toFixed(2)|| "-"}</td>
-          <td>${(entry?.totalAmount-((entry?.commissionPaid||0)+(entry?.marketFee||0)))?.toFixed(2)|| "-"}</td>
-        </tr>
-      `).join('')}
-    </tbody>
-    <tfoot>
-      <tr>
-        <td colspan="3">Total</td>
-        <td>${totalStats?.totalBox|| "-"}</td>
-        <td>${totalStats?.totalKg|| "-"}</td>
-        <td>${totalStats?.totalAmount?.toFixed(2)|| "-"}</td>
-        <td>${totalStats?.totalCommission?.toFixed(2)|| "-"}</td>
-        <td>${totalStats?.totalMarketFee?.toFixed(2)|| "-"}</td>
-        <td>${
-          entries.reduce(
-            (sum, entry) => sum + ((entry.totalAmount || 0) - ((entry.commissionPaid || 0) + (entry.marketFee || 0))),
-            0
-          ).toFixed(2)|| "-"}</td>
-      </tr>
-    </tfoot>
-  </table>
-
-  <script>
-    window.onload = function() {
-      window.print();
-    };
-  </script>
-</body>
-</html> 
-    `;
-    
-    newWindow.document.write(printContent);
-    newWindow.document.close();
-  };
-
-
-  // Select all toggle
-  const toggleAllRows = () => {
-    if (selectedRows.length === rows.length) {
-      setSelectedRows([]);
-    } else {
-      setSelectedRows(rows);
-    }
-  };
-
-  // Select individual row
-  const toggleRowSelection = (i) => {
-    setSelectedRows((prev) =>
-      prev.includes(i) ? prev.filter((row) => row !== i) : [...prev, i]
-    );
   };
 
   const handlePrevious = () => {
@@ -205,15 +93,6 @@ function PurchaseReport() {
         <table className="w-[1491px] left-0 top-[108px] absolute inline-table">
           <thead>
             <tr className="px-12 py-3 bg-gray-50 border-b border-gray-200 inline-flex justify-start items-center gap-16 w-full">
-              <th className="w-8">
-                <button onClick={toggleAllRows}>
-                  {selectedRows.length === rows.length ? (
-                    <FaCheckSquare className="text-blue-600 mr-10" />
-                  ) : (
-                    <FaRegSquare className="text-blue-600 mr-10" />
-                  )}
-                </button>
-              </th>
               <th className="min-w-16 text-indigo-950 text-xl font-bold font-['Urbanist'] tracking-wide">
                 No.
               </th>
@@ -233,7 +112,10 @@ function PurchaseReport() {
                 Commision
               </th>
               <th className="min-w-32 text-indigo-950 text-xl font-bold font-['Urbanist'] tracking-wide">
-                Amount
+                Gross
+              </th>
+              <th className="min-w-32 text-indigo-950 text-xl font-bold font-['Urbanist'] tracking-wide">
+                Total
               </th>
             </tr>
           </thead>
@@ -246,17 +128,8 @@ function PurchaseReport() {
                   key={i?._id}
                   className="px-12 py-2 bg-white border-b border-gray-200 inline-flex justify-start items-center gap-16 w-full"
                 >
-                  <td className="w-8">
-                    <button onClick={() => toggleRowSelection(i)}>
-                      {selectedRows.includes(i) ? (
-                        <FaCheckSquare className="text-blue-600" />
-                      ) : (
-                        <FaRegSquare className="text-blue-600" />
-                      )}
-                    </button>
-                  </td>
                   <td className="min-w-16 text-slate-900 text-xl font-normal font-['Urbanist'] tracking-wide">
-                  {index + 1 + (currentPage - 1) * limit}
+                    {index + 1 + (currentPage - 1) * limit}
                   </td>
                   <td className="min-w-32 text-slate-900 text-xl font-normal font-['Urbanist'] tracking-wide">
                     {i?.dateOfPurchase
@@ -273,10 +146,13 @@ function PurchaseReport() {
                     {i?.totalBox}
                   </td>
                   <td className="min-w-24 text-slate-900 text-xl font-normal font-['Urbanist'] tracking-wide">
-                    {i?.commissionPaid}
+                    {i?.commissionPaid?.toFixed(2)}
                   </td>
                   <td className="min-w-32 text-slate-900 text-xl font-normal font-['Urbanist'] tracking-wide">
-                    {i?.totalAmount}
+                    {i?.grossTotalAmount?.toFixed(2)}
+                  </td>
+                  <td className="min-w-32 text-slate-900 text-xl font-normal font-['Urbanist'] tracking-wide">
+                    {i?.netTotalAmount?.toFixed(2)}
                   </td>
                 </tr>
               ))
@@ -284,17 +160,12 @@ function PurchaseReport() {
           </tbody>
         </table>
 
-        {/* === Hidden Printable Table === */}
-        {/* <div style={{ display: "none" }}>
-        <PurchasePrint ref={componentRef} purchaseEntries={printEntries} />
-      </div> */}
-
         <div className="w-[1491px] px-12 py-4 left-0 top-[722px] absolute bg-teal-50 border-b border-gray-200 inline-flex justify-start items-center gap-16">
           <div className="w-[1104px] min-w-32 justify-center text-slate-500/40 text-xl font-normal font-['Urbanist'] tracking-wide">
             Total
           </div>
           <div className="min-w-32 justify-center text-slate-900 text-xl font-bold font-['Urbanist'] tracking-wide">
-            {totalStats?.totalAmount?.toFixed(2)}
+            {totalStats?.netTotalAmount?.toFixed(2)}
           </div>
         </div>
         <div className="w-[1495px] px-12 py-2 left-0 top-[650px] absolute bg-white border-b border-gray-200 inline-flex justify-between items-center">
@@ -328,6 +199,14 @@ function PurchaseReport() {
             </div>
             <div className="justify-center text-slate-900 text-xl font-bold font-['Urbanist'] tracking-wide">
               {totalStats?.totalMarketFee?.toFixed(2)}
+            </div>
+          </div>
+          <div className="flex justify-start items-center gap-32">
+            <div className="justify-center text-slate-500/40 text-xl font-normal font-['Urbanist'] tracking-wide">
+              Gross Total
+            </div>
+            <div className="justify-center text-slate-900 text-xl font-bold font-['Urbanist'] tracking-wide">
+              {totalStats?.grossTotalAmount?.toFixed(2)}
             </div>
           </div>
         </div>

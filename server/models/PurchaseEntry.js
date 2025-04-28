@@ -59,7 +59,11 @@ const purchaseEntrySchema = new mongoose.Schema(
         message: "At least one item must be included in the purchase",
       },
     },
-    totalAmount: {
+    grossTotalAmount: {
+      type: Number,
+      required: true,
+    },
+    netTotalAmount: {
       type: Number,
       required: true,
     },

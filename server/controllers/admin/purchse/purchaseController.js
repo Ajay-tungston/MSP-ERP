@@ -3,36 +3,36 @@ const Item = require("../../../models/Item");
 const PurchaseEntry = require("../../../models/PurchaseEntry");
 const Supplier = require("../../../models/Supplier");
 const getNextCounterNumber = require("../../../utils/counter");
-const validator=require("validator")
+const validator = require("validator");
 
 const createPurchaseEntry = async (req, res) => {
   //added validation in schema
   try {
-    console.log(req.body)
-    const { supplierId, items, dateOfPurchase,marketFee } = req.body;
-    if (!supplierId || !items || !dateOfPurchase ||!marketFee) {
+    console.log(req.body);
+    const { supplierId, items, dateOfPurchase, marketFee } = req.body;
+    if (!supplierId || !items || !dateOfPurchase || !marketFee) {
       return res.status(400).json({ error: "all feilds are required" });
     }
 
     const supplier = await Supplier.findById(supplierId);
 
-    if (!supplier) {  
+    if (!supplier) {
       return res.status(404).json({ message: "Supplier not found" });
     }
     if (!validator.isISO8601(dateOfPurchase)) {
       return res.status(400).json({ error: "Invalid date format" });
     }
-    
+
     // Optional: Check if the date is not in the future
     const inputDate = new Date(dateOfPurchase);
     const now = new Date();
-    
+
     if (inputDate > now) {
       return res
         .status(400)
         .json({ error: "Date of purchase cannot be in the future" });
     }
-    if (typeof marketFee !== 'number' || marketFee < 0) {
+    if (typeof marketFee !== "number" || marketFee < 0) {
       return res
         .status(400)
         .json({ error: "Market fee must be a non-negative number" });
@@ -40,9 +40,9 @@ const createPurchaseEntry = async (req, res) => {
 
     const newPurchaseNumber = await getNextCounterNumber("purchaseNumber");
 
-    let totalAmount = 0;
+    let grossTotalAmount = 0;
     let totalKg = 0;
-    let totalBox=0
+    let totalBox = 0;
     const purchaseItems = [];
 
     for (let itemDetails of items) {
@@ -61,28 +61,29 @@ const createPurchaseEntry = async (req, res) => {
       purchaseItems.push({
         item: item._id,
         quantity: quantity,
-        quantityType:unitType,
+        quantityType: unitType,
         remainingQuantity: quantity,
         unitPrice,
         totalCost,
       });
-      totalAmount += totalCost;
-      unitType==="kg"?
-      totalKg += quantity:totalBox+=quantity
+      grossTotalAmount += totalCost;
+      unitType === "kg" ? (totalKg += quantity) : (totalBox += quantity);
     }
 
-    const commissionPaid = (totalAmount * supplier.commission) / 100;
+    const commissionPaid = (grossTotalAmount * supplier.commission) / 100;
+    const netTotalAmount = grossTotalAmount - (commissionPaid +marketFee);
 
     const purchaseEntry = new PurchaseEntry({
       purchaseNumber: newPurchaseNumber,
       supplier: supplier._id,
       items: purchaseItems,
-      totalAmount,
+      grossTotalAmount,
+      netTotalAmount,
       totalBox,
       totalKg,
       commissionPaid,
       dateOfPurchase,
-      marketFee
+      marketFee,
     });
 
     await purchaseEntry.save();
@@ -103,7 +104,13 @@ const createPurchaseEntry = async (req, res) => {
 
 const getAllPurchaseEntries = async (req, res) => {
   try {
-    const { page = 1, limit = 10, startDate, endDate, noPagination } = req.query;
+    const {
+      page = 1,
+      limit = 10,
+      startDate,
+      endDate,
+      noPagination,
+    } = req.query;
 
     const pageNumber = parseInt(page, 10);
     const limitNumber = parseInt(limit, 10);
@@ -119,7 +126,9 @@ const getAllPurchaseEntries = async (req, res) => {
       };
     }
 
-    let query = PurchaseEntry.find(filter).populate("supplier items.item").sort({ dateOfPurchase: -1 });
+    let query = PurchaseEntry.find(filter)
+      .populate("supplier items.item")
+      .sort({ dateOfPurchase: -1 });
 
     if (!noPagination) {
       // Only apply skip and limit if noPagination is false
@@ -142,7 +151,6 @@ const getAllPurchaseEntries = async (req, res) => {
   }
 };
 
-
 //for calclute the total amount for the getAllPurchaseEntries search
 const getTotalPurchaseStats = async (req, res) => {
   try {
@@ -162,17 +170,18 @@ const getTotalPurchaseStats = async (req, res) => {
       {
         $group: {
           _id: null,
-          totalAmount: { $sum: "$totalAmount" },
+          netTotalAmount: { $sum: "$netTotalAmount" },
+          grossTotalAmount: { $sum: "$grossTotalAmount" },
           totalCommission: { $sum: "$commissionPaid" },
           totalBox: { $sum: "$totalBox" },
           totalKg: { $sum: "$totalKg" },
-          totalMarketFee: { $sum: "$marketFee" }, 
+          totalMarketFee: { $sum: "$marketFee" },
         },
       },
     ]);
 
     const stats = result[0] || {
-      totalAmount: 0,
+      netTotalAmount: 0,
       totalCommission: 0,
       totalBox: 0,
       totalKg: 0,
@@ -186,7 +195,6 @@ const getTotalPurchaseStats = async (req, res) => {
   }
 };
 
-
 const getPurchaseCounter = async (req, res) => {
   try {
     const purchaseNo = await Counter.find({ name: "purchaseNumber" });
@@ -197,10 +205,9 @@ const getPurchaseCounter = async (req, res) => {
   }
 };
 
-
 module.exports = {
   createPurchaseEntry,
   getAllPurchaseEntries,
   getPurchaseCounter,
-  getTotalPurchaseStats
+  getTotalPurchaseStats,
 };

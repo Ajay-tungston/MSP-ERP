@@ -1,33 +1,54 @@
-import { useState } from 'react';
+import { useEffect, useState } from "react";
 import { XCircleIcon, PlusCircleIcon } from "@heroicons/react/24/solid";
-import { Combobox, ComboboxInput, ComboboxOptions, ComboboxOption } from '@headlessui/react';
+import {
+  Combobox,
+  ComboboxInput,
+  ComboboxOptions,
+  ComboboxOption,
+} from "@headlessui/react";
+import useAxiosPrivate from "../../hooks/useAxiosPrivate";
 
 function AddPaymentIn({ setPopup }) {
-  const [category, setCategory] = useState('');
-  const [date, setDate] = useState('');
-  const [name, setName] = useState('');
-  const [amount, setAmount] = useState('');
-  const [address, setAddress] = useState('');
+  const [category, setCategory] = useState("");
+  console.log(category);
+  const [date, setDate] = useState("");
+  const [name, setName] = useState("");
+  const [amount, setAmount] = useState("");
+  const [address, setAddress] = useState("");
   const [errors, setErrors] = useState({});
-  const [nameList, setNameList] = useState(['Ajay', 'Athul', 'Pranav', 'Ajaykumar', 'Pranav']);
-  const [autoFilledAddress, setAutoFilledAddress] = useState(''); 
+  const [nameList, setNameList] = useState([]);
+  const [sellectedData,setselectedData]=useState("")
+  const [autoFilledAddress, setAutoFilledAddress] = useState("");
+  const axiosInstance = useAxiosPrivate();
+console.log("dehifcbdhib",nameList)
+  useEffect(() => {
+    const fetchName = async () => {
+      try {
+        const response = await axiosInstance.get(
+          `/admin/${category}/list?search=${name}`
+        );
+        if(category==="employee"){
 
-
-  const handleCategoryChange = (e) => {
-    const selectedCategory = e.target.value;
-    setCategory(selectedCategory);
-    // Auto-fill the address based on category
-    if (selectedCategory === 'Customer' || selectedCategory === 'Employee' || selectedCategory === 'Supplier') {
-      setAutoFilledAddress('123 Main St, City, Country');
-      setAddress(''); // Clear user input if auto-filled
-    } else {
-      setAutoFilledAddress(''); // Clear auto-filled address if user selects Bank or Others
-    }
-  };
+          setNameList(response?.data);
+        }
+        if(category==="supplier"){
+        setNameList(response?.data);
+        }
+        if(category==="company"){
+          setNameList(response.data.map(i=>i.supplierName));
+        }
+        console.log(response);
+        console.log(`/admin/${category}/list?search=${name}`);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    fetchName();
+  }, [name,category]);
 
   const handleSave = () => {
     const newErrors = {};
-    
+
     // Validation for Category
     if (!category) newErrors.category = "Category is required";
 
@@ -38,7 +59,7 @@ function AddPaymentIn({ setPopup }) {
     if (!name) {
       newErrors.name = "Name is required";
     } else if (!nameList.includes(name)) {
-      newErrors.name = "Name must be one of the available options";  // You can customize this condition based on your needs
+      newErrors.name = "Name must be one of the available options"; // You can customize this condition based on your needs
     }
 
     // Validation for Amount
@@ -58,53 +79,67 @@ function AddPaymentIn({ setPopup }) {
 
     // If no errors, proceed to submit
     if (Object.keys(newErrors).length === 0) {
-      console.log("Submitting Data:", { category, date, name, amount, address });
+      console.log("Submitting Data:", {
+        category,
+        date,
+        name,
+        amount,
+        address,
+      });
       alert("Data Saved!");
       // Optionally reset the form
-      setCategory('');
-      setDate('');
-      setName('');
-      setAmount('');
-      setAddress('');
-      setAutoFilledAddress('');
+      setCategory("");
+      setDate("");
+      setName("");
+      setAmount("");
+      setAddress("");
+      setAutoFilledAddress("");
     }
   };
 
   const handleCancel = () => {
-    setCategory('');
-    setDate('');
-    setName('');
-    setAmount('');
-    setAddress('');
+    setCategory("");
+    setDate("");
+    setName("");
+    setAmount("");
+    setAddress("");
     setErrors({});
-    setPopup('');
-    setAutoFilledAddress('');
+    setPopup("");
+    setAutoFilledAddress("");
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75">
       <div className="w-[900px] px-8 py-10 bg-gray-100 rounded-3xl shadow-lg">
         <div className="flex flex-col gap-6">
-          <div className="text-indigo-950 text-3xl font-bold font-['Urbanist']">Payment Out</div>
+          <div className="text-indigo-950 text-3xl font-bold font-['Urbanist']">
+            Payment Out
+          </div>
 
           <div className="flex justify-between gap-8">
             {/* Left Column */}
             <div className="w-full flex flex-col gap-6">
               {/* Category */}
               <div className="w-full">
-                {errors.category && <span className="text-red-600 text-sm ml-6">{errors.category}</span>}
+                {errors.category && (
+                  <span className="text-red-600 text-sm ml-6">
+                    {errors.category}
+                  </span>
+                )}
                 <div className="px-6 py-4 bg-gray-50 rounded-xl rounded-tr-xl flex justify-between items-center">
-                  <div className="text-slate-500 text-xl font-normal font-['Urbanist']">Choose Category</div>
+                  <div className="text-slate-500 text-xl font-normal font-['Urbanist']">
+                    Choose Category
+                  </div>
                   <select
                     value={category}
-                    onChange={handleCategoryChange}
+                    onChange={(e) => setCategory(e.target.value)}
                     className="w-40 text-xl font-normal font-['Urbanist'] px-4 py-2 border border-gray-300 rounded-lg"
                   >
                     <option value="">Select</option>
-                    <option value="Employee">Employee</option>
-                    <option value="Customer">Customer</option>
-                    <option value="Supplier">Supplier</option>
-                    <option value="Company">Company</option>
+                    <option value="employee">Employee</option>
+                    <option value="customer">Customer</option>
+                    <option value="supplier">Supplier</option>
+                    <option value="company">Company</option>
                     <option value="Bank">Bank</option>
                     <option value="Others">Others</option>
                   </select>
@@ -113,9 +148,15 @@ function AddPaymentIn({ setPopup }) {
 
               {/* Date */}
               <div className="w-full">
-                {errors.date && <span className="text-red-600 text-sm ml-6">{errors.date}</span>}
+                {errors.date && (
+                  <span className="text-red-600 text-sm ml-6">
+                    {errors.date}
+                  </span>
+                )}
                 <div className="px-12 py-4 bg-gray-50 rounded-xl rounded-tr-xl flex justify-start items-center gap-9">
-                  <div className="text-slate-500 text-xl font-normal font-['Urbanist']">Date</div>
+                  <div className="text-slate-500 text-xl font-normal font-['Urbanist']">
+                    Date
+                  </div>
                   <input
                     type="date"
                     value={date}
@@ -130,13 +171,29 @@ function AddPaymentIn({ setPopup }) {
             <div className="w-full flex flex-col gap-6">
               {/* Name */}
               <div className="w-full relative">
-                {errors.name && <span className="text-red-600 text-sm ml-6">{errors.name}</span>}
+                {errors.name && (
+                  <span className="text-red-600 text-sm ml-6">
+                    {errors.name}
+                  </span>
+                )}
                 <div className="px-6 py-4 bg-gray-50 rounded-xl rounded-tr-xl flex justify-between items-center">
-                  <div className="text-slate-500 text-xl font-normal font-['Urbanist']">Name</div>
-                  <Combobox value={name} onChange={setName}>
+                  <div className="text-slate-500 text-xl font-normal font-['Urbanist']">
+                    Name
+                  </div>
+                  <Combobox 
+                 value={sellectedData}
+                 onChange={setselectedData}
+                 onClose={() => setselectedData("")}
+                  // onClose={() => setName("")}
+                  // value={name} onChange={setName}
+                  >
                     <ComboboxInput
                       aria-label="Name"
-                      displayValue={(name) => name} // Display selected name in the input
+                      displayValue={(person) => person?.name}
+                      onChange={(e) => setName(e.target.value)}
+                      onFocus={() => setInputFocused(true)}
+                      onBlur={() => setInputFocused(false)}
+                      autoComplete="off"
                       placeholder="Enter Name"
                       className="w-full px-8 py-2 text-xl font-normal font-['Urbanist'] text-slate-500"
                     />
@@ -148,7 +205,7 @@ function AddPaymentIn({ setPopup }) {
                             value={item}
                             className="px-6 py-3 cursor-pointer text-gray-700 hover:bg-gray-100"
                           >
-                            {item}
+                            {item.name}
                           </ComboboxOption>
                         ))}
                       </ComboboxOptions>
@@ -159,9 +216,15 @@ function AddPaymentIn({ setPopup }) {
 
               {/* Amount */}
               <div className="w-full">
-                {errors.amount && <span className="text-red-600 text-sm ml-6">{errors.amount}</span>}
+                {errors.amount && (
+                  <span className="text-red-600 text-sm ml-6">
+                    {errors.amount}
+                  </span>
+                )}
                 <div className="px-6 py-4 bg-gray-50 rounded-xl rounded-tr-xl flex justify-between items-center">
-                  <div className="text-slate-500 text-xl font-normal font-['Urbanist']">Amount<span className='text-red-600'>*</span></div>
+                  <div className="text-slate-500 text-xl font-normal font-['Urbanist']">
+                    Amount<span className="text-red-600">*</span>
+                  </div>
                   <input
                     type="number"
                     value={amount}
@@ -175,9 +238,11 @@ function AddPaymentIn({ setPopup }) {
           </div>
 
           {/* Address */}
-          {errors.address && <span className="text-red-600 text-sm ml-6">{errors.address}</span>}
+          {errors.address && (
+            <span className="text-red-600 text-sm ml-6">{errors.address}</span>
+          )}
           <div className="px-6 py-4 bg-gray-50 rounded-2xl">
-            {category === 'Bank' || category === 'Others' ? (
+            {category === "Bank" || category === "Others" ? (
               <textarea
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
@@ -190,7 +255,11 @@ function AddPaymentIn({ setPopup }) {
                 value={autoFilledAddress || address}
                 onChange={(e) => setAddress(e.target.value)}
                 className="w-full px-8 py-2 text-xl font-normal font-['Urbanist'] text-slate-500"
-                disabled={category === 'Customer' || category === 'Employee' || category === 'Supplier'}
+                disabled={
+                  category === "Customer" ||
+                  category === "Employee" ||
+                  category === "Supplier"
+                }
               />
             )}
           </div>

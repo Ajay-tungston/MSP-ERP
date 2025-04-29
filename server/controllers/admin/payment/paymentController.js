@@ -124,4 +124,38 @@ const addPayment = async (req, res) => {
   }
 };
 
-module.exports = { addPayment };
+const getAllPayments = async (req, res) => {
+  try {
+    const { page = 1, limit = 10, paymentType } = req.query;
+
+    const query = {};
+
+    if (paymentType) {
+      if (!['PaymentIn', 'PaymentOut'].includes(paymentType)) {
+        return res.status(400).json({ message: "Invalid payment type." });
+      }
+      query.paymentType = paymentType;
+    }
+
+    const payments = await Payment.find(query)
+      .sort({ date: -1 }) 
+      .skip((page - 1) * limit)
+      .limit(Number(limit))
+      .lean();
+
+    const total = await Payment.countDocuments(query);
+
+    res.status(200).json({
+      payments,
+      total,
+      page: Number(page),
+      totalPages: Math.ceil(total / limit),
+    });
+  } catch (error) {
+    console.error("Error fetching payments:", error);
+    res.status(500).json({ message: "Internal server error." });
+  }
+};
+
+
+module.exports = { addPayment,getAllPayments };

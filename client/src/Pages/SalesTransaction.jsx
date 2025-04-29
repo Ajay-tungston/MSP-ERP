@@ -64,7 +64,7 @@ const navigate=useNavigate()
       {/* Table */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <table className="w-full">
-          <thead className="bg-gray-50">
+          <thead className="bg-[#F9FAFB]">
             <tr>
               <th className="px-6 py-3 text-left text-[20px] font-medium text-gray-500">No.</th>
               <th className="px-6 py-3 text-left text-[20px] font-medium text-gray-500">Supplier</th>

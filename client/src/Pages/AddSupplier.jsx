@@ -329,11 +329,12 @@ function AddSupplier({setPopup}) {
               className="min-w-[120px] sm:min-w-[172px] text-[#737791] text-xl font-normal font-['Urbanist']"
               htmlFor="marketFee"
             >
-              marketFee (%)
+              marketFee 
             </label>
             <input
               id="marketFee"
               name="marketFee"
+              placeholder="for 1 box"
               type="number"
               className={`w-full sm:w-[350px] px-6 py-4 bg-gray-50 rounded-xl text-xl font-normal font-['Urbanist'] ${errors.marketFee ? "border-red-500" : ""
                 }`}

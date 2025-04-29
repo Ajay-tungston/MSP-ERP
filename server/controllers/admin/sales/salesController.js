@@ -8,57 +8,49 @@ const getNextCounterNumber = require("../../../utils/counter");
 const mongoose = require("mongoose");
 
 const createSaleTransaction = async (req, res) => {
-  console.log(req.body);
   try {
     const sales = Array.isArray(req.body) ? req.body : [req.body];
-    const results = [];
+
+    const transactionNumber = await getNextCounterNumber("saleTransaction");
+    const customersArray = [];
+    let grandTotal = 0;
+    let totalQuantity = 0;
 
     for (const saleData of sales) {
-      const {
-        customerId,
-        items,
-        discount = 0,
-        status = "completed",
-      } = saleData;
+      const { customerId, items, discount = 0 } = saleData;
 
-      // Convert customerId to ObjectId and validate
-      const customer = await Customer.findById(
-        new mongoose.Types.ObjectId(customerId)
-      );
+      // Validate customer
+      const customer = await Customer.findById(customerId);
       if (!customer) {
-        return res
-          .status(404)
-          .json({ message: `Customer with ID ${customerId} not found` });
+        return res.status(404).json({ message: `Customer ${customerId} not found` });
       }
 
-      const transactionNumber = await getNextCounterNumber("saleTransaction");
-
-      let totalAmount = 0;
-      let totalQuantity = 0;
-      const saleItems = [];
+      const customerItems = [];
+      let customerTotal = 0;
+      let customerQuantity = 0;
 
       for (const itemData of items) {
         const { itemName, supplierId, quantity, unitPrice } = itemData;
 
+        // Validate item
         const item = await Item.findOne({ itemName });
         if (!item) {
-          return res
-            .status(404)
-            .json({ message: `Item "${itemName}" not found` });
+          return res.status(404).json({ message: `Item ${itemName} not found` });
         }
 
-        const supplier = await Supplier.findById(
-          new mongoose.Types.ObjectId(supplierId)
-        );
+        // Validate supplier
         if (!supplierId || !mongoose.Types.ObjectId.isValid(supplierId)) {
-          return res
-            .status(400)
-            .json({ message: `Invalid supplier ID: ${supplierId}` });
+          return res.status(400).json({ message: `Invalid supplier ID: ${supplierId}` });
+        }
+
+        const supplier = await Supplier.findById(supplierId);
+        if (!supplier) {
+          return res.status(404).json({ message: `Supplier ${supplierId} not found` });
         }
 
         const totalCost = unitPrice * quantity;
 
-        saleItems.push({
+        customerItems.push({
           item: item._id,
           supplier: supplier._id,
           quantity,
@@ -66,40 +58,42 @@ const createSaleTransaction = async (req, res) => {
           totalCost,
         });
 
-        totalAmount += totalCost;
-        totalQuantity += quantity;
+        customerTotal += totalCost;
+        customerQuantity += quantity;
       }
 
-      const finalAmount = totalAmount - discount;
-
-      const newSale = new SalesEntry({
-        transactionNumber,
+      // Push processed customer data
+      customersArray.push({
         customer: customer._id,
-        items: saleItems,
-        totalAmount: finalAmount,
-        totalQuantity,
+        items: customerItems,
         discount,
-        status,
+        totalAmount: customerTotal - discount,
+        totalQuantity: customerQuantity,
       });
 
-      await newSale.save();
-      results.push(newSale);
+      grandTotal += (customerTotal - discount);
+      totalQuantity += customerQuantity;
     }
 
-    return res
-      .status(201)
-      .json({ message: "Sales transactions recorded", sales: results });
+    // Create and save the sale transaction
+    const newSale = new SalesEntry({
+      transactionNumber,
+      status: "completed",
+      totalAmount: grandTotal,
+      totalQuantity,
+      customers: customersArray,
+    });
+
+    await newSale.save();
+
+    return res.status(201).json({ message: "Grouped sales transaction saved", sale: newSale });
+
   } catch (error) {
     console.error("Sale creation error:", error);
-
-    if (error.name === "ValidationError") {
-      const messages = Object.values(error.errors).map((e) => e.message);
-      return res.status(400).json({ errors: messages });
-    }
-
-    return res.status(500).json({ message: "Internal Server Error" });
+    return res.status(500).json({ message: "Internal Server Error", error: error.message });
   }
 };
+
 
 const getSalesEntries = async (req, res) => {
   try {

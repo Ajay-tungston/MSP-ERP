@@ -17,14 +17,16 @@ const Sales = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [purchase, setPurchase] = useState();
+  console.log("Add purchase", purchase);
   const axiosInstance = useAxiosPrivate();
+  const [submitLoading, setSubmitloading] = useState(false);
 
   // rows holds each line of the sales form
   const [rows, setRows] = useState([
     {
       id: 1,
       customer: "",
-      supplierId:"",
+      supplierId: "",
       customerName: "",
       itemName: "",
       quantity: "",
@@ -32,7 +34,7 @@ const Sales = () => {
       unitPrice: "",
     },
   ]);
-
+  console.log("ejhfbwkbf", rows);
   // which row’s dropdown is open?
   const [activeCustomerIndex, setActiveCustomerIndex] = useState(null);
   // what the user has typed when searching
@@ -84,7 +86,7 @@ const Sales = () => {
     const fetchPurchaseById = async () => {
       try {
         const response = await axiosInstance.get(`/admin/purchase/get/${id}`);
-        console.log(response)
+
         setPurchase(response.data);
       } catch (err) {
         console.error("Error fetching purchase:", err);
@@ -151,21 +153,20 @@ const Sales = () => {
   };
   const handleItemChange = (index, selectedItemName) => {
     const updatedRows = [...rows];
-  
+
     // Find the selected item object from purchase items
     const selectedItem = purchase?.items?.find(
       (item) => item.item.itemName === selectedItemName
     );
-  
+
     if (selectedItem) {
       updatedRows[index].itemName = selectedItem.item.itemName;
-      updatedRows[index].itemId = selectedItem.item._id;        // ⬅️ SAVE itemId
-      updatedRows[index].supplier = selectedItem.supplierId;    // ⬅️ SAVE supplierId
+      updatedRows[index].itemId = selectedItem.item._id; // ⬅️ SAVE itemId
+      updatedRows[index].supplierId = selectedItem.supplierId; // ⬅️ SAVE supplierId
     }
-  
+
     setRows(updatedRows);
   };
-  
 
   //Helper function to calculate remaining quantity
   const getRemainingQuantity = (itemId, currentIndex = -1) => {
@@ -201,22 +202,6 @@ const Sales = () => {
     setRows(
       rows.map((row, i) => (i === index ? { ...row, quantity, error } : row))
     );
-  };
-
-  const addRow = () => {
-    setRows((r) => [
-      ...r,
-      {
-        id: r.length + 1,
-        customer: "",
-        customerLabel: "",
-        supplierId: "",
-        itemName: "",
-        quantity: "",
-        unit: "",
-        unitPrice: "",
-      },
-    ]);
   };
 
   const handleKeyDown = (e, rowIndex) => {
@@ -260,68 +245,83 @@ const Sales = () => {
         break;
     }
   };
-  const handleAddSale = async (index) => {
-    console.log("Button clicked, index:", index);
-
-    const rowData = rows[index];
-    console.log(rowData);
-    // Validation
-    if (!rowData.customer) {
-      return Swal.fire("Error", "Please select a customer first.", "error");
-    }
-    if (!rowData.itemName) {
-      return Swal.fire("Error", "Please select an item.", "error");
-    }
-    if (!rowData.quantity || rowData.quantity <= 0) {
-      return Swal.fire("Error", "Please enter a valid quantity.", "error");
-    }
-    if (!rowData.unitPrice || rowData.unitPrice <= 0) {
-      return Swal.fire("Error", "Invalid unit price.", "error");
-    }
-
+  const handleAddSale = async () => {
+    setSubmitloading(true);
     try {
-      // Prepare the payload for API request
-      const salePayload = {
-        customerId: rowData.customer,
-        discount: rowData.discount || 0,
-        status: "completed",
-        items: [
-          {
-            itemName: rowData.itemName,
-            supplierId: purchase.supplier._id, // supplier _id
-            quantity: rowData.quantity,
-            unitPrice: rowData.unitPrice,
-          },
-        ],
-      };
+      const newRows = [...rows]; // Clone the rows
 
-      console.log("Sending Payload:", salePayload);
+      for (let i = 0; i < newRows.length; i++) {
+        const rowData = newRows[i];
+        console.log(`Processing row ${i + 1}`, rowData);
 
-      // Make API request
-      const response = await axiosInstance.post(
-        "/admin/sales/add",
-        salePayload
-      );
+        // Validation
+        if (!rowData.customer) {
+          throw new Error(`Row ${i + 1}: Please select a customer.`);
+        }
+        if (!rowData.itemName) {
+          throw new Error(`Row ${i + 1}: Please select an item.`);
+        }
+        if (!rowData.quantity || rowData.quantity <= 0) {
+          throw new Error(`Row ${i + 1}: Please enter a valid quantity.`);
+        }
+        if (!rowData.unitPrice || rowData.unitPrice <= 0) {
+          throw new Error(`Row ${i + 1}: Invalid unit price.`);
+        }
 
-      console.log("API Response:", response);
+        // Prepare payload
+        const salePayload = {
+          customerId: rowData.customer,
+          discount: rowData.discount || 0,
+          status: "completed",
+          items: [
+            {
+              itemName: rowData.itemName,
+              supplierId: purchase.supplier._id,
+              quantity: Number(rowData.quantity),
+              unitPrice: Number(rowData.unitPrice),
+            },
+          ],
+        };
 
-      // Handle successful response
-      if (response.status === 201) {
-        Swal.fire({
-          icon: "success",
-          title: "Sale added successfully",
-          timer: 1500,
-          showConfirmButton: false,
-        });
-        navigate("/sales-transactions"); // Navigate to sales transactions page after success
+        console.log(`Payload for row ${i + 1}:`, salePayload);
+
+        const response = await axiosInstance.post(
+          "/admin/sales/add",
+          salePayload
+        );
+        console.log(`Response for row ${i + 1}:`, response);
       }
-    } catch (err) {
-      console.error("Failed to add sale:", err);
+
       Swal.fire({
-        icon: "error",
-        title: "Error adding sale",
-        text: err.response?.data?.message || "Something went wrong.",
+        title: "All sales transactions added successfully!",
+        icon: "success",
+        draggable: true,
       });
+
+      // Reset all rows after successful submission
+      setRows([
+        {
+          id: 1,
+          customer: "",
+          supplierId: "",
+          customerName: "",
+          itemName: "",
+          quantity: "",
+          unit: "",
+          unitPrice: "",
+        },
+      ]);
+
+      navigate("/sales-transactions");
+    } catch (error) {
+      Swal.fire({
+        title: error.message || "Something went wrong!",
+        icon: "error",
+        draggable: true,
+      });
+      console.error(error);
+    } finally {
+      setSubmitloading(false);
     }
   };
 
@@ -641,18 +641,26 @@ const Sales = () => {
               ))}
 
               {/* Add new row button */}
-              <button
-                type="button"
-                onClick={addRow}
-                className="self-stretch px-12 py-4 bg-white border-b border-gray-200 inline-flex justify-center items-center gap-4 cursor-pointer"
+              <div
+                className="col-span-6 rounded-lg px-6 py-4 cursor-pointer flex items-center justify-center gap-3 text-indigo-900 text-xl hover:bg-gray-100 transition"
+                onClick={() => {
+                  setRows((prev) => [
+                    ...prev,
+                    {
+                      id: prev.length + 1,
+                      customer: "",
+                      supplierId: "",
+                      customerName: "",
+                      itemName: "",
+                      quantity: "",
+                      unit: "",
+                      unitPrice: "",
+                    },
+                  ]);
+                }}
               >
-                <div className="w-6 h-6 relative text-indigo-400">
-                  <CiCirclePlus className="w-6 h-6 absolute" />
-                </div>
-                <div className="min-w-32 justify-center text-indigo-400 text-sm font-normal font-['Urbanist'] tracking-wide">
-                  Add another item
-                </div>
-              </button>
+                <span className="text-2xl">＋</span> Add another item
+              </div>
             </div>
 
             <div className="self-stretch flex flex-col justify-start items-end gap-8">
@@ -755,16 +763,12 @@ const Sales = () => {
 
                   {/* Save Button */}
 
-                  {rows.map((row, index) => (
-                    <div key={index}>
-                      <button
-                        onClick={() => handleAddSale(index)} // This is how index is passed
-                        className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
-                      >
-                        Save
-                      </button>
-                    </div>
-                  ))}
+                  <button
+                    onClick={handleAddSale}
+                    className="flex items-center gap-2 border border-blue-800 text-blue-800 px-5 py-2 rounded-lg hover:bg-red-100 transition"
+                  >
+                    Save
+                  </button>
                 </div>
               </div>
             </div>

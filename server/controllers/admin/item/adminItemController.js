@@ -1,11 +1,11 @@
 const Item = require("../../../models/Item");
-const validator=require("validator")
+const validator = require("validator");
 
 const itemNameRegex = /^[a-zA-Z0-9\s]+$/;
 
 const addItem = async (req, res) => {
   try {
-    const { itemCode, itemName,conversionRatio } = req.body;
+    const { itemCode, itemName, conversionRatio } = req.body;
     if (!itemCode || !itemName) {
       return res.status(400).json({ message: "Please fill in all fields" });
     }
@@ -19,6 +19,7 @@ const addItem = async (req, res) => {
         message: "An item with the same code or name already exists",
       });
     }
+
     if (
       !validator.isAlphanumeric(itemCode) ||
       itemCode.length < 3 ||
@@ -26,15 +27,16 @@ const addItem = async (req, res) => {
     ) {
       return res.status(400).json({
         message:
-          "item code must be alphanumeric and between 3 and 10 characters long",
+          "Item code must be alphanumeric and between 3 and 10 characters long",
       });
     }
+
     if (!itemNameRegex.test(itemName)) {
       return res.status(400).json({
         message: "Item name must contain only letters, numbers, and spaces",
       });
     }
-    
+
     if (conversionRatio && (isNaN(conversionRatio) || conversionRatio <= 0)) {
       return res.status(400).json({
         message: "Conversion ratio must be a positive number",
@@ -58,11 +60,11 @@ const getAllItems = async (req, res) => {
     const search = req.query.search || "";
 
     const searchQuery = {
-        $or: [
-          { itemName: { $regex: search, $options: "i" } },
-          { itemCode: { $regex: search, $options: "i" } }
-        ]
-      };
+      $or: [
+        { itemName: { $regex: search, $options: "i" } },
+        { itemCode: { $regex: search, $options: "i" } },
+      ],
+    };
 
     const totalItems = await Item.countDocuments(searchQuery);
 
@@ -89,6 +91,27 @@ const getAllItems = async (req, res) => {
   }
 };
 
+const getItemById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json({ message: "Item ID is required" });
+    }
+
+    const item = await Item.findById(id);
+
+    if (!item) {
+      return res.status(404).json({ message: "Item not found" });
+    }
+
+    return res.status(200).json({ item });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: "Error retrieving item" });
+  }
+};
+
 const deleteItems = async (req, res) => {
   try {
     const { itemId } = req.body;
@@ -98,10 +121,11 @@ const deleteItems = async (req, res) => {
         .status(400)
         .json({ message: "Please provide a valid list of item IDs." });
     }
+
     const result = await Item.deleteMany({ _id: { $in: itemId } });
 
     if (result.deletedCount === 0) {
-      return res.status(404).json({ message: "item not found" });
+      return res.status(404).json({ message: "Item not found" });
     }
 
     return res.status(200).json({
@@ -113,4 +137,4 @@ const deleteItems = async (req, res) => {
   }
 };
 
-module.exports={addItem,getAllItems,deleteItems}
+module.exports = { addItem, getAllItems, getItemById, deleteItems };

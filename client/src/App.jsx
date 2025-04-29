@@ -26,9 +26,19 @@ import Dashboard from "./Pages/Dashboard";
 import PersistLogin from "./Components/PersistLogin";
 import RequireAuth from "./Components/RequireAuth";
 import IndividualSales from "./Pages/IndividualSales";
+import { ToastContainer } from 'react-toastify';
+import TrialBalance from "./Pages/TrialBalance";
+import EditCustomer from "./Pages/EditCustomer";
+import EditSupplier from "./Pages/EditSupplier";
+import EditEmployee from "./Pages/EditEmployee";
+import EditItem from "./Pages/EditItem";
+import EditCommission from "./Pages/EditCommission";
+import EditCompany from "./Pages/EditCompany";
+
 function App() {
   return (
     <>
+    <ToastContainer />
       <Routes>
         <Route element={<PersistLogin />}>
           <Route element={<RequireAuth />}>
@@ -39,6 +49,7 @@ function App() {
               <Route path="/supplier" element={<Supplier />} />
               <Route path="/employee" element={<Employee />} />
               <Route path="/individualsales" element={<IndividualSales />} />
+              <Route path="/trialbalance" element={<TrialBalance />} />
 
               <Route
                 path="/purchase-transaction"
@@ -65,6 +76,13 @@ function App() {
         <Route path="/add-customer" element={<AddCustomer />} />
         <Route path="/add-supplier" element={<AddSupplier />} />
         <Route path="/company" element={<Company />} />
+        <Route path="/edit-customer/:id" element={<EditCustomer />} />
+        <Route path="/edit-supplier" element={<EditSupplier />} />
+        <Route path="/edit-employe" element={<EditEmployee />} />
+        <Route path="/edit-item" element={<EditItem />} />
+        <Route path="/edit-commission" element={<EditCommission />} />
+        <Route path="/edit-company" element={<EditCompany />} />
+
       </Routes>
     </>
   );

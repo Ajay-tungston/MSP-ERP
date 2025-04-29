@@ -3,44 +3,38 @@ import { useNavigate } from 'react-router-dom';
 import { CiCirclePlus, CiFilter } from "react-icons/ci";
 import { GoTrash } from "react-icons/go";
 import { FaCheckSquare, FaRegSquare } from "react-icons/fa";
+import { LuPencilLine } from "react-icons/lu"; // <--- Added here
 import useAxiosPrivate from '../hooks/useAxiosPrivate';
 
 export default function CustomerHeader() {
-  // State for dynamic customers list and selected rows
   const [customers, setCustomers] = useState([]);
   const [selectedRows, setSelectedRows] = useState([]);
-
-  // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
-const axiosInstance=useAxiosPrivate();
-  // Fetch customers from the backend API with pagination
+  const axiosInstance = useAxiosPrivate();
+  const navigate = useNavigate();
+console.log(customers)
   const fetchCustomers = async (page = 1) => {
     setLoading(true);
     try {
-      // Set limit as 10 per page (adjust if needed)
       const limit = 10;
       const response = await axiosInstance.get(`/admin/customer/get?page=${page}&limit=${limit}`);
-      // Expected response: { customers, total, totalPages, currentPage }
       const data = response.data;
       setCustomers(data.customers);
       setCurrentPage(data.currentPage);
       setTotalPages(data.totalPages);
     } catch (error) {
       console.error("Error fetching customers:", error);
-      // Optionally, display an error message to the user
     } finally {
       setLoading(false);
     }
   };
-const navigate=useNavigate();
-  // Call fetchCustomers when the component mounts or when currentPage changes.
+
   useEffect(() => {
     fetchCustomers(currentPage);
   }, [currentPage]);
 
-  // Function to toggle individual row selection based on customer id or customerNumber
   const toggleRowSelection = (id) => {
     setSelectedRows((prev) =>
       prev.includes(id)
@@ -49,7 +43,6 @@ const navigate=useNavigate();
     );
   };
 
-  // Function to select or deselect all rows (the customers currently displayed)
   const toggleAllRows = () => {
     if (selectedRows.length === customers.length) {
       setSelectedRows([]);
@@ -58,7 +51,6 @@ const navigate=useNavigate();
     }
   };
 
-  // Pagination handlers
   const handlePrevious = () => {
     if (currentPage > 1) {
       setCurrentPage(currentPage - 1);
@@ -80,15 +72,14 @@ const navigate=useNavigate();
 
       {/* Header & Buttons */}
       <div className="flex justify-between items-center ">
-        {/* Title */}
         <h1 className="text-2xl font-bold text-gray-900">Customer</h1>
-        {/* Buttons */}
         <div className="flex space-x-3 -mt-10 mr-10 ">
-          <button className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-2 rounded-lg flex items-center gap-2 " onClick={()=>navigate('/add-customer')}>
+          <button className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-2 rounded-lg flex items-center gap-2" onClick={() => navigate('/add-customer')}>
             <CiCirclePlus className="text-xl" /> Add New Customer
           </button>
         </div>
       </div>
+
       <div className="flex space-x-3 float-right mt-5 mr-10">
         <button className="border border-red-500 text-red-500 px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-red-100 font-Urbanist">
           <GoTrash className="text-lg" /> Delete
@@ -101,7 +92,6 @@ const navigate=useNavigate();
       {/* Dynamic Table */}
       <div className="mt-20 bg-white">
         <table className="w-full border-collapse text-gray-900">
-          {/* Table Header */}
           <thead>
             <tr className="text-left text-gray-900 font-bold border-b-2 border-gray-200 bg-[#F9FAFB]">
               <th className="p-3">
@@ -121,7 +111,6 @@ const navigate=useNavigate();
             </tr>
           </thead>
 
-          {/* Table Body */}
           <tbody>
             {loading ? (
               <tr>
@@ -147,7 +136,13 @@ const navigate=useNavigate();
                       : ''}
                   </td>
                   <td className="p-3">${customer.openingBalance.toFixed(2)}</td>
-                  <td className="p-3">{customer.routeCustomer ? "Yes" : "No"}</td>
+                  <td className="p-3 flex items-center gap-2">
+                    {customer.routeCustomer ? "Yes" : "No"}
+                    <LuPencilLine 
+                      className="text-[#6A5AE0] w-4 h-4 cursor-pointer" 
+                      onClick={() => navigate(`/edit-customer/${customer._id}`)} 
+                    />
+                  </td>
                 </tr>
               ))
             ) : (

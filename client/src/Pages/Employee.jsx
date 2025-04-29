@@ -3,6 +3,7 @@ import { CiCirclePlus } from "react-icons/ci";
 import { CiFilter } from "react-icons/ci";
 import { GoTrash } from "react-icons/go";
 import { FaCheckSquare, FaRegSquare } from "react-icons/fa";
+import { LuPencilLine } from "react-icons/lu"; // <-- Pencil Icon import
 import { useNavigate } from "react-router-dom";
 import useAxiosPrivate from "../hooks/useAxiosPrivate";
 import { format, parseISO } from "date-fns";
@@ -34,7 +35,6 @@ export default function Employee() {
     fetchEmployee();
   }, [currentPage]);
 
-  // First define all functions
   const toggleAllRows = () => {
     if (selectedRows.length === employee?.employees?.length) {
       setSelectedRows([]);
@@ -59,9 +59,7 @@ export default function Employee() {
 
       {/* Header & Buttons */}
       <div className="flex justify-between items-center">
-        {/* Title */}
         <h1 className="text-2xl font-bold text-gray-900">Employee</h1>
-        {/* Buttons */}
         <div className="flex space-x-3 -mt-10 mr-10">
           <button
             onClick={() => navigate("/add-employe")}
@@ -72,6 +70,7 @@ export default function Employee() {
         </div>
       </div>
 
+      {/* Top Right Buttons */}
       <div className="flex space-x-3 float-right mt-5 mr-10">
         <button className="border border-red-500 text-red-500 px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-red-100 font-Urbanist">
           <GoTrash className="text-lg" /> Delete
@@ -103,6 +102,7 @@ export default function Employee() {
               <th className="p-3">Opening Bal.</th>
               <th className="p-3">Joining Date</th>
               <th className="p-3">Salary</th>
+              <th className="p-3"></th> {/* Extra column for Edit button */}
             </tr>
           </thead>
 
@@ -110,13 +110,13 @@ export default function Employee() {
           <tbody>
             {isLoading ? (
               <tr>
-                <td colSpan="10">
+                <td colSpan="11">
                   <OvalSpinner />
                 </td>
               </tr>
             ) : !employee?.employees?.length > 0 ? (
               <tr>
-                <td colSpan="10" className="text-center py-10 text-gray-500">
+                <td colSpan="11" className="text-center py-10 text-gray-500">
                   No data available
                 </td>
               </tr>
@@ -138,10 +138,7 @@ export default function Employee() {
                       )}
                     </button>
                   </td>
-                  <td className="p-3">
-                    {" "}
-                    {index + 1 + (currentPage - 1) * limit}
-                  </td>
+                  <td className="p-3">{index + 1 + (currentPage - 1) * limit}</td>
                   <td className="p-3">{employee?.employeeName}</td>
                   <td className="p-3">{employee?.address}</td>
                   <td className="p-3">{employee?.phone}</td>
@@ -151,6 +148,15 @@ export default function Employee() {
                     {format(parseISO(employee?.joiningDate), "dd/MM/yyyy")}
                   </td>
                   <td className="p-3">{employee?.salary}</td>
+                  {/* Edit Button */}
+                  <td className="p-3">
+                    <button
+                      onClick={() => navigate("/edit-employe")}
+                      className="text-blue-500 hover:text-blue-700"
+                    >
+                      <LuPencilLine size={20} />
+                    </button>
+                  </td>
                 </tr>
               ))
             )}
@@ -159,9 +165,9 @@ export default function Employee() {
       </div>
 
       {/* Pagination */}
-      <div className="flex justify-between items-center mt-68 text-gray-600 ml-10">
+      <div className="flex justify-between items-center mt-10 text-gray-600 ml-10">
         <span>
-          Page {employee?.currentPage}of {employee?.totalPages}
+          Page {employee?.currentPage} of {employee?.totalPages}
         </span>
         <div className="flex space-x-2">
           <button

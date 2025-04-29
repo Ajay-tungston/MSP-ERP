@@ -3,7 +3,8 @@ import { CiCirclePlus } from "react-icons/ci";
 import { CiFilter } from "react-icons/ci";
 import { GoTrash } from "react-icons/go";
 import { useNavigate } from "react-router-dom";
-import { FaCheckSquare, FaRegSquare } from "react-icons/fa"; // For styled checkboxes
+import { FaCheckSquare, FaRegSquare } from "react-icons/fa";
+import { LuPencilLine } from "react-icons/lu"; // Imported your pencil icon
 import useAxiosPrivate from "../hooks/useAxiosPrivate";
 import OvalSpinner from "../Components/spinners/OvalSpinner";
 import Swal from "sweetalert2";
@@ -15,6 +16,7 @@ export default function CustomerHeader() {
   const limit = 8;
   const [isLoading, setIsLoading] = useState(false);
   const axiosInstance = useAxiosPrivate();
+  const navigate = useNavigate();
 
   useEffect(() => {
     setSelectedRows([]);
@@ -34,18 +36,17 @@ export default function CustomerHeader() {
     fetchSuppliers();
   }, [currentPage]);
 
-  //need to add logic for check the supplier has any transcations
   const handleDelete = async () => {
     const swalWithTailwindButtons = Swal.mixin({
       customClass: {
         confirmButton:
           "bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded",
         cancelButton:
-          "bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded mr-4" // ← Add margin-right to cancel button
+          "bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded mr-4"
       },
       buttonsStyling: false
     });
-    
+
     swalWithTailwindButtons.fire({
       title: "Are you sure?",
       text: "You won't be able to revert this!",
@@ -69,11 +70,11 @@ export default function CustomerHeader() {
         });
       }
     });
-    
+
     try {
-      const response = await axiosInstance.delete("/admin/supplier",{
-        data:{
-          supplierIds:selectedRows
+      const response = await axiosInstance.delete("/admin/supplier", {
+        data: {
+          supplierIds: selectedRows
         }
       });
     } catch (error) {
@@ -86,7 +87,6 @@ export default function CustomerHeader() {
       prev.includes(id) ? prev.filter((rowId) => rowId !== id) : [...prev, id]
     );
   };
-  const navigate = useNavigate();
 
   const toggleAllRows = () => {
     if (selectedRows.length === supplier?.suppliers?.length) {
@@ -97,19 +97,17 @@ export default function CustomerHeader() {
   };
 
   return (
-    <div className=" p-4 rounded-lg shadow-sm h-[800px] bg-white mt-5">
+    <div className="p-4 rounded-lg shadow-sm h-[800px] bg-white mt-5">
       {/* Breadcrumb */}
-      <nav className="text-sm text-gray-500 mb-2  mt-10">
+      <nav className="text-sm text-gray-500 mb-2 mt-10">
         <span>Master</span> <span className="mx-1">›</span>{" "}
         <span className="text-gray-700">Supplier</span>
       </nav>
 
       {/* Header & Buttons */}
-      <div className="flex justify-between items-center ">
-        {/* Title */}
+      <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold text-gray-900">Supplier</h1>
-        {/* Buttons */}
-        <div className="flex space-x-3 -mt-10  mr-10 ">
+        <div className="flex space-x-3 -mt-10 mr-10">
           <button
             className="bg-[#5D5FEF] text-white px-6 py-2 rounded-lg flex items-center gap-2"
             onClick={() => navigate("/add-supplier")}
@@ -118,21 +116,23 @@ export default function CustomerHeader() {
           </button>
         </div>
       </div>
+
       <div className="flex space-x-3 float-right mt-5 mr-10">
-        <button className="border border-red-500 text-red-500 px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-red-100 font-Urbanist"
-        // onClick={handleDelete}
+        <button
+          className="border border-red-500 text-red-500 px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-red-100 font-Urbanist"
         >
           <GoTrash className="text-lg" /> Delete
         </button>
         <button className="border border-gray-300 text-[#4079ED] px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-gray-100">
-          <CiFilter classname="text-lg " /> Filter
+          <CiFilter className="text-lg" /> Filter
         </button>
       </div>
-      <div className=" mt-20 bg-white ">
+
+      <div className="mt-20 bg-white">
         <table className="w-full border-collapse text-gray-900">
           {/* Table Header */}
           <thead>
-            <tr className="text-left text-gray-900 font-bold border-b-2 border-gray-200 bg-[#F9FAFB] ">
+            <tr className="text-left text-gray-900 font-bold border-b-2 border-gray-200 bg-[#F9FAFB]">
               <th className="p-3">
                 <button onClick={toggleAllRows} className="text-blue-600">
                   {selectedRows.length === supplier?.suppliers?.length ? (
@@ -151,6 +151,7 @@ export default function CustomerHeader() {
               <th className="p-3">Comm.Type</th>
               <th className="p-3">Advance</th>
               <th className="p-3">Adv.Deducted</th>
+              <th className="p-3"></th> {/* For pencil icon column */}
             </tr>
           </thead>
 
@@ -158,20 +159,20 @@ export default function CustomerHeader() {
           <tbody>
             {isLoading ? (
               <tr>
-                <td colSpan="10">
+                <td colSpan="11">
                   <OvalSpinner />
                 </td>
               </tr>
             ) : !supplier?.suppliers?.length > 0 ? (
               <tr>
-                <td colSpan="10" className="text-center py-10 text-gray-500">
+                <td colSpan="11" className="text-center py-10 text-gray-500">
                   No data available
                 </td>
               </tr>
             ) : (
               supplier?.suppliers?.map((supplier, index) => (
                 <tr
-                  key={supplier.id}
+                  key={supplier._id}
                   className="border-b border-gray-200 hover:bg-gray-50 bg-white"
                 >
                   <td className="p-3">
@@ -197,6 +198,13 @@ export default function CustomerHeader() {
                   <td className="p-3">{supplier?.commission}</td>
                   <td className="p-3">{supplier?.advance}</td>
                   <td className="p-3">{supplier?.advanceDeducted}</td>
+                  <td className="p-3 text-blue-600">
+                    <button
+                      onClick={() => navigate(`/edit-supplier`)} // Navigate to edit page with supplier ID
+                    >
+                      <LuPencilLine size={20} />
+                    </button>
+                  </td>
                 </tr>
               ))
             )}
@@ -207,7 +215,7 @@ export default function CustomerHeader() {
       {/* Pagination */}
       <div className="flex justify-between items-center mt-68 text-gray-600 ml-10">
         <span>
-          Page {supplier?.currentPage}of {supplier?.totalPages}
+          Page {supplier?.currentPage} of {supplier?.totalPages}
         </span>
         <div className="flex space-x-2">
           <button

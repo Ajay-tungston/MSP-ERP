@@ -110,7 +110,6 @@ const getSalesEntries = async (req, res) => {
 
     // Build query object
     const query = {};
-    if (customerId) query.customer = customerId;
     if (status) query.status = status;
     if (startDate && endDate) {
       query.dateOfSale = {
@@ -130,18 +129,16 @@ const getSalesEntries = async (req, res) => {
 
     // Fetch paginated and sorted results
     const salesEntries = await SalesEntry.find(query)
-      .populate("customer", "name") // Optional: include customer name
-      .populate("items.item", "itemName")
-      .populate("items.supplier", "supplierName")
+      .populate("customers.customer", "customerName")
+      .populate("customers.items.item", "itemName")
+      .populate("customers.items.supplier", "supplierName")
       .sort(sortOptions)
       .skip(skip)
       .limit(pageSize)
       .exec();
 
-    // Count total for frontend pagination
     const totalEntries = await SalesEntry.countDocuments(query);
 
-    // Return paginated response
     res.status(200).json({
       page: pageNumber,
       limit: pageSize,
@@ -150,10 +147,11 @@ const getSalesEntries = async (req, res) => {
       entries: salesEntries,
     });
   } catch (error) {
-    console.error(error);
+    console.error("Error fetching sales entries:", error);
     res.status(500).json({ message: "Error fetching sales entries." });
   }
 };
+
 
 module.exports = {
   createSaleTransaction,

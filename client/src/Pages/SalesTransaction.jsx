@@ -8,25 +8,10 @@ const SalesRegister = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 const axiosInstance=useAxiosPrivate()
 const [purchaseData, setPurchaseData] = useState([]);
+const[salesData,setSalesData]=useState([])
 
-const salesData = [
-    {
-      no: "001",
-      supplier: "Farm Fresh",
-      qtyKG: "10",
-      qtyBox: "-",
-      unitPrice: "$1.00",
-      subtotal: "$200.00",
-    },
-    {
-      no: "002",
-      supplier: "Green Supply",
-      qtyKG: "-",
-      qtyBox: "2",
-      unitPrice: "$100.00",
-      subtotal: "$200.00",
-    },
-  ];
+
+
 
  
 

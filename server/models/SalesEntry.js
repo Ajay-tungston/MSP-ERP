@@ -1,6 +1,5 @@
 const mongoose = require("mongoose");
 
-// Schema for each item sold in a transaction
 const saleItemSchema = new mongoose.Schema({
   item: {
     type: mongoose.Schema.Types.ObjectId,
@@ -10,12 +9,12 @@ const saleItemSchema = new mongoose.Schema({
   supplier: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Supplier",
-    required: true, // To track original source
+    required: true,
   },
   quantity: {
     type: Number,
     required: true,
-    min: [0, "Quantity must be at least 1"],
+    min: [1, "Quantity must be at least 1"],
   },
   unitPrice: {
     type: Number,
@@ -29,21 +28,25 @@ const saleItemSchema = new mongoose.Schema({
   }
 });
 
-// Sale transaction to customers
-const saleTransactionSchema = new mongoose.Schema({
-  transactionNumber: {
-    type: Number,
-    required: true,
-    unique: true,
-  },
+// NEW: customer-level structure inside the transaction
+const saleCustomerSchema = new mongoose.Schema({
   customer: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Customer",
     required: true,
   },
-  dateOfSale: {
-    type: Date,
-    default: Date.now,
+  discount: {
+    type: Number,
+    default: 0,
+    min: [0, "Discount cannot be negative"],
+  },
+  totalAmount: {
+    type: Number,
+    required: true,
+  },
+  totalQuantity: {
+    type: Number,
+    required: true,
   },
   items: {
     type: [saleItemSchema],
@@ -54,6 +57,27 @@ const saleTransactionSchema = new mongoose.Schema({
       message: "At least one item must be sold",
     },
   },
+});
+
+const saleTransactionSchema = new mongoose.Schema({
+  transactionNumber: {
+    type: Number,
+    required: true,
+    unique: true,
+  },
+  customers: {
+    type: [saleCustomerSchema],
+    validate: {
+      validator: function (customers) {
+        return customers.length > 0;
+      },
+      message: "At least one customer must be included",
+    },
+  },
+  dateOfSale: {
+    type: Date,
+    default: Date.now,
+  },
   totalAmount: {
     type: Number,
     required: true,
@@ -62,18 +86,11 @@ const saleTransactionSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
-  discount: {
-    type: Number,
-    default: 0,
-    min: [0, "Discount cannot be negative"],
-  },
   status: {
     type: String,
     enum: ["pending", "completed", "returned"],
     default: "completed",
-  }
-}, {
-  timestamps: true
-});
+  },
+}, { timestamps: true });
 
 module.exports = mongoose.model("SalesEntry", saleTransactionSchema);

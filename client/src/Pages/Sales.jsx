@@ -34,7 +34,6 @@ const Sales = () => {
       unitPrice: "",
     },
   ]);
-  console.log("ejhfbwkbf", rows);
   // which row’s dropdown is open?
   const [activeCustomerIndex, setActiveCustomerIndex] = useState(null);
   // what the user has typed when searching
@@ -137,11 +136,13 @@ const Sales = () => {
     copy[i][field] = val;
     setRows(copy);
   };
-
+  const CalculateTotals={
+    
+  }
   const handleCustomerSelect = (i, customer) => {
     const copy = [...rows];
     copy[i].customer = customer.value;
-    copy[i].customerLabel = customer.label;
+    copy[i].customerLabel= customer.label;
     setRows(copy);
     setActiveCustomerIndex(null);
   };
@@ -154,11 +155,12 @@ const Sales = () => {
   const handleItemChange = (index, selectedItemName) => {
     const updatedRows = [...rows];
 
+
     // Find the selected item object from purchase items
     const selectedItem = purchase?.items?.find(
       (item) => item.item.itemName === selectedItemName
     );
-
+ 
     if (selectedItem) {
       updatedRows[index].itemName = selectedItem.item.itemName;
       updatedRows[index].itemId = selectedItem.item._id; // ⬅️ SAVE itemId
@@ -168,16 +170,14 @@ const Sales = () => {
     setRows(updatedRows);
   };
 
-  //Helper function to calculate remaining quantity
+
   const getRemainingQuantity = (itemId, currentIndex = -1) => {
-    const selectedItem = purchase?.items?.find(
-      (i) => i.item.itemName === itemId
-    );
+    const selectedItem = purchase?.items?.find((i) => i.item._id === itemId);
     if (!selectedItem) return 0;
 
     // Sum all quantities except the current row
     const usedQuantity = rows
-      .filter((row, index) => row.item === itemId && index !== currentIndex)
+      .filter((row, index) => row.itemId === itemId && index !== currentIndex)
       .reduce((sum, row) => sum + (parseInt(row.quantity) || 0), 0);
 
     const remaining = selectedItem.quantity - usedQuantity;
@@ -189,9 +189,9 @@ const Sales = () => {
     const quantity = parseInt(value) || 0;
     const currentRow = rows[index];
 
-    const remaining = getRemainingQuantity(currentRow.item, index);
+    const remaining = getRemainingQuantity(currentRow.itemId, index);
     const selectedItem = purchase?.items?.find(
-      (i) => i.item._id === currentRow.item
+      (i) => i.item.itemId === currentRow.item
     );
 
     let error = null;
@@ -248,13 +248,13 @@ const Sales = () => {
   const handleAddSale = async () => {
     setSubmitloading(true);
     try {
-      const newRows = [...rows]; // Clone the rows
+      const newRows = [...rows];
+
+      const salesPayload = [];
 
       for (let i = 0; i < newRows.length; i++) {
         const rowData = newRows[i];
-        console.log(`Processing row ${i + 1}`, rowData);
 
-        // Validation
         if (!rowData.customer) {
           throw new Error(`Row ${i + 1}: Please select a customer.`);
         }
@@ -268,29 +268,26 @@ const Sales = () => {
           throw new Error(`Row ${i + 1}: Invalid unit price.`);
         }
 
-        // Prepare payload
-        const salePayload = {
+        salesPayload.push({
           customerId: rowData.customer,
           discount: rowData.discount || 0,
-          status: "completed",
           items: [
             {
               itemName: rowData.itemName,
-              supplierId: purchase.supplier._id,
+              supplierId: purchase.supplier._id, // NOTE: fixed supplierId to come from row
               quantity: Number(rowData.quantity),
               unitPrice: Number(rowData.unitPrice),
             },
           ],
-        };
-
-        console.log(`Payload for row ${i + 1}:`, salePayload);
-
-        const response = await axiosInstance.post(
-          "/admin/sales/add",
-          salePayload
-        );
-        console.log(`Response for row ${i + 1}:`, response);
+        });
       }
+
+    
+
+      const response = await axiosInstance.post(
+        "/admin/sales/add",
+        salesPayload
+      );
 
       Swal.fire({
         title: "All sales transactions added successfully!",
@@ -298,7 +295,6 @@ const Sales = () => {
         draggable: true,
       });
 
-      // Reset all rows after successful submission
       setRows([
         {
           id: 1,
@@ -309,10 +305,11 @@ const Sales = () => {
           quantity: "",
           unit: "",
           unitPrice: "",
+       
         },
       ]);
 
-      navigate("/sales-transactions");
+      navigate("/sales-transaction");
     } catch (error) {
       Swal.fire({
         title: error.message || "Something went wrong!",
@@ -586,15 +583,15 @@ const Sales = () => {
                         type="number"
                         min="0"
                         max={
-                          row.itemName
-                            ? getRemainingQuantity(row.itemName, index)
+                          row.itemId
+                            ? getRemainingQuantity(row.itemId, index)
                             : undefined
                         }
                         value={row.quantity}
                         onChange={(e) =>
                           handleQuantityChange(index, e.target.value)
                         }
-                        disabled={!row.itemName} // <-- Changed from row.item to row.itemName
+                        disabled={!row.itemId}
                         className={`w-25 bg-transparent outline-none text-slate-900 -ml-8 ${
                           row.error ? "border-b border-red-500" : ""
                         }`}
@@ -639,7 +636,6 @@ const Sales = () => {
                   </div>
                 </div>
               ))}
-
               {/* Add new row button */}
               <div
                 className="col-span-6 rounded-lg px-6 py-4 cursor-pointer flex items-center justify-center gap-3 text-indigo-900 text-xl hover:bg-gray-100 transition"

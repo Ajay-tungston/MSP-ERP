@@ -22,7 +22,7 @@ function Purchasetransaction() {
       total: "0.00",
     },
   ]);
-  const [error, setError] = useState("");
+  const [error, setError] = useState("")
   const inputRefs = useRef([]);
 
   const handleInputChange = (index, e) => {
@@ -42,7 +42,7 @@ function Purchasetransaction() {
     setItems(updatedItems);
     setError("");
   };
-
+ 
   const [supplierSearch, setSupplierSearch] = useState("");
   const [supplierList, setSupplierList] = useState([]);
   const [selectedSupplier, setSelectedSupplier] = useState(null);
@@ -229,6 +229,7 @@ function Purchasetransaction() {
       console.log(error);
     } finally {
       setSubmitloading(false);
+     
     }
   };
 

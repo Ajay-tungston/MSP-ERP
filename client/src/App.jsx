@@ -25,15 +25,20 @@ import RouteExpense from "./Pages/RouteExpense"
 import IndividualReports from './Pages/IndividualReports'
 import SalesTransaction from './Pages/SalesTransaction'
 import Sales from './Pages/Sales'
+// import Sample from './Pages/Sample'
 import Cashbook from './Pages/Cashbook'
-import PurchaseReport from './Pages/PurchaseReport'
+import PurchaseReport from './Pages/PurchaseReport' 
 import Dashboard from "./Pages/Dashboard";
 import PersistLogin from "./Components/PersistLogin";
 import RequireAuth from "./Components/RequireAuth";
 import LocalsalesReport from "./Pages/LocalsalesReport";
-
-import Sample from './Pages/Sample'
+import EditCustomerModal from "./Pages/EditCustomer";
+import TrialBalance from "./Pages/TrialBalance";
 import Whatsapp from "./Pages/Whatsapp";
+import PaymentIn from "./Pages/Payment/PaymentIn";
+import PaymentOut from "./Pages/Payment/PaymentOut";
+import AddPaymentIn from "./Pages/Payment/AddPaymentIn";
+
 function App() {
   return (
     <>
@@ -44,18 +49,18 @@ function App() {
           <Route path="/supplier" element={<Supplier />} />
           <Route path='/employee' element={<Employee />} />
           <Route path="/purchase-transaction" element={<Purchasetransaction />} />
-          <Route path='/company' element={<Company />} />
+
           <Route path='/commission' element={<Commission />} />
           <Route path='/item' element={<Item />} />
           <Route path='/route-expense' element={<RouteExpense />} />
           <Route path='/individual-report' element={<IndividualReports />} />
           <Route path='/sales-transaction' element={<SalesTransaction />} />
-          <Route path='/sales' element={<Sales />} />
+          <Route path='/sales/:id' element={<Sales />} />
           <Route path='/cashbook' element={<Cashbook />} />
           <Route path='/purchase-report' element={<PurchaseReport />} />
           <Route path='/localsales-report' element={<LocalsalesReport />} />
-          <Route path='/sample' element={<Sample />} />
           <Route path='/whatsapp' element={<Whatsapp />} />
+          <Route path="/trail" element={<TrialBalance />}/>
         </Route>
 
         <Route path="/sales" element={<Sales />} />
@@ -71,7 +76,7 @@ function App() {
         <Route path="/purchase-transaction" element={<Purchasetransaction />} />
         <Route path='/add-customer' element={<AddCustomer />} />
         <Route path='/add-supplier' element={<AddSupplier />} />
-        <Route path='/company' element={<Company />} />
+
 
         <Route element={<PersistLogin />}>
           <Route element={<RequireAuth />}>
@@ -80,7 +85,8 @@ function App() {
               <Route path="/mastercustomer" element={<Customer />} />
               <Route path="/route-customer" element={<Routecustomer />} />
               <Route path="/supplier" element={<Supplier />} />
-
+<Route path="/paymentin" element={<PaymentIn/>}/>
+<Route path="/paymentout" element={<PaymentOut/>}/>
               <Route path="/company" element={<Company />} />
               <Route path="/commission" element={<Commission />} />
               <Route path="/item" element={<Item />} />
@@ -96,16 +102,14 @@ function App() {
         <Route path="/add-commission" element={<AddCommission />} />
         <Route path="/add-company" element={<AddCompany />} />
         <Route path="/expense" element={<AddExpense />} />
-        <Route path='/whatsapp' element={<Whatsapp />} />
         <Route path="/add-employe" element={<Addemploye />} />
         <Route path="/purchase-transaction" element={<Purchasetransaction />} />
-
+        <Route path='/updatecustomer/:id' element={<EditCustomerModal/>}/>
         {/* <Route path="/add-supplier" element={<AddSuppconsole.log('App component rendered');lier />} /> */}
         <Route path="/company" element={<Company />} />
-
-
-
-        <Route path='/sample' element={<Sample />} />
+<Route path="/trail" element={<TrialBalance />}/>
+<Route path="/add-payment" element={<AddPaymentIn/>}/>
+      
       </Routes>
     </>
   );

@@ -110,7 +110,7 @@ function Employee() {
                   setCurrentPage(currentPage + 1);
                 }
               };
-              const [popup,setPopup]=useState(false)
+              const [popup,setPopup]=useState(false);
   return (
 <>
       <div className=" h-full relative bg-gray-50  outline-1 outline-offset-[-1px] outline-white overflow-hidden mt-10">

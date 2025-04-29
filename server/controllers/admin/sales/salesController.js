@@ -5,89 +5,108 @@ const Item = require("../../../models/Item");
 const PurchaseEntry = require("../../../models/PurchaseEntry");
 const getNextCounterNumber = require("../../../utils/counter");
 
+const mongoose = require("mongoose");
+
 const createSaleTransaction = async (req, res) => {
   try {
-    const { customerId, items, discount = 0, status = "completed" } = req.body;
+    const sales = Array.isArray(req.body) ? req.body : [req.body];
 
-    // 1. Validate customer
-    const customer = await Customer.findById(customerId);
-    if (!customer) {
-      return res.status(404).json({ message: "Customer not found" });
-    }
-
-    // 2. Generate new transaction number
     const transactionNumber = await getNextCounterNumber("saleTransaction");
-
-    let totalAmount = 0;
+    const customersArray = [];
+    let grandTotal = 0;
     let totalQuantity = 0;
-    const saleItems = [];
 
-    for (const itemData of items) {
-      const { itemName, supplierId, quantity, unitPrice } = itemData;
+    for (const saleData of sales) {
+      const { customerId, items, discount = 0 } = saleData;
 
-      const item = await Item.findOne({ itemName });
-      if (!item) {
-        return res
-          .status(404)
-          .json({ message: `Item "${itemName}" not found` });
+      // Validate customer
+      const customer = await Customer.findById(customerId);
+      if (!customer) {
+        return res.status(404).json({ message: `Customer ${customerId} not found` });
       }
 
-      const supplier = await Supplier.findById(supplierId);
-      if (!supplier) {
-        return res
-          .status(404)
-          .json({ message: `Supplier with ID ${supplierId} not found` });
+      const customerItems = [];
+      let customerTotal = 0;
+      let customerQuantity = 0;
+
+      for (const itemData of items) {
+        const { itemName, supplierId, quantity, unitPrice } = itemData;
+
+        // Validate item
+        const item = await Item.findOne({ itemName });
+        if (!item) {
+          return res.status(404).json({ message: `Item ${itemName} not found` });
+        }
+
+        // Validate supplier
+        if (!supplierId || !mongoose.Types.ObjectId.isValid(supplierId)) {
+          return res.status(400).json({ message: `Invalid supplier ID: ${supplierId}` });
+        }
+
+        const supplier = await Supplier.findById(supplierId);
+        if (!supplier) {
+          return res.status(404).json({ message: `Supplier ${supplierId} not found` });
+        }
+
+        const totalCost = unitPrice * quantity;
+
+        customerItems.push({
+          item: item._id,
+          supplier: supplier._id,
+          quantity,
+          unitPrice,
+          totalCost,
+        });
+
+        customerTotal += totalCost;
+        customerQuantity += quantity;
       }
 
-      const totalCost = unitPrice * quantity;
-
-      saleItems.push({
-        item: item._id,
-        supplier: supplier._id,
-        quantity,
-        unitPrice,
-        totalCost,
+      // Push processed customer data
+      customersArray.push({
+        customer: customer._id,
+        items: customerItems,
+        discount,
+        totalAmount: customerTotal - discount,
+        totalQuantity: customerQuantity,
       });
 
-      totalAmount += totalCost;
-      totalQuantity += quantity;
-
-      // Optional: Deduct from inventory (PurchaseEntry logic here if needed)
+      grandTotal += (customerTotal - discount);
+      totalQuantity += customerQuantity;
     }
 
-    // 3. Apply discount
-    const finalAmount = totalAmount - discount;
-
+    // Create and save the sale transaction
     const newSale = new SalesEntry({
       transactionNumber,
-      customer: customer._id,
-      items: saleItems,
-      totalAmount: finalAmount,
+      status: "completed",
+      totalAmount: grandTotal,
       totalQuantity,
-      discount,
-      status,
+      customers: customersArray,
     });
 
     await newSale.save();
 
-    return res
-      .status(201)
-      .json({ message: "Sale transaction recorded", sale: newSale });
+    return res.status(201).json({ message: "Grouped sales transaction saved", sale: newSale });
+
   } catch (error) {
     console.error("Sale creation error:", error);
-
-    if (error.name === "ValidationError") {
-      const messages = Object.values(error.errors).map((e) => e.message);
-      return res.status(400).json({ errors: messages });
-    }
-
-    return res.status(500).json({ message: "Internal Server Error" });
+    return res.status(500).json({ message: "Internal Server Error", error: error.message });
   }
 };
 
+
 const getSalesEntries = async (req, res) => {
   try {
-    const { customerId, status, startDate, endDate, page = 1, limit = 10, sortBy = "dateOfSale", sortOrder = "desc" } = req.query;
+    const {
+      customerId,
+      status,
+      startDate,
+      endDate,
+      page = 1,
+      limit = 10,
+      sortBy = "dateOfSale",
+      sortOrder = "desc",
+    } = req.query;
 
     // Build query object
     const query = {};
@@ -130,13 +149,11 @@ const getSalesEntries = async (req, res) => {
       totalPages: Math.ceil(totalEntries / pageSize),
       entries: salesEntries,
     });
-
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Error fetching sales entries." });
   }
 };
-
 
 module.exports = {
   createSaleTransaction,

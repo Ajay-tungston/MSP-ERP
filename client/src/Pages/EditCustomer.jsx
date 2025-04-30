@@ -1,13 +1,13 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Swal from "sweetalert2";
 import { XCircleIcon, PlusCircleIcon } from "@heroicons/react/24/solid";
 import useAxiosPrivate from "../hooks/useAxiosPrivate";
 
-const AddCustomerModal = ({ onClose ,setPopup}) => {
-  
+const EditCustomerModal = ({ customerId, onClose, setPopup }) => {
   const axiosInstance = useAxiosPrivate();
   const safeOnClose = typeof onClose === "function" ? onClose : () => {};
 
+  const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
     name: "",
     address: "",
@@ -21,85 +21,125 @@ const AddCustomerModal = ({ onClose ,setPopup}) => {
     routeName: "",
   });
 
+  // Helper to merge partial updates
   const handleChange = (field, value) =>
     setFormData((prev) => ({ ...prev, [field]: value }));
 
+  // Cancel/close
   const handleCancel = () => {
     safeOnClose();
-    setPopup(false)
-    
+    setPopup(false);
   };
 
+  // 1) Fetch existing customer on mount
+  useEffect(() => {
+    const loadCustomer = async () => {
+      try {
+        const { data } = await axiosInstance.get(`/admin/customer/get/${customerId}`);
+        // assuming { customer: { customerName, address, ... } }
+        const c = data.customer;
+        setFormData({
+          name: c.customerName || "",
+          address: c.address || "",
+          phone: c.phone || "",
+          whatsapp: c.whatsapp || "",
+          discount: c.discount?.toString() || "",
+          discountType: c.discountType || "manual",
+          discountFrequency: c.discountApplied || "manual",
+          balance: c.openingBalance?.toString() || "",
+          route: c.routeCustomer ? "Yes" : "No",
+          routeName: c.routeAddress || "",
+        });
+        console.log(c);
+        
+      } catch (err) {
+        console.error("Error loading customer:", err);
+        Swal.fire({
+          icon: "error",
+          title: "Load Failed",
+          text: err.response?.data?.message || "Could not load customer.",
+        });
+        safeOnClose();
+        setPopup(false);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadCustomer();
+  }, [axiosInstance, customerId, safeOnClose, setPopup]);
+
+  // 2) Submit update
   const handleSubmit = async () => {
-    
-    // 1) Front‑end required validation
     if (!formData.name.trim() || !formData.phone.trim()) {
       await Swal.fire({
         icon: "error",
         title: "Validation Error",
-        text: "Please provide both Customer Name and Mobile number.",
+        text: "Name and Phone are required.",
         confirmButtonColor: "#2563EB",
-       
       });
       return;
     }
 
-    // 2) Build payload
     const payload = {
       customerName: formData.name.trim(),
       address: formData.address.trim(),
       phone: formData.phone.trim(),
       whatsapp: formData.whatsapp.trim(),
       discount: parseFloat(formData.discount) || 0,
-      discountApplied: formData.discountFrequency.toLowerCase() || "manual",
-      discountType: formData.discountType.toLowerCase() || "manual",
+      discountApplied: formData.discountFrequency.toLowerCase(),
+      discountType: formData.discountType.toLowerCase(),
       openingBalance: parseFloat(formData.balance) || 0,
       routeCustomer: formData.route === "Yes",
       routeAddress: formData.routeName.trim(),
     };
 
     try {
-      await axiosInstance.post("/admin/customer/add", payload);
-
-      // 3) Success alert → close → navigate
+      await axiosInstance.put(
+        `/admin/customer/updatecustomer/${customerId}`,
+        payload
+      );
       await Swal.fire({
         icon: "success",
-        title: "Customer Added!",
-        text: "The customer has been added successfully.",
+        title: "Customer Updated!",
+        text: "Changes have been saved.",
         confirmButtonColor: "#2563EB",
       });
-
       safeOnClose();
-      setPopup(false)
+      setPopup(false);
     } catch (err) {
-      console.error("Error adding customer:", err.response || err);
-
-      // extract server‑side message(s)
-      let message = "Something went wrong.";
-      if (err.response?.data) {
-        if (err.response.data.message) {
-          message = err.response.data.message;
-        } else if (Array.isArray(err.response.data.errors)) {
-          message = err.response.data.errors.join("\n");
-        }
-      }
-
+      console.error("Error updating customer:", err.response || err);
+      const msg =
+        err.response?.data?.message ||
+        (Array.isArray(err.response?.data?.errors)
+          ? err.response.data.errors.join("\n")
+          : "Something went wrong.");
       await Swal.fire({
         icon: "error",
-        title: "Save Failed",
-        text: message,
+        title: "Update Failed",
+        text: msg,
         confirmButtonColor: "#DC2626",
       });
     }
   };
 
+  if (loading) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+        <div className="p-6 bg-white rounded-lg shadow">
+          Loading customer…
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 ">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75">
       <div className="w-full sm:w-[640px] lg:w-[1000px] xl:w-[1200px] bg-white rounded-[24px] p-8 sm:p-10 shadow-xl relative">
         {/* Header */}
         <div className="flex justify-between items-center pb-4 border-b border-gray-300">
           <h2 className="text-2xl font-bold text-gray-900">
-            Add New Customer
+            Edit Customer
           </h2>
           <button onClick={handleCancel}>
             <XCircleIcon className="w-6 h-6 text-gray-500 hover:text-red-500" />
@@ -164,6 +204,7 @@ const AddCustomerModal = ({ onClose ,setPopup}) => {
               <div className="flex items-center gap-2">
                 <input
                   type="checkbox"
+                  checked={formData.whatsapp === formData.phone}
                   onChange={(e) =>
                     handleChange(
                       "whatsapp",
@@ -200,7 +241,9 @@ const AddCustomerModal = ({ onClose ,setPopup}) => {
                 {["Weekly", "Monthly", "Yearly"].map((freq, idx) => (
                   <button
                     key={freq}
-                    onClick={() => handleChange("discountFrequency", freq)}
+                    onClick={() =>
+                      handleChange("discountFrequency", freq)
+                    }
                     className={`px-6 py-3 ${
                       formData.discountFrequency === freq
                         ? "bg-blue-100 text-blue-700 border border-blue-500"
@@ -210,7 +253,7 @@ const AddCustomerModal = ({ onClose ,setPopup}) => {
                         ? "rounded-l-2xl"
                         : idx === 2
                         ? "rounded-r-2xl"
-                        : "rounded-none"
+                        : ""
                     }`}
                   >
                     {freq}
@@ -221,7 +264,9 @@ const AddCustomerModal = ({ onClose ,setPopup}) => {
                 {["Manual", "Auto"].map((method, idx) => (
                   <button
                     key={method}
-                    onClick={() => handleChange("discountType", method)}
+                    onClick={() =>
+                      handleChange("discountType", method)
+                    }
                     className={`px-6 py-3 ${
                       formData.discountType === method
                         ? "bg-blue-100 text-blue-700 border border-blue-500"
@@ -302,4 +347,4 @@ const AddCustomerModal = ({ onClose ,setPopup}) => {
   );
 };
 
-export default AddCustomerModal;
+export default EditCustomerModal;

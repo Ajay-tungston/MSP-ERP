@@ -1,3 +1,4 @@
+const { default: mongoose } = require("mongoose");
 const Counter = require("../../../models/Counter");
 const Item = require("../../../models/Item");
 const PurchaseEntry = require("../../../models/PurchaseEntry");
@@ -205,9 +206,50 @@ const getPurchaseCounter = async (req, res) => {
   }
 };
 
+const getIncompletePurchases = async (req, res) => {
+  try {
+    // Fetch purchases where at least one item is not completed
+    const incompletePurchases = await PurchaseEntry.find({
+      "items.isCompleted": false,
+    }).populate("supplier").populate("items.item");
+
+    res.status(200).json(incompletePurchases);
+  } catch (error) {
+    console.error("Error fetching incomplete purchases:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+const getPurchaseById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Validate the ID
+    if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid purchase ID" });
+    }
+
+    // Find the purchase entry and populate supplier and items
+    const purchase = await PurchaseEntry.findById(id)
+      .populate("supplier")
+      .populate("items.item");
+
+    if (!purchase) {
+      return res.status(404).json({ message: "Purchase not found" });
+    }
+
+    res.status(200).json(purchase);
+  } catch (error) {
+    console.error("Error fetching purchase:", error);
+    res.status(500).json({ message: "Server error while fetching purchase" });
+  }
+};
+
 module.exports = {
   createPurchaseEntry,
   getAllPurchaseEntries,
   getPurchaseCounter,
+  getIncompletePurchases,
+  getPurchaseById,
   getTotalPurchaseStats,
 };

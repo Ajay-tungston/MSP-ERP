@@ -8,6 +8,7 @@ import { FaCheckSquare, FaRegSquare } from "react-icons/fa"; // For styled check
 import useAxiosPrivate from "../hooks/useAxiosPrivate";
 import OvalSpinner from "../Components/spinners/OvalSpinner";
 import Swal from "sweetalert2";
+import AddSupplier from "./AddSupplier";
 function Supplier() {
     const [selectedRows, setSelectedRows] = useState([]);
     const [supplier, setSupplier] = useState([]);
@@ -26,7 +27,7 @@ function Supplier() {
             `/admin/supplier?page=${currentPage}&limit=${limit}`
           );
           setSupplier(response?.data);
-          setTotalPages(data.totalPages);
+          setTotalPages(response?.data?.totalPages);
         } catch (error) {
           console.log(error);
         } finally {
@@ -88,7 +89,7 @@ function Supplier() {
         prev.includes(id) ? prev.filter((rowId) => rowId !== id) : [...prev, id]
       );
     };
-    const navigate = useNavigate();
+
   
     const toggleAllRows = () => {
       if (selectedRows.length === supplier?.suppliers?.length) {
@@ -109,13 +110,16 @@ function Supplier() {
       setCurrentPage(currentPage + 1);
     }
   };
+  const [popup, setPopup]=useState(false)
+ 
   return (
-
+              
+<>
       <div className=" h-full relative bg-gray-50  outline-1 outline-offset-[-1px] outline-white overflow-hidden">
 
     
-    <div className="w-[1511px] h-[1095px]   absolute bg-white rounded-3xl overflow-hidden mt-10">
-        <div className="left-[48px] top-[86px] absolute inline-flex justify-start items-center gap-3">
+<div className={`w-[1511px] h-[1095px] bg-white rounded-3xl overflow-hidden relative ${popup ? 'backdrop-blur-[100px]' : ''}`}>
+<div className="left-[48px] top-[86px] absolute inline-flex justify-start items-center gap-3">
         <div className="flex items-center gap-2 text-slate-500 text-xl font-normal font-['Urbanist']">
   Master <FaChevronRight /> Supplier
 </div>
@@ -123,7 +127,7 @@ function Supplier() {
         </div>
        
        
-        <div className="w-80 h-[64px] px-6 py-4 left-[1143px] top-[32px] absolute bg-indigo-500 rounded-2xl inline-flex justify-center items-center gap-3" onClick={() => navigate('/add-supplier')}>
+        <div className="w-80 h-[64px] px-6 py-4 left-[1143px] top-[32px] absolute bg-indigo-500 rounded-2xl inline-flex justify-center items-center gap-3" onClick={()=>setPopup(true)}>
           <div className="w-8 h-8 relative">
             <CiCirclePlus className="w-7 h-7 left-[2.67px] top-[2.67px] absolute text-white" />
             <div className="w-8 h-8 left-[32px] top-[32px] absolute origin-top-left -rotate-180 opacity-0" />
@@ -241,7 +245,8 @@ function Supplier() {
         </div>
     </div>
 </div>
-
+{popup && <AddSupplier  setPopup={setPopup}/>}
+</>
   )
 }
 

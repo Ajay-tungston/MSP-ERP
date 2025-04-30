@@ -207,15 +207,15 @@ const getCustomerNames = async (req, res) => {
       };
     }
 
-    const customers = await Customer.find(filter, "customerName")
+    const customers = await Customer.find(filter, "customerName address")
       .sort({ customerName: 1 })
       .limit(100) // Prevent excessive results
       .lean() // Faster if just converting to objects
       .exec();
-
     const customerList = customers.map(c => ({
       id: c._id,
-      name: c.customerName
+      name: c.customerName,
+      address:c.address
     }));
 
     return res.status(200).json({ 

@@ -1,4 +1,4 @@
-const { default: mongoose } = require("mongoose");
+const  mongoose  = require("mongoose");
 const Counter = require("../../../models/Counter");
 const Item = require("../../../models/Item");
 const PurchaseEntry = require("../../../models/PurchaseEntry");
@@ -155,8 +155,7 @@ const getAllPurchaseEntries = async (req, res) => {
 //for calclute the total amount for the getAllPurchaseEntries search
 const getTotalPurchaseStats = async (req, res) => {
   try {
-    const { startDate, endDate } = req.query;
-
+    const { startDate, endDate ,supplierId} = req.query;
     let filter = {};
 
     if (startDate && endDate) {
@@ -164,6 +163,10 @@ const getTotalPurchaseStats = async (req, res) => {
         $gte: new Date(startDate),
         $lte: new Date(new Date(endDate).setUTCHours(23, 59, 59, 999)),
       };
+    }
+
+    if (supplierId) {
+      filter.supplier = new mongoose.Types.ObjectId(supplierId);
     }
 
     const result = await PurchaseEntry.aggregate([
@@ -180,7 +183,6 @@ const getTotalPurchaseStats = async (req, res) => {
         },
       },
     ]);
-
     const stats = result[0] || {
       netTotalAmount: 0,
       totalCommission: 0,

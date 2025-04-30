@@ -10,89 +10,138 @@ const mongoose = require("mongoose");
 const createSaleTransaction = async (req, res) => {
   try {
     const sales = Array.isArray(req.body) ? req.body : [req.body];
-
     const transactionNumber = await getNextCounterNumber("saleTransaction");
+
     const customersArray = [];
-    let grandTotal = 0;
-    let totalQuantity = 0;
+    let grandTotal     = 0;
+    let grandQuantity  = 0;
 
     for (const saleData of sales) {
       const { customerId, items, discount = 0 } = saleData;
 
-      // Validate customer
+      // 1) Validate customer
       const customer = await Customer.findById(customerId);
       if (!customer) {
         return res.status(404).json({ message: `Customer ${customerId} not found` });
       }
 
       const customerItems = [];
-      let customerTotal = 0;
-      let customerQuantity = 0;
+      let   customerTotal    = 0;
+      let   customerQuantity = 0;
 
+      // 2) For each item sold, deduct from the matching Purchase
       for (const itemData of items) {
         const { itemName, supplierId, quantity, unitPrice } = itemData;
 
-        // Validate item
+        // 2a) Validate item & supplier
         const item = await Item.findOne({ itemName });
         if (!item) {
           return res.status(404).json({ message: `Item ${itemName} not found` });
         }
-
-        // Validate supplier
         if (!supplierId || !mongoose.Types.ObjectId.isValid(supplierId)) {
           return res.status(400).json({ message: `Invalid supplier ID: ${supplierId}` });
         }
-
         const supplier = await Supplier.findById(supplierId);
         if (!supplier) {
           return res.status(404).json({ message: `Supplier ${supplierId} not found` });
         }
 
-        const totalCost = unitPrice * quantity;
+        // 2b) STEP 1: Atomically decrement soldQuantity & remainingQuantity
+        const updatedPurchase = await PurchaseEntry.findOneAndUpdate(
+          {
+            supplier:               supplier._id,
+            "items.item":           item._id,
+            "items.remainingQuantity": { $gte: quantity }
+          },
+          {
+            $inc: {
+              "items.$.soldQuantity":      quantity,
+              "items.$.remainingQuantity": -quantity
+            }
+          },
+          { new: true }
+        );
 
+        if (!updatedPurchase) {
+          return res.status(400).json({
+            message: `Only limited stock for ${itemName} from this supplier`
+          });
+        }
+
+        // 2c) Locate the updated sub-document
+        const purchaseItem = updatedPurchase.items.find(pi =>
+          pi.item.toString() === item._id.toString()
+        );
+
+        // 2d) STEP 2: Mark that item completed if it hit zero
+        if (purchaseItem.remainingQuantity === 0 && !purchaseItem.isCompleted) {
+          await PurchaseEntry.updateOne(
+            { _id: updatedPurchase._id, "items._id": purchaseItem._id },
+            { $set: { "items.$.isCompleted": true } }
+          );
+        }
+
+        // 2e) STEP 3: If *all* sub-items are done, mark whole purchase completed
+        const fresh = await PurchaseEntry.findById(updatedPurchase._id).select("items isCompleted");
+        if (!fresh.isCompleted && fresh.items.every(i => i.isCompleted)) {
+          await PurchaseEntry.updateOne(
+            { _id: updatedPurchase._id },
+            { $set: { isCompleted: true } }
+          );
+        }
+
+        // 2f) Record this sale‐line
+        const totalCost = unitPrice * quantity;
         customerItems.push({
-          item: item._id,
-          supplier: supplier._id,
+          item:      item._id,
+          supplier:  supplier._id,
           quantity,
           unitPrice,
-          totalCost,
+          totalCost
         });
-
-        customerTotal += totalCost;
+        customerTotal    += totalCost;
         customerQuantity += quantity;
       }
 
-      // Push processed customer data
+      // 3) Build customer‐level entry
       customersArray.push({
-        customer: customer._id,
-        items: customerItems,
+        customer:      customer._id,
+        items:         customerItems,
         discount,
-        totalAmount: customerTotal - discount,
-        totalQuantity: customerQuantity,
+        totalAmount:   customerTotal - discount,
+        totalQuantity: customerQuantity
       });
 
-      grandTotal += (customerTotal - discount);
-      totalQuantity += customerQuantity;
+      grandTotal    += (customerTotal - discount);
+      grandQuantity += customerQuantity;
     }
 
-    // Create and save the sale transaction
+    // 4) Finally, save the grouped sale transaction
     const newSale = new SalesEntry({
       transactionNumber,
-      status: "completed",
-      totalAmount: grandTotal,
-      totalQuantity,
-      customers: customersArray,
+      customers:      customersArray,
+      dateOfSale:     new Date(),
+      totalAmount:    grandTotal,
+      totalQuantity:  grandQuantity,
+      status:         "completed"
     });
 
     await newSale.save();
 
-    return res.status(201).json({ message: "Grouped sales transaction saved", sale: newSale });
+    return res.status(201).json({
+      message: "Grouped sales transaction saved",
+      sale: newSale
+    });
 
   } catch (error) {
     console.error("Sale creation error:", error);
-    return res.status(500).json({ message: "Internal Server Error", error: error.message });
+    return res.status(500).json({
+      message: "Internal Server Error",
+      error:   error.message
+    });
   }
 };
+
 
 
 const getSalesEntries = async (req, res) => {

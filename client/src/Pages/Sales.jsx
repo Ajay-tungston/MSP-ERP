@@ -12,13 +12,15 @@ import Swal from "sweetalert2";
 import { useNavigate, useParams } from "react-router-dom";
 
 const Sales = () => {
-  const { id } = useParams();
+  const { id:purchaseId } = useParams();
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [purchase, setPurchase] = useState();
-  console.log("Add purchase", purchase);
+  // console.log("Add purchase", purchase);
   const axiosInstance = useAxiosPrivate();
+  const [loadingCustomers, setLoadingCustomers] = useState(false);
+  const [loadingPurchase, setLoadingPurchase] = useState(true);
   const [submitLoading, setSubmitloading] = useState(false);
 
   // rows holds each line of the sales form
@@ -32,8 +34,12 @@ const Sales = () => {
       quantity: "",
       unit: "",
       unitPrice: "",
+      quantityType: "",
+      remainingQuantity: 0,
+      error: "",
     },
   ]);
+  // console.log("edjdekjdejkejefjhr",rows)
   // which row’s dropdown is open?
   const [activeCustomerIndex, setActiveCustomerIndex] = useState(null);
   // what the user has typed when searching
@@ -82,24 +88,42 @@ const Sales = () => {
   }, [searchTerm, axiosInstance]);
 
   useEffect(() => {
-    const fetchPurchaseById = async () => {
+    const fetchPurchase = async () => {
+      setLoadingPurchase(true);
       try {
-        const response = await axiosInstance.get(`/admin/purchase/get/${id}`);
+        const res = await axiosInstance.get(`/admin/purchase/get/${purchaseId}`);
+        setPurchase(res.data);
+       
+        // Initialize rows from purchase items still in stock
+        setRows((r) => {
+          // preserve existing rows if already editing
+          if (r.length > 1 || r[0].itemId) return r;
 
-        setPurchase(response.data);
+          return res.data.items
+            .filter((it) => it.remainingQuantity > 0)
+            .map((it, idx) => ({
+              id: idx + 1,
+              customerId: "",
+              customerLabel: "",
+              itemName: it.item.itemName,
+              itemId: it.item._id,
+              quantity: "",
+              unitPrice: it.unitPrice,
+              quantityType: it.quantityType,
+              remainingQuantity: it.remainingQuantity,
+              error: "",
+            }));
+        });
+        // console.log("purchase response",res)
       } catch (err) {
         console.error("Error fetching purchase:", err);
-        setError("Failed to fetch purchase details.");
+        setError("Failed to load purchase.");
       } finally {
-        setLoading(false);
+        setLoadingPurchase(false);
       }
     };
-
-    if (id) {
-      fetchPurchaseById();
-    }
-  }, [id]);
-
+    fetchPurchase();
+  }, [purchaseId, axiosInstance]);
   const sortAlphabetically = (data) => {
     return [...data].sort((a, b) => a.label.localeCompare(b.label));
   };
@@ -136,9 +160,7 @@ const Sales = () => {
     copy[i][field] = val;
     setRows(copy);
   };
-  const CalculateTotals={
-    
-  }
+ 
   const handleCustomerSelect = (i, customer) => {
     const copy = [...rows];
     copy[i].customer = customer.value;
@@ -152,22 +174,23 @@ const Sales = () => {
       p = parseFloat(price);
     return isNaN(q) || isNaN(p) ? 0 : q * p;
   };
-  const handleItemChange = (index, selectedItemName) => {
-    const updatedRows = [...rows];
-
-
-    // Find the selected item object from purchase items
-    const selectedItem = purchase?.items?.find(
-      (item) => item.item.itemName === selectedItemName
+  const handleItemChange = (idx, itemName) => {
+    const pi = purchase.items.find((it) => it.item.itemName === itemName);
+    if (!pi) return;
+    setRows((rs) =>
+      rs.map((r, i) =>
+        i === idx
+          ? {
+              ...r,
+              itemName: pi.item.itemName,
+              itemId: pi.item._id,
+              unitPrice: pi.unitPrice,
+              quantityType: pi.quantityType,
+              remainingQuantity: pi.remainingQuantity,
+            }
+          : r
+      )
     );
- 
-    if (selectedItem) {
-      updatedRows[index].itemName = selectedItem.item.itemName;
-      updatedRows[index].itemId = selectedItem.item._id; // ⬅️ SAVE itemId
-      updatedRows[index].supplierId = selectedItem.supplierId; // ⬅️ SAVE supplierId
-    }
-
-    setRows(updatedRows);
   };
 
 
@@ -185,22 +208,17 @@ const Sales = () => {
   };
 
   // Quantity change handler
-  const handleQuantityChange = (index, value) => {
-    const quantity = parseInt(value) || 0;
-    const currentRow = rows[index];
-
-    const remaining = getRemainingQuantity(currentRow.itemId, index);
-    const selectedItem = purchase?.items?.find(
-      (i) => i.item.itemId === currentRow.item
-    );
-
-    let error = null;
-    if (selectedItem && quantity > remaining) {
-      error = `Only ${remaining}Kg of ${selectedItem.item.itemName} is available`;
-    }
-
-    setRows(
-      rows.map((row, i) => (i === index ? { ...row, quantity, error } : row))
+  const handleQuantityChange = (idx, val) => {
+    const q = parseInt(val, 10) || "";
+    setRows((rs) =>
+      rs.map((r, i) => {
+        if (i !== idx) return r;
+        let err = "";
+        if (q > r.remainingQuantity) {
+          err = `Max ${r.remainingQuantity} ${r.quantityType}`;
+        }
+        return { ...r, quantity: q, error: err };
+      })
     );
   };
 
@@ -248,79 +266,88 @@ const Sales = () => {
   const handleAddSale = async () => {
     setSubmitloading(true);
     try {
-      const newRows = [...rows];
-
-      const salesPayload = [];
-
-      for (let i = 0; i < newRows.length; i++) {
-        const rowData = newRows[i];
-
-        if (!rowData.customer) {
+      // 1) Validate form
+      for (let i = 0; i < rows.length; i++) {
+        const r = rows[i];
+        if (!r.customer) {
           throw new Error(`Row ${i + 1}: Please select a customer.`);
         }
-        if (!rowData.itemName) {
+        if (!r.itemName) {
           throw new Error(`Row ${i + 1}: Please select an item.`);
         }
-        if (!rowData.quantity || rowData.quantity <= 0) {
+        if (!r.quantity || r.quantity <= 0) {
           throw new Error(`Row ${i + 1}: Please enter a valid quantity.`);
         }
-        if (!rowData.unitPrice || rowData.unitPrice <= 0) {
+        if (!r.unitPrice || r.unitPrice <= 0) {
           throw new Error(`Row ${i + 1}: Invalid unit price.`);
         }
-
-        salesPayload.push({
-          customerId: rowData.customer,
-          discount: rowData.discount || 0,
-          items: [
-            {
-              itemName: rowData.itemName,
-              supplierId: purchase.supplier._id, // NOTE: fixed supplierId to come from row
-              quantity: Number(rowData.quantity),
-              unitPrice: Number(rowData.unitPrice),
-            },
-          ],
-        });
       }
-
-    
-
-      const response = await axiosInstance.post(
-        "/admin/sales/add",
-        salesPayload
-      );
-
+  
+      // 2) Build the grouped sales payload
+      //    Each element in the array is one customer's mini-transaction
+      const salesPayload = rows.map((r) => ({
+        customerId: r.customer,    // your customer dropdown value
+        discount:   r.discount || 0,
+        items: [
+          {
+            itemName:   r.itemName,
+            supplierId: purchase.supplier._id, // make sure you set this on item select
+            quantity:   Number(r.quantity),
+            unitPrice:  Number(r.unitPrice),
+          },
+        ],
+      }));
+  
+      // 3) Send it in one go
+      await axiosInstance.post("/admin/sales/add", salesPayload);
+  
       Swal.fire({
         title: "All sales transactions added successfully!",
         icon: "success",
         draggable: true,
       });
-
-      setRows([
-        {
-          id: 1,
-          customer: "",
-          supplierId: "",
-          customerName: "",
-          itemName: "",
-          quantity: "",
-          unit: "",
-          unitPrice: "",
-       
-        },
-      ]);
-
-      navigate("/sales-transaction");
+  
+      // 4) Re-fetch the purchase to get updated remainingQuantity
+      const { data: updatedPurchase } = await axiosInstance.get(
+        `/admin/purchase/get/${purchase._id}`
+      );
+      setPurchase(updatedPurchase);
+  
+      // 5) Rebuild rows only for items still in stock
+      const stillInStock = updatedPurchase.items
+        .filter((it) => it.remainingQuantity > 0)
+        .map((it, idx) => ({
+          id: idx + 1,
+          customer:          "",        // reset selection
+          customerLabel:     "",
+          itemName:          it.item.itemName,
+          itemId:            it.item._id,
+          supplierId:        updatedPurchase.supplier._id,
+          quantity:          "",
+          unitPrice:         it.unitPrice,
+          quantityType:      it.quantityType,
+          remainingQuantity: it.remainingQuantity,
+          error:             "",
+        }));
+  
+      if (stillInStock.length) {
+        setRows(stillInStock);
+      } else {
+        // nothing left → go back to register
+        navigate("/sales-transaction");
+      }
     } catch (error) {
       Swal.fire({
-        title: error.message || "Something went wrong!",
+        title: error.response?.data?.message || error.message || "Something went wrong!",
         icon: "error",
         draggable: true,
       });
-      console.error(error);
+      console.error("handleAddSale error:", error);
     } finally {
       setSubmitloading(false);
     }
   };
+  
 
   return (
     <div>
@@ -349,7 +376,7 @@ const Sales = () => {
             </div>
 
             {purchase?.items?.map((item, index) => {
-              const total = item.quantity * item.unitPrice;
+              const total = item.remainingQuantity * item.unitPrice;
 
               return (
                 <div
@@ -363,7 +390,7 @@ const Sales = () => {
                     {item.item.itemName}
                   </div>
                   <div className="min-w-32 justify-center text-indigo-950 text-sm font-normal font-['Urbanist'] tracking-wide">
-                    {item.quantity}
+                    {item.remainingQuantity}
                   </div>
                   <div className="min-w-32 justify-center text-indigo-950 text-sm font-normal font-['Urbanist'] tracking-wide">
                     {item.quantityType}
@@ -661,69 +688,8 @@ const Sales = () => {
 
             <div className="self-stretch flex flex-col justify-start items-end gap-8">
               <div className="self-stretch px-4 flex flex-col justify-start items-start gap-12">
-                <div className="self-stretch pb-6 border-b border-slate-600/40 inline-flex justify-start items-center gap-2.5">
-                  <div className="justify-start text-indigo-950 text-3xl font-semibold font-['Urbanist'] leading-10">
-                    Deductions
-                  </div>
-                </div>
-                <div className="self-stretch pb-8 border-b border-zinc-100 inline-flex justify-between items-start flex-wrap content-start">
-                  <div className="w-96 flex justify-between items-center">
-                    <label
-                      className="w-24 justify-start text-slate-600/40 text-sm font-normal font-['Urbanist']"
-                      htmlFor="commission"
-                    >
-                      Commission (%)
-                    </label>
-                    <div className="w-64 h-12 px-6 py-4 bg-gray-50 rounded-xl flex justify-start items-center gap-2">
-                      <input
-                        type="number"
-                        id="commission"
-                        name="commission"
-                        placeholder="Fetch from Customer Master"
-                        className="w-full bg-transparent outline-none text-indigo-950 text-sm font-medium font-['Urbanist']"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="w-96 flex justify-between items-center">
-                    <label
-                      className="w-24 justify-start text-slate-600/40 text-sm font-normal font-['Urbanist']"
-                      htmlFor="discount"
-                    >
-                      Discount (%)
-                    </label>
-                    <div className="w-64 h-12 px-6 py-4 bg-gray-50 rounded-xl flex justify-start items-center gap-2">
-                      <input
-                        type="number"
-                        id="discount"
-                        name="discount"
-                        placeholder="Fetch from Customer Master"
-                        className="w-full bg-transparent outline-none text-indigo-950 text-sm font-medium font-['Urbanist']"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex justify-start items-center gap-2 mt-10">
-                    <label
-                      className="w-30 justify-start text-slate-600/40 text-sm font-normal font-['Urbanist']"
-                      htmlFor="totalDeductions"
-                    >
-                      Total Deductions
-                    </label>
-                    <div className="w-64 h-12 px-6 py-4 bg-gray-50 rounded-xl flex justify-start items-center gap-3">
-                      <div className="justify-start text-indigo-950 text-xl font-bold font-['Urbanist']">
-                        ₹
-                      </div>
-                      <input
-                        type="text"
-                        id="totalDeductions"
-                        name="totalDeductions"
-                        readOnly
-                        className="w-full bg-transparent outline-none text-indigo-950 text-sm font-bold font-['Urbanist']"
-                      />
-                    </div>
-                  </div>
-                </div>
+              
+  
 
                 <div className="self-stretch inline-flex justify-between items-start flex-wrap content-start">
                   <div className="w-96 flex justify-between items-center">
@@ -773,6 +739,6 @@ const Sales = () => {
       </div>
     </div>
   );
-};
+  }
 
 export default Sales;

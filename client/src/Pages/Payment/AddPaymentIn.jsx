@@ -27,21 +27,12 @@ function AddPaymentIn({ setPopup }) {
 
   useEffect(() => {
     const fetchName = async () => {
+      const qry=category==="customer"?`/admin/customer/getname?q=${name}`:`/admin/${category}/list?search=${name}`
       try {
-        const response = await axiosInstance.get(
-          `/admin/${category}/list?search=${name}`
-        );
-        if (category === "employee") {
-          setNameList(response?.data);
-        }
-        if (category === "supplier") {
-          setNameList(response?.data);
-        }
-        if (category === "company") {
-          setNameList(response?.data);
-        }
+        const response = await axiosInstance.get(qry);
+        category==="customer"?setNameList(response?.data?.customers):setNameList(response?.data);
+       
         console.log(response);
-        console.log(`/admin/${category}/list?search=${name}`);
       } catch (error) {
         console.log(error);
       }
@@ -196,6 +187,7 @@ function AddPaymentIn({ setPopup }) {
                         if (category === "supplier") return item.supplierName;
                         if (category === "employee") return item.employeeName;
                         if (category === "company") return item.companyName;
+                        if (category === "customer") return item.name;
                         return "";
                       }}
                       onChange={(e) => setName(e.target.value)}
@@ -207,13 +199,13 @@ function AddPaymentIn({ setPopup }) {
                     />
                     <div className="absolute left-0 right-0 mt- z-10 top-18">
                       <ComboboxOptions className="w-full border border-gray-200 rounded-xl bg-white max-h-60 overflow-y-auto shadow-lg">
-                        {nameList.map((item, index) => (
+                        {nameList?.map((item, index) => (
                           <ComboboxOption
                             key={index}
                             value={item}
                             className="px-6 py-3 cursor-pointer text-gray-700 hover:bg-gray-100"
                           >{category==="supplier"?item?.supplierName:category==="employee"?
-                            item?.employeeName:category==="company"?item?.companyName:""}
+                            item?.employeeName:category==="company"?item?.companyName:category==="customer"?item.name:""}
                           </ComboboxOption>
                         ))}
                       </ComboboxOptions>

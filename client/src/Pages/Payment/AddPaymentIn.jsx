@@ -11,31 +11,34 @@ import useAxiosPrivate from "../../hooks/useAxiosPrivate";
 function AddPaymentIn({ setPopup }) {
   const [category, setCategory] = useState("");
   console.log(category);
-  const [date, setDate] = useState("");
+  const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [name, setName] = useState("");
   const [amount, setAmount] = useState("");
   const [address, setAddress] = useState("");
   const [errors, setErrors] = useState({});
   const [nameList, setNameList] = useState([]);
-  const [sellectedData,setselectedData]=useState("")
+  const [sellectedData, setselectedData] = useState(null);
   const [autoFilledAddress, setAutoFilledAddress] = useState("");
   const axiosInstance = useAxiosPrivate();
-console.log("dehifcbdhib",nameList)
+  console.log("namelist=", nameList);
+  console.log("selecteddaa=", sellectedData);
+
+  console.log("name=", name);
+
   useEffect(() => {
     const fetchName = async () => {
       try {
         const response = await axiosInstance.get(
           `/admin/${category}/list?search=${name}`
         );
-        if(category==="employee"){
-
+        if (category === "employee") {
           setNameList(response?.data);
         }
-        if(category==="supplier"){
-        setNameList(response?.data);
+        if (category === "supplier") {
+          setNameList(response?.data);
         }
-        if(category==="company"){
-          setNameList(response.data.map(i=>i.supplierName));
+        if (category === "company") {
+          setNameList(response?.data);
         }
         console.log(response);
         console.log(`/admin/${category}/list?search=${name}`);
@@ -44,7 +47,8 @@ console.log("dehifcbdhib",nameList)
       }
     };
     fetchName();
-  }, [name,category]);
+  }, [name, category]);
+  
 
   const handleSave = () => {
     const newErrors = {};
@@ -180,19 +184,23 @@ console.log("dehifcbdhib",nameList)
                   <div className="text-slate-500 text-xl font-normal font-['Urbanist']">
                     Name
                   </div>
-                  <Combobox 
-                 value={sellectedData}
-                 onChange={setselectedData}
-                 onClose={() => setselectedData("")}
-                  // onClose={() => setName("")}
-                  // value={name} onChange={setName}
+                  <Combobox
+                    value={sellectedData}
+                    onChange={setselectedData}
+                    // onClose={() => setselectedData("")}
                   >
                     <ComboboxInput
                       aria-label="Name"
-                      displayValue={(person) => person?.name}
+                      displayValue={(item) => {
+                        if (!item) return "";
+                        if (category === "supplier") return item.supplierName;
+                        if (category === "employee") return item.employeeName;
+                        if (category === "company") return item.companyName;
+                        return "";
+                      }}
                       onChange={(e) => setName(e.target.value)}
-                      onFocus={() => setInputFocused(true)}
-                      onBlur={() => setInputFocused(false)}
+                      // onFocus={() => setInputFocused(true)}
+                      // onBlur={() => setInputFocused(false)}
                       autoComplete="off"
                       placeholder="Enter Name"
                       className="w-full px-8 py-2 text-xl font-normal font-['Urbanist'] text-slate-500"
@@ -204,8 +212,8 @@ console.log("dehifcbdhib",nameList)
                             key={index}
                             value={item}
                             className="px-6 py-3 cursor-pointer text-gray-700 hover:bg-gray-100"
-                          >
-                            {item.name}
+                          >{category==="supplier"?item?.supplierName:category==="employee"?
+                            item?.employeeName:category==="company"?item?.companyName:""}
                           </ComboboxOption>
                         ))}
                       </ComboboxOptions>
@@ -252,8 +260,10 @@ console.log("dehifcbdhib",nameList)
             ) : (
               <input
                 type="text"
-                value={autoFilledAddress || address}
-                onChange={(e) => setAddress(e.target.value)}
+                // value={autoFilledAddress || address}
+                value={sellectedData?.address}
+
+                // onChange={(e) => setAddress(e.target.value)}
                 className="w-full px-8 py-2 text-xl font-normal font-['Urbanist'] text-slate-500"
                 disabled={
                   category === "Customer" ||

@@ -205,9 +205,90 @@ const getPurchaseCounter = async (req, res) => {
   }
 };
 
+const getSupplierPurchaseReport = async (req, res) => {
+  try {
+    const { supplierId, startDate=new Date().toLocaleDateString("en-CA")
+    , endDate=new Date().toLocaleDateString("en-CA")
+  ,  page = 1, limit = 10  } = req.query;
+console.log(req.query)
+    if (!supplierId || !startDate || !endDate) {
+      return res.status(400).json({ error: "supplierId, startDate, and endDate are required" });
+    }
+
+    const supplier = await Supplier.findById(supplierId);
+    if (!supplier) {
+      return res.status(404).json({ error: "Supplier not found" });
+    }
+
+    const filter = {
+      supplier: supplierId,
+      dateOfPurchase: {
+        $gte: new Date(startDate),
+        $lte: new Date(new Date(endDate).setUTCHours(23, 59, 59, 999)),
+      },
+    };
+
+
+    const skip = (page - 1) * limit;
+
+    // Fetch the purchase entries with pagination
+    const entries = await PurchaseEntry.find(filter)
+      // .populate("items.item")
+      .sort({ dateOfPurchase: -1 })
+      .skip(skip)
+      .limit(limit);
+  
+
+    const stats = await PurchaseEntry.aggregate([
+      { $match: filter },
+      {
+        $group: {
+          _id: null,
+          grossTotalAmount: { $sum: "$grossTotalAmount" },
+          netTotalAmount: { $sum: "$netTotalAmount" },
+          commissionPaid: { $sum: "$commissionPaid" },
+          totalBox: { $sum: "$totalBox" },
+          totalKg: { $sum: "$totalKg" },
+          totalMarketFee: { $sum: "$marketFee" },
+        },
+      },
+    ]);
+
+    const summary = stats[0] || {
+      grossTotalAmount: 0,
+      netTotalAmount: 0,
+      commissionPaid: 0,
+      totalBox: 0,
+      totalKg: 0,
+      totalMarketFee: 0,
+    };
+      // Calculate total pages
+      const totalEntries = await PurchaseEntry.countDocuments(filter);
+      const totalPages = Math.ceil(totalEntries / limit);
+
+    res.status(200).json({
+      supplier: {
+        id: supplier._id,
+        name: supplier.name,
+      },
+      startDate,
+      endDate,
+      page,
+      totalPages,
+      totalEntries,
+      summary,
+      purchaseEntries: entries,
+    });
+  } catch (error) {
+    console.error("Error in supplier report:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
 module.exports = {
   createPurchaseEntry,
   getAllPurchaseEntries,
   getPurchaseCounter,
   getTotalPurchaseStats,
+  getSupplierPurchaseReport,
 };

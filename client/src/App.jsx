@@ -36,7 +36,7 @@ import Whatsapp from "./Pages/Whatsapp";
 import PaymentIn from "./Pages/Payment/PaymentIn";
 import PaymentOut from "./Pages/Payment/PaymentOut";
 import AddPaymentIn from "./Pages/Payment/AddPaymentIn";
-
+import Sample from './Pages/Sample'
 function App() {
   return (
     <>
@@ -109,7 +109,7 @@ function App() {
         <Route path="/company" element={<Company />} />
 <Route path="/trail" element={<TrialBalance />}/>
 <Route path="/add-payment" element={<AddPaymentIn/>}/>
-      
+    <Route path="/sample" element={<Sample/>}/>  
       </Routes>
     </>
   );

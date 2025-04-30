@@ -181,8 +181,8 @@ function PurchaseReport() {
           <div className="min-w-32 justify-center text-slate-900 text-xl font-bold font-['Urbanist'] tracking-wide">
             {totalStats?.netTotalAmount?.toFixed(2)}
           </div>
-        </div>
-        <div className="w-[1495px] px-12 py-2 left-0 top-[650px] absolute bg-white border-b border-gray-200 inline-flex justify-between items-center">
+          </div>
+         <div className="w-[1495px] px-12 py-2 left-0 top-[650px] absolute bg-white border-b border-gray-200 inline-flex justify-between items-center">
           <div className="flex justify-start items-center gap-5">
             <div className="justify-center text-slate-500/40 text-xl font-normal font-['Urbanist'] tracking-wide">
               Commission

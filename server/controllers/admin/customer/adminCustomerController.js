@@ -193,6 +193,95 @@ const deleteCustomer = async (req, res) => {
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
+const escapeRegex = (string) => string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+const getCustomerNames = async (req, res) => {
+  try {
+    const { q } = req.query;
+    const filter = {};
+
+    if (q && q.trim()) {
+      filter.customerName = { 
+        $regex: escapeRegex(q.trim()), 
+        $options: "i" 
+      };
+    }
+
+    const customers = await Customer.find(filter, "customerName address")
+      .sort({ customerName: 1 })
+      .limit(100) // Prevent excessive results
+      .lean() // Faster if just converting to objects
+      .exec();
+    const customerList = customers.map(c => ({
+      id: c._id,
+      name: c.customerName,
+      address:c.address
+    }));
+
+    return res.status(200).json({ 
+      success: true,
+      count: customerList.length,
+      customers: customerList 
+    });
+  } catch (error) {
+    console.error("Error fetching customer names:", error);
+    return res.status(500).json({ 
+      success: false,
+      message: "Internal Server Error",
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+};
+
+const updateCustomer = async (req, res) => {
+  try {
+    const { customerId } = req.params;  // Get the customerId from the request parameters
+    const updates = req.body;  // Get the updates from the request body
+
+    // Make sure the customer exists before attempting to update
+    const customer = await Customer.findById(customerId);
+    if (!customer) {
+      return res.status(404).json({ message: `Customer with ID ${customerId} not found` });
+    }
+
+    // Apply the updates to the customer document
+    Object.keys(updates).forEach((key) => {
+      if (updates[key] !== undefined) {
+        customer[key] = updates[key];
+      }
+    });
+
+    // Save the updated customer document to the database
+    await customer.save();
+
+    return res.status(200).json({ message: 'Customer updated successfully', customer });
+  } catch (error) {
+    console.error('Error updating customer:', error);
+    return res.status(500).json({ message: 'Internal Server Error' });
+  }
+};
 
 
-module.exports = { addNewCustomer,getAllCustomers, deleteCustomer };
+const getSingleCustomer = async (req, res) => {
+  try {
+    const { customerId } = req.params;
+
+    // Validate customerId
+    if (!customerId || customerId === "undefined") {
+      return res.status(400).json({ message: "Invalid or missing customer ID" });
+    }
+
+    const customer = await Customer.findById(customerId);
+    if (!customer) {
+      return res.status(404).json({ message: "Customer not found" });
+    }
+
+    res.status(200).json(customer);
+  } catch (error) {
+    console.error("Error fetching customer:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+
+module.exports = { addNewCustomer,getAllCustomers, deleteCustomer,getCustomerNames,updateCustomer,getSingleCustomer };

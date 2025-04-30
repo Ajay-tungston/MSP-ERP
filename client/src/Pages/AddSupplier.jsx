@@ -5,10 +5,10 @@ import useAxiosPrivate from "../hooks/useAxiosPrivate";
 import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom";
 
-function AddSupplier() {
+function AddSupplier({setPopup}) {
   const axiosPrivate = useAxiosPrivate();
   const navigate = useNavigate();
-
+  // const safeOnClose = typeof onClose === "function" ? onClose : () => {};
   // State to manage form values
   const [formData, setFormData] = useState({
     supplierCode: "",
@@ -106,7 +106,7 @@ function AddSupplier() {
           icon: "success",
           draggable: true,
         });
-        navigate("/supplier"); // Navigate after successful submission
+        setPopup(false); // Navigate after successful submission
       }
     } catch (error) {
       console.log(error);
@@ -144,274 +144,184 @@ function AddSupplier() {
     });
     setSameAsPhone(false);
     setResponseError("");
-    navigate("/supplier"); // Navigate to suppliers list
+     setPopup(false);
   };
 
   return (
-    <div className="w-full h-full p-4 md:p-8 lg:p-12 bg-white rounded-3xl flex flex-col justify-start items-start gap-12 overflow-hidden">
-      <div className="w-full pb-6 border-b border-[#a1a5b6] flex justify-start items-center gap-2.5">
+    <div className="fixed inset-0 z-50 flex items-center justify-center  bg-opacity-10 backdrop-blur-sm">
+      <div className="w-full sm:w-[640px] lg:w-[1000px] xl:w-[1200px] bg-white rounded-[24px] p-8 sm:p-10 shadow-xl relative">
+        {/* Header */}
+        <div className="flex justify-between items-center pb-4 border-b border-gray-300">
         <button
           onClick={() => navigate("/suppliers")}
           className="text-[#151d48] text-[24px] sm:text-[28px] md:text-[32px] font-bold font-['Urbanist'] leading-[44.80px] hover:opacity-80 transition-opacity text-left"
         >
           Add New Supplier
         </button>
-      </div>
-
-      {responseError && <p className="text-red-500"> {responseError}</p>}
-
-      <form
-        onSubmit={handleSubmit}
-        className="w-full flex flex-wrap justify-between items-start gap-12 md:px-8 lg:px-40"
-      >
-
-        {/* No. */}
-        <div className="flex justify-start items-center gap-6 sm:gap-12 w-full sm:w-[570px]">
-          <label
-            className="min-w-[120px] sm:min-w-[172px] text-[#737791] text-xl font-normal font-['Urbanist']"
-            htmlFor="customer-number"
-          >
-            No.
-          </label>
-          <div className="w-[77px] text-center text-[#05004e] text-xl font-bold font-['Urbanist']">
-            001
-          </div>
+          <button onClick={handleCancel}>
+            <XCircleIcon className="w-6 h-6 text-gray-500 hover:text-red-500" />
+          </button>
         </div>
 
-        {/* Supplier Code */}
-        <div className="flex flex-col w-full sm:w-[570px]">
-          {/* Display Error Message Above Label if any */}
-          {errors.supplierCode && (
-            <p className="text-red-500 text-sm">{errors.supplierCode}</p>
-          )}
+        {/* Server-response error */}
+        {responseError && (
+          <p className="mt-4 text-red-500 font-['Urbanist']">
+            {responseError}
+          </p>
+        )}
 
-          {/* Label and Input on the same line */}
-          <div className="flex justify-start items-center gap-6 sm:gap-12">
-            <label
-              className="min-w-[120px] sm:min-w-[172px] text-[#737791] text-xl font-normal font-['Urbanist']"
-              htmlFor="supplier-code"
-            >
-              Supplier Code <span className="text-red-500 text-xl">*</span>
-            </label>
-            <input
-              id="supplier-code"
-              name="supplierCode"
-              type="text"
-              placeholder="Enter here"
-              className={`w-full sm:w-[350px] px-6 py-4 bg-gray-50 rounded-xl text-xl font-normal font-['Urbanist'] ${errors.supplierCode ? "border-red-500" : ""
+        {/* Form */}
+        <form
+          onSubmit={handleSubmit}
+          className="grid grid-cols-2 gap-x-20 gap-y-6 mt-6 text-[#05004e] text-xl font-['Urbanist']"
+        >
+          {/* No. */}
+          <div className="flex items-center">
+            <label className="w-[172px] text-[#737791]">No.</label>
+            <div className="font-bold">Auto Generated</div>
+          </div>
+
+          {/* Supplier Code */}
+          <div className="flex flex-col">
+            {errors.supplierCode && (
+              <p className="text-red-500 mb-1">{errors.supplierCode}</p>
+            )}
+            <div className="flex items-center">
+              <label className="w-[172px] text-[#737791]">
+                Supplier Code <span className="text-red-500">*</span>
+              </label>
+              <input
+                name="supplierCode"
+                value={formData.supplierCode}
+                onChange={handleChange}
+                placeholder="Enter here"
+                className={`w-full sm:w-[350px] px-6 py-4 bg-gray-50 rounded-xl outline-none ${
+                  errors.supplierCode ? "border border-red-500" : ""
                 }`}
-              value={formData.supplierCode}
-              onChange={handleChange}
-            />
+              />
+            </div>
           </div>
-        </div>
 
-        {/* Supplier Name */}
-        <div className="flex flex-col w-full sm:w-[570px]">
-          {/* Display Error Message Above Label if any */}
-          {errors.supplierName && (
-            <p className="text-red-500 text-sm">{errors.supplierName}</p>
-          )}
-
-          {/* Label and Input on the same line */}
-          <div className="flex justify-start items-center gap-6 sm:gap-12">
-            <label
-              className="min-w-[120px] sm:min-w-[172px] text-[#737791] text-xl font-normal font-['Urbanist']"
-              htmlFor="supplier-name"
-            >
-              Supplier Name <span className="text-red-500 text-xl">*</span>
-            </label>
-            <input
-              id="supplier-name"
-              name="supplierName"
-              type="text"
-              placeholder="Enter here"
-              className={`w-full sm:w-[350px] px-6 py-4 bg-gray-50 rounded-xl text-xl font-normal font-['Urbanist'] ${errors.supplierName ? "border-red-500" : ""
+          {/* Supplier Name */}
+          <div className="flex flex-col">
+            {errors.supplierName && (
+              <p className="text-red-500 mb-1">{errors.supplierName}</p>
+            )}
+            <div className="flex items-center">
+              <label className="w-[172px] text-[#737791]">
+                Supplier Name <span className="text-red-500">*</span>
+              </label>
+              <input
+                name="supplierName"
+                value={formData.supplierName}
+                onChange={handleChange}
+                placeholder="Enter here"
+                className={`w-full sm:w-[350px] px-6 py-4 bg-gray-50 rounded-xl outline-none ${
+                  errors.supplierName ? "border border-red-500" : ""
                 }`}
-              value={formData.supplierName}
-              onChange={handleChange}
-            />
+              />
+            </div>
           </div>
-        </div>
 
-        {/* Address */}
-        <div className="flex flex-col w-full sm:w-[570px]">
-          {/* Display Error Message Above Label if any */}
-          {errors.address && (
-            <p className="text-red-500 text-sm">{errors.address}</p>
-          )}
-
-          {/* Label and Input on the same line */}
-          <div className="flex justify-start items-center gap-6 sm:gap-12">
-            <label
-              className="min-w-[120px] sm:min-w-[172px] text-[#737791] text-xl font-normal font-['Urbanist']"
-              htmlFor="address"
-            >
-              Address
-            </label>
+          {/* Address */}
+          <div className="flex items-center">
+            <label className="w-[172px] text-[#737791]">Address</label>
             <input
-              id="address"
               name="address"
-              type="text"
-              placeholder="Enter here"
-              className={`w-full sm:w-[350px] px-6 py-4 bg-gray-50 rounded-xl text-xl font-normal font-['Urbanist'] ${errors.address ? "border-red-500" : ""
-                }`}
               value={formData.address}
               onChange={handleChange}
-            />
-          </div>
-        </div>
-
-        {/* Phone */}
-        <div className="flex flex-col w-full sm:w-[570px]">
-          {/* Display Error Message Above Label if any */}
-          {errors.phone && (
-            <p className="text-red-500 text-sm">{errors.phone}</p>
-          )}
-
-          {/* Label and Input on the same line */}
-          <div className="flex justify-start items-center gap-6 sm:gap-12">
-            <label
-              className="min-w-[120px] sm:min-w-[172px] text-[#737791] text-xl font-normal font-['Urbanist']"
-              htmlFor="phone"
-            >
-              Phone <span className="text-red-500 text-xl">*</span>
-            </label>
-            <input
-              id="phone"
-              name="phone"
-              type="text"
               placeholder="Enter here"
-              className={`w-full sm:w-[350px] px-6 py-4 bg-gray-50 rounded-xl text-xl font-normal font-['Urbanist'] ${errors.phone ? "border-red-500" : ""
+              className="w-full sm:w-[350px] px-6 py-4 bg-gray-50 rounded-xl outline-none"
+            />
+          </div>
+
+          {/* Phone */}
+          <div className="flex flex-col">
+            {errors.phone && (
+              <p className="text-red-500 mb-1">{errors.phone}</p>
+            )}
+            <div className="flex items-center">
+              <label className="w-[172px] text-[#737791]">
+                Phone <span className="text-red-500">*</span>
+              </label>
+              <input
+                name="phone"
+                value={formData.phone}
+                onChange={handleChange}
+                placeholder="Enter here"
+                className={`w-full sm:w-[350px] px-6 py-4 bg-gray-50 rounded-xl outline-none ${
+                  errors.phone ? "border border-red-500" : ""
                 }`}
-              value={formData.phone}
-              onChange={handleChange}
-            />
+              />
+            </div>
           </div>
-        </div>
 
-        {/* WhatsApp */}
-        <div className="flex flex-col w-full sm:w-[570px]">
-          {/* Display Error Message Above Label if any */}
-          {errors.whatsapp && (
-            <p className="text-red-500 text-sm">{errors.whatsapp}</p>
-          )}
-
-          {/* Label and Input on the same line */}
-          <div className="flex justify-start items-center gap-6 sm:gap-12">
-            <label
-              className="min-w-[120px] sm:min-w-[172px] text-[#737791] text-xl font-normal font-['Urbanist']"
-              htmlFor="whatsapp"
-            >
-              WhatsApp
-            </label>
-            <input
-              id="whatsapp"
-              name="whatsapp"
-              type="text"
-              placeholder="Enter here"
-              className={`w-full sm:w-[350px] px-6 py-4 bg-gray-50 rounded-xl text-xl font-normal font-['Urbanist'] ${errors.whatsapp ? "border-red-500" : ""
+          {/* WhatsApp */}
+          <div className="flex flex-col">
+            {errors.whatsapp && (
+              <p className="text-red-500 mb-1">{errors.whatsapp}</p>
+            )}
+            <div className="flex items-center">
+              <label className="w-[172px] text-[#737791]">WhatsApp</label>
+              <input
+                name="whatsapp"
+                value={formData.whatsapp}
+                onChange={handleChange}
+                placeholder="Enter here"
+                className={`w-full sm:w-[350px] px-6 py-4 bg-gray-50 rounded-xl outline-none ${
+                  errors.whatsapp ? "border border-red-500" : ""
                 }`}
-              value={formData.whatsapp}
-              onChange={handleChange}
-            />
+              />
+            </div>
+            <div className="flex items-center gap-2 mt-2">
+              <input
+                id="sameAsPhone"
+                type="checkbox"
+                checked={sameAsPhone}
+                onChange={handleSameAsPhoneChange}
+                className="w-4 h-4 rounded border-2 border-gray-300 focus:ring-0 checked:border-blue-500 checked:bg-blue-500"
+              />
+              <label htmlFor="sameAsPhone" className="text-[#a1a5b6]">
+                Same as Phone
+              </label>
+            </div>
           </div>
 
-          {/* Checkbox for "Same as Phone" */}
-          <div className="inline-flex justify-start items-center gap-2">
+          {/* Advance */}
+          <div className="flex items-center">
+            <label className="w-[172px] text-[#737791]">Advance</label>
             <input
-              id="sameAsPhone"
-              type="checkbox"
-              checked={sameAsPhone}
-              onChange={handleSameAsPhoneChange}
-              className="checkbox w-4 h-4 rounded border-2 border-gray-300 focus:ring-0 checked:border-blue-500 checked:bg-blue-500"
-            />
-            <label
-              htmlFor="sameAsPhone"
-              className="text-[#a1a5b6] text-base font-normal font-['Urbanist']"
-            >
-              Same as Phone
-            </label>
-          </div>
-        </div>
-
-        {/* Advance */}
-        <div className="flex flex-col w-full sm:w-[570px]">
-          {/* Display Error Message Above Label if any */}
-          {errors.advance && (
-            <p className="text-red-500 text-sm">{errors.advance}</p>
-          )}
-
-          {/* Label and Input on the same line */}
-          <div className="flex justify-start items-center gap-6 sm:gap-12">
-            <label
-              className="min-w-[120px] sm:min-w-[172px] text-[#737791] text-xl font-normal font-['Urbanist']"
-              htmlFor="advance"
-            >
-              Advance
-            </label>
-            <input
-              id="advance"
               name="advance"
               type="number"
-              className={`w-full sm:w-[350px] px-6 py-4 bg-gray-50 rounded-xl text-xl font-normal font-['Urbanist'] ${errors.advance ? "border-red-500" : ""
-                }`}
               value={formData.advance}
               onChange={handleChange}
+              className="w-full sm:w-[350px] px-6 py-4 bg-gray-50 rounded-xl outline-none"
             />
           </div>
-        </div>
 
-        {/* Advance Deducted */}
-        <div className="flex flex-col w-full sm:w-[570px]">
-          {/* Display Error Message Above Label if any */}
-          {errors.advanceDeducted && (
-            <p className="text-red-500 text-sm">{errors.advanceDeducted}</p>
-          )}
-
-          {/* Label and Input on the same line */}
-          <div className="flex justify-start items-center gap-6 sm:gap-12">
-            <label
-              className="min-w-[120px] sm:min-w-[172px] text-[#737791] text-xl font-normal font-['Urbanist']"
-              htmlFor="advance-deducted"
-            >
+          {/* Advance Deducted */}
+          <div className="flex items-center">
+            <label className="w-[172px] text-[#737791]">
               Advance Deducted
             </label>
             <input
-              id="advance-deducted"
               name="advanceDeducted"
               type="number"
-              className={`w-full sm:w-[350px] px-6 py-4 bg-gray-50 rounded-xl text-xl font-normal font-['Urbanist'] ${errors.advanceDeducted ? "border-red-500" : ""
-                }`}
               value={formData.advanceDeducted}
               onChange={handleChange}
+              className="w-full sm:w-[350px] px-6 py-4 bg-gray-50 rounded-xl outline-none"
             />
           </div>
-        </div>
 
-        {/* Commission */}
-        <div className="flex flex-col w-full sm:w-[570px]">
-          {/* Display Error Message Above Label if any */}
-          {errors.commission && (
-            <p className="text-red-500 text-sm">{errors.commission}</p>
-          )}
-
-          {/* Label and Input on the same line */}
-          <div className="flex justify-start items-center gap-6 sm:gap-12">
-            <label
-              className="min-w-[120px] sm:min-w-[172px] text-[#737791] text-xl font-normal font-['Urbanist']"
-              htmlFor="commission"
-            >
-              Commission (%)
-            </label>
+          {/* Commission */}
+          <div className="flex items-center">
+            <label className="w-[172px] text-[#737791]">Commission</label>
             <input
-              id="commission"
               name="commission"
-              type="number"
-              className={`w-full sm:w-[350px] px-6 py-4 bg-gray-50 rounded-xl text-xl font-normal font-['Urbanist'] ${errors.commission ? "border-red-500" : ""
-                }`}
+              type="text"
               value={formData.commission}
               onChange={handleChange}
+              className="w-full sm:w-[350px] px-6 py-4 bg-gray-50 rounded-xl outline-none"
             />
           </div>
           <div className="flex justify-start items-center gap-6 sm:gap-12">
@@ -432,40 +342,39 @@ function AddSupplier() {
               onChange={handleChange}
             />
           </div>
+
+          {/* Required-fields error */}
+          {errors.requiredFields && (
+            <p className="col-span-2 text-red-500 mt-4">
+              {errors.requiredFields}
+            </p>
+          )}
+        </form>
+
+        {/* Footer Buttons */}
+        <div className="mt-10 flex justify-end gap-4">
+          <button
+            onClick={handleCancel}
+            className="flex items-center gap-2 border border-red-500 text-red-500 px-4 py-2 rounded-lg hover:bg-red-100"
+          >
+            <XCircleIcon className="w-5 h-5" />
+            Cancel
+          </button>
+          <button
+            
+            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+            onClick={handleSubmit}
+          >
+            <PlusCircleIcon className="w-5 h-5" />
+            Save
+          </button>
+
+    
+
         </div>
-
-        {/* Error for Required Fields */}
-        {errors.requiredFields && (
-          <p className="text-red-500 text-sm mt-4">{errors.requiredFields}</p>
-        )}
-
-        
-
-
-        {/* Action Buttons */}
-        <div className="self-stretch flex justify-end items-center gap-4 mt-8 md:mr-25">
-          <div className="flex gap-4">
-            <button
-              type="button"
-              onClick={handleCancel}
-              className="flex items-center gap-2 border border-red-500 text-red-500 px-4 py-2 rounded-lg hover:bg-red-100 transition"
-            >
-              <XCircleIcon className="w-5 h-5" />
-              Cancel
-            </button>
-
-            <button
-              type="submit"
-              className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
-            >
-              <PlusCircleIcon className="w-5 h-5" />
-              Save
-            </button>
-          </div>
-        </div>
-      </form>
+      </div>
     </div>
   );
-}
+};
 
 export default AddSupplier;

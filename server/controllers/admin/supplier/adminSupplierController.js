@@ -199,7 +199,7 @@ const getSupplierList = async (req, res) => {
         }
       : {};
     const suppliers = await Supplier.find(query).select(
-      "supplierName supplierCode commission marketFee"
+      "supplierName supplierCode commission marketFee address"
     );
     return res.status(200).json(suppliers);
   } catch (error) {

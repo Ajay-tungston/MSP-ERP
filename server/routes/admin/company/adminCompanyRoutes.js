@@ -3,6 +3,7 @@ const {
   addCompany,
   getAllCompanies,
   deleteCompanies,
+  getCompanyList,
 } = require("../../../controllers/admin/company/adminCompany");
 const verifyJwt = require("../../../middleware/verifyJwt");
 
@@ -16,5 +17,7 @@ router.get("/get", verifyJwt, getAllCompanies);
 
 // Delete companies by ID array
 router.delete("/delete", verifyJwt, deleteCompanies);
+router.get("/list",verifyJwt,getCompanyList)
+
 
 module.exports = router;

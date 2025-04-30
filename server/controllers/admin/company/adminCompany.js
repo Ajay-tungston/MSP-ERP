@@ -25,6 +25,12 @@ const addCompany = async (req, res) => {
       return res.status(400).json({ message: "Please fill in all fields" });
     }
 
+    const duplicate= await Company.findOne({companyName})
+    if(duplicate){
+      return res.status(400).json({
+        message: "company name already in use",
+      });
+    }
     if (!isValidDate(date)) {
       return res.status(400).json({
         message: "Date must be valid and in DD/MM/YYYY format",
@@ -106,8 +112,26 @@ const deleteCompanies = async (req, res) => {
   }
 };
 
+const getCompanyList = async (req, res) => {
+  try {
+    const search = req.query.search || "";
+    const query = search
+  ? { companyName: { $regex: search, $options: "i" } }
+  : {};
+    const company = await Company.find(query)
+    // .select(
+    //   "supplierName supplierCode commission marketFee"
+    // );
+    return res.status(200).json(company);
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: "Error getting company" });
+  }
+};
+
 module.exports = {
   addCompany,
   getAllCompanies,
   deleteCompanies,
+  getCompanyList
 };

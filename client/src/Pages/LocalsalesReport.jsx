@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { RiPrinterLine } from "react-icons/ri";
+import { FaChevronRight } from "react-icons/fa6";
 
 function LocalsalesReport() {
     const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 6;
+    const itemsPerPage = 7;
 
     const data = [
         { no: '001', date: '01/12/2024', supplier: 'Farm Fresh', customer: 'GreenMart', qty: '100', total: '$510.00' },
@@ -38,13 +39,13 @@ function LocalsalesReport() {
     };
 
     return (
-        <div className=" bg-gray-50 outline-1 outline-offset-[-1px] outline-white overflow-hidden mt-10">
+        <div className=" bg-gray-50 outline-1 outline-offset-[-1px] outline-white overflow-hidden mt-10 bg">
             <div className="w-[1511px] h-[1095px] fixed bg-white rounded-3xl overflow-hidden">
 
                 {/* Table */}
-                <table className="w-[1511px] absolute left-0 top-[200px]">
+                <table className="w-full absolute left-0 top-[200px]">
                     <thead>
-                        <tr className="px-12 py-4 bg-gray-50 border-b border-gray-200 inline-flex justify-start items-center gap-16">
+                        <tr className=" w-full px-12 py-3 bg-gray-50 border-b border-gray-200 inline-flex justify-start items-center gap-16">
                             <th className="w-8 h-8 relative">
                                 <input
                                     type="checkbox"
@@ -53,17 +54,17 @@ function LocalsalesReport() {
                                     onChange={handleSelectAll}
                                 />
                             </th>
-                            <th className="min-w-16 text-indigo-950 text-xl font-bold font-['Urbanist'] tracking-wide">No.</th>
-                            <th className="min-w-32 text-indigo-950 text-xl font-bold font-['Urbanist'] tracking-wide">Date</th>
-                            <th className="min-w-32 text-indigo-950 text-xl font-bold font-['Urbanist'] tracking-wide">Supplier</th>
-                            <th className="min-w-32 text-indigo-950 text-xl font-bold font-['Urbanist'] tracking-wide">Customer</th>
-                            <th className="min-w-32 text-indigo-950 text-xl font-bold font-['Urbanist'] tracking-wide">Qty</th>
-                            <th className="min-w-32 text-indigo-950 text-xl font-bold font-['Urbanist'] tracking-wide">Total</th>
+                            <th className="w-full text-indigo-950 text-xl font-bold font-['Urbanist'] tracking-wide">No.</th>
+                            <th className="w-full  text-indigo-950 text-xl font-bold font-['Urbanist'] tracking-wide">Date</th>
+                            <th className="w-full  text-indigo-950 text-xl font-bold font-['Urbanist'] tracking-wide">Supplier</th>
+                            <th className="w-full  text-indigo-950 text-xl font-bold font-['Urbanist'] tracking-wide">Customer</th>
+                            <th className="w-full  text-indigo-950 text-xl font-bold font-['Urbanist'] tracking-wide">Qty</th>
+                            <th className="w-full  text-indigo-950 text-xl font-bold font-['Urbanist'] tracking-wide">Total</th>
                         </tr>
                     </thead>
                     <tbody>
                         {paginatedData.map((item) => (
-                            <tr key={item.no} className="px-12 py-4 bg-white border-b border-gray-200 inline-flex justify-start items-center gap-16">
+                            <tr key={item.no} className="w-full px-12 py-3 bg-white border-b border-gray-200 inline-flex justify-start items-center gap-16">
                                 <td className="w-8 h-8 relative">
                                     <input
                                         type="checkbox"
@@ -120,7 +121,9 @@ function LocalsalesReport() {
 
                 {/* Header */}
                 <div className="left-[48px] top-[38px] absolute inline-flex justify-start items-center gap-3">
-                    <div className="justify-start text-slate-500 text-xl font-normal font-['Urbanist']">Reports Local Sales Report</div>
+                <div className="flex items-center text-slate-500 text-xl font-normal font-['Urbanist'] gap-2">
+  Reports <FaChevronRight /> Local Sales Report
+</div>
                 </div>
                 <div className="left-[48px] top-[60px] absolute justify-start text-indigo-950 text-4xl font-bold font-['Urbanist'] leading-[50.40px]">
                     Local Sales Report

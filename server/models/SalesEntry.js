@@ -15,7 +15,7 @@ const saleItemSchema = new mongoose.Schema({
   quantity: {
     type: Number,
     required: true,
-    min: [1, "Quantity must be at least 1"],
+    min: [0, "Quantity must be at least 1"],
   },
   unitPrice: {
     type: Number,

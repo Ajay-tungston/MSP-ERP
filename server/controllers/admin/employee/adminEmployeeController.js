@@ -144,6 +144,23 @@ const getAllEmployees = async (req, res) => {
   }
 };
 
+const getEmployeeList = async (req, res) => {
+  try {
+    const search = req.query.search || "";
+    const query = search
+  ? { employeeName: { $regex: search, $options: "i" } }
+  : {};
+    const employee = await Employee.find(query)
+    // .select(
+    //   "supplierName supplierCode commission marketFee"
+    // );
+    return res.status(200).json(employee);
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: "Error getting employee" });
+  }
+};
+
 const deleteEmployees = async (req, res) => {
   try {
     const { employeeId } = req.body;
@@ -168,4 +185,4 @@ const deleteEmployees = async (req, res) => {
   }
 };
 
-module.exports = { addNewEmployee, getAllEmployees,deleteEmployees };
+module.exports = { addNewEmployee, getAllEmployees,deleteEmployees,getEmployeeList };

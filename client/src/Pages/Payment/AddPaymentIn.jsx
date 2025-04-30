@@ -9,39 +9,36 @@ import {
 import useAxiosPrivate from "../../hooks/useAxiosPrivate";
 
 function AddPaymentIn({ setPopup }) {
-  const [category, setCategory] = useState("");
-  console.log(category);
+  const [category, setCategory] = useState("supplier");
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [name, setName] = useState("");
+  const [name2, setName2] = useState("");
   const [amount, setAmount] = useState("");
-  const [address, setAddress] = useState("");
+  const [note, setnote] = useState("");
   const [errors, setErrors] = useState({});
   const [nameList, setNameList] = useState([]);
   const [sellectedData, setselectedData] = useState(null);
-  const [autoFilledAddress, setAutoFilledAddress] = useState("");
   const axiosInstance = useAxiosPrivate();
-  console.log("namelist=", nameList);
-  console.log("selecteddaa=", sellectedData);
-
-  console.log("name=", name);
 
   useEffect(() => {
     const fetchName = async () => {
-      const qry=category==="customer"?`/admin/customer/getname?q=${name}`:`/admin/${category}/list?search=${name}`
+      const qry =
+        category === "customer"
+          ? `/admin/customer/getname?q=${name}`
+          : `/admin/${category}/list?search=${name}`;
       try {
         const response = await axiosInstance.get(qry);
-        category==="customer"?setNameList(response?.data?.customers):setNameList(response?.data);
-       
-        console.log(response);
+        category === "customer"
+          ? setNameList(response?.data?.customers)
+          : setNameList(response?.data);
       } catch (error) {
         console.log(error);
       }
     };
     fetchName();
   }, [name, category]);
-  
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const newErrors = {};
 
     // Validation for Category
@@ -64,11 +61,6 @@ function AddPaymentIn({ setPopup }) {
       newErrors.amount = "Amount is invalid";
     }
 
-    // Validation for Address
-    if (address.trim().length <= 5) {
-      newErrors.address = "Address must be more than 5 characters";
-    }
-
     // Set the errors state
     setErrors(newErrors);
 
@@ -81,14 +73,45 @@ function AddPaymentIn({ setPopup }) {
         amount,
         address,
       });
+      try {
+        const payload = {
+          paymentType: "PaymentIn",
+          category,
+          amount: "700",
+          paymentMode: "Cash",
+        };
+        
+        switch (category) {
+          case "supplier":
+            payload.supplier = "67d00a4a2b3ff78bfe118a15";
+            break;
+          case "employee":
+            payload.employee = "67d00a4a2b3ff78bfe118a15";
+            break;
+          case "customer":
+            payload.customer = "67d00a4a2b3ff78bfe118a15";
+            break;
+          case "company":
+            payload.company = "67d00a4a2b3ff78bfe118a15";
+            break;
+          case "bank":
+            payload.bank = "67d00a4a2b3ff78bfe118a15";
+            break;
+          case "other":
+            payload.other = "67d00a4a2b3ff78bfe118a15";
+            break;
+          default:
+            break;
+        }
+        
+        const response = await axiosInstance.post(`/admin/payment/add`, payload);
+      } catch (error) {}
       alert("Data Saved!");
       // Optionally reset the form
       setCategory("");
       setDate("");
       setName("");
       setAmount("");
-      setAddress("");
-      setAutoFilledAddress("");
     }
   };
 
@@ -97,10 +120,8 @@ function AddPaymentIn({ setPopup }) {
     setDate("");
     setName("");
     setAmount("");
-    setAddress("");
     setErrors({});
     setPopup("");
-    setAutoFilledAddress("");
   };
 
   return (
@@ -130,7 +151,6 @@ function AddPaymentIn({ setPopup }) {
                     onChange={(e) => setCategory(e.target.value)}
                     className="w-40 text-xl font-normal font-['Urbanist'] px-4 py-2 border border-gray-300 rounded-lg"
                   >
-                    <option value="">Select</option>
                     <option value="employee">Employee</option>
                     <option value="customer">Customer</option>
                     <option value="supplier">Supplier</option>
@@ -175,42 +195,61 @@ function AddPaymentIn({ setPopup }) {
                   <div className="text-slate-500 text-xl font-normal font-['Urbanist']">
                     Name
                   </div>
-                  <Combobox
-                    value={sellectedData}
-                    onChange={setselectedData}
-                    // onClose={() => setselectedData("")}
-                  >
-                    <ComboboxInput
-                      aria-label="Name"
-                      displayValue={(item) => {
-                        if (!item) return "";
-                        if (category === "supplier") return item.supplierName;
-                        if (category === "employee") return item.employeeName;
-                        if (category === "company") return item.companyName;
-                        if (category === "customer") return item.name;
-                        return "";
-                      }}
-                      onChange={(e) => setName(e.target.value)}
-                      // onFocus={() => setInputFocused(true)}
-                      // onBlur={() => setInputFocused(false)}
-                      autoComplete="off"
+                  {category === "Bank" || category === "Others" ? (
+                    <input
+                      type="text"
+                      value={name2}
+                      onChange={(e) => setName2(e.target.value)}
                       placeholder="Enter Name"
+                      autoComplete="off"
                       className="w-full px-8 py-2 text-xl font-normal font-['Urbanist'] text-slate-500"
                     />
-                    <div className="absolute left-0 right-0 mt- z-10 top-18">
-                      <ComboboxOptions className="w-full border border-gray-200 rounded-xl bg-white max-h-60 overflow-y-auto shadow-lg">
-                        {nameList?.map((item, index) => (
-                          <ComboboxOption
-                            key={index}
-                            value={item}
-                            className="px-6 py-3 cursor-pointer text-gray-700 hover:bg-gray-100"
-                          >{category==="supplier"?item?.supplierName:category==="employee"?
-                            item?.employeeName:category==="company"?item?.companyName:category==="customer"?item.name:""}
-                          </ComboboxOption>
-                        ))}
-                      </ComboboxOptions>
-                    </div>
-                  </Combobox>
+                  ) : (
+                    <Combobox
+                      value={sellectedData}
+                      onChange={setselectedData}
+                      // onClose={() => setselectedData("")}
+                    >
+                      <ComboboxInput
+                        aria-label="Name"
+                        displayValue={(item) => {
+                          if (!item) return "";
+                          if (category === "supplier") return item.supplierName;
+                          if (category === "employee") return item.employeeName;
+                          if (category === "company") return item.companyName;
+                          if (category === "customer") return item.name;
+                          return "";
+                        }}
+                        onChange={(e) => setName(e.target.value)}
+                        // onFocus={() => setInputFocused(true)}
+                        // onBlur={() => setInputFocused(false)}
+                        autoComplete="off"
+                        placeholder="Enter Name"
+                        className="w-full px-8 py-2 text-xl font-normal font-['Urbanist'] text-slate-500"
+                      />
+                      <div className="absolute left-0 right-0 mt- z-10 top-18">
+                        <ComboboxOptions className="w-full border border-gray-200 rounded-xl bg-white max-h-60 overflow-y-auto shadow-lg">
+                          {nameList?.map((item, index) => (
+                            <ComboboxOption
+                              key={index}
+                              value={item}
+                              className="px-6 py-3 cursor-pointer text-gray-700 hover:bg-gray-100"
+                            >
+                              {category === "supplier"
+                                ? item?.supplierName
+                                : category === "employee"
+                                ? item?.employeeName
+                                : category === "company"
+                                ? item?.companyName
+                                : category === "customer"
+                                ? item.name
+                                : ""}
+                            </ComboboxOption>
+                          ))}
+                        </ComboboxOptions>
+                      </div>
+                    </Combobox>
+                  )}
                 </div>
               </div>
 
@@ -241,29 +280,25 @@ function AddPaymentIn({ setPopup }) {
           {errors.address && (
             <span className="text-red-600 text-sm ml-6">{errors.address}</span>
           )}
-          <div className="px-6 py-4 bg-gray-50 rounded-2xl">
-            {category === "Bank" || category === "Others" ? (
-              <textarea
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-                placeholder="Enter address"
-                className="w-full h-full bg-transparent outline-none resize-none text-slate-500 text-xl font-normal font-['Urbanist']"
-              ></textarea>
-            ) : (
-              <input
-                type="text"
-                // value={autoFilledAddress || address}
-                value={sellectedData?.address}
-
-                // onChange={(e) => setAddress(e.target.value)}
-                className="w-full px-8 py-2 text-xl font-normal font-['Urbanist'] text-slate-500"
-                disabled={
-                  category === "Customer" ||
-                  category === "Employee" ||
-                  category === "Supplier"
-                }
-              />
+          {(category === "supplier" ||
+            category === "employee" ||
+            category === "customer") &&
+            sellectedData && (
+              <div className="px-6 py-4 bg-gray-50 rounded-2xl">
+                <textarea
+                  value={sellectedData?.address}
+                  placeholder="Enter address"
+                  className="w-full h-full bg-transparent outline-none resize-none text-slate-500 text-xl font-normal font-['Urbanist']"
+                ></textarea>
+              </div>
             )}
+          <div className="px-6 py-4 bg-gray-50 rounded-2xl">
+            <textarea
+              value={note}
+              onChange={(e) => setnote(e.target.value)}
+              placeholder="Enter a note"
+              className="w-full h-full bg-transparent outline-none resize-none text-slate-500 text-xl font-normal font-['Urbanist']"
+            ></textarea>
           </div>
 
           {/* Buttons */}

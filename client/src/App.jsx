@@ -38,6 +38,7 @@ import Whatsapp from "./Pages/Whatsapp";
 import PaymentIn from "./Pages/Payment/PaymentIn";
 import PaymentOut from "./Pages/Payment/PaymentOut";
 import AddPaymentIn from "./Pages/Payment/AddPaymentIn";
+import IndividualSales from "./Pages/IndividualSales";
 
 function App() {
   return (
@@ -61,6 +62,7 @@ function App() {
           <Route path='/localsales-report' element={<LocalsalesReport />} />
           <Route path='/whatsapp' element={<Whatsapp />} />
           <Route path="/trail" element={<TrialBalance />}/>
+          <Route path="/individualsales" element={<IndividualSales/>}/>
         </Route>
 
         <Route path="/sales" element={<Sales />} />

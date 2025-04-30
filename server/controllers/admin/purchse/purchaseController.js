@@ -242,29 +242,29 @@ console.log(req.query)
       .limit(limit);
   
 
-    const stats = await PurchaseEntry.aggregate([
-      { $match: filter },
-      {
-        $group: {
-          _id: null,
-          grossTotalAmount: { $sum: "$grossTotalAmount" },
-          netTotalAmount: { $sum: "$netTotalAmount" },
-          commissionPaid: { $sum: "$commissionPaid" },
-          totalBox: { $sum: "$totalBox" },
-          totalKg: { $sum: "$totalKg" },
-          totalMarketFee: { $sum: "$marketFee" },
-        },
-      },
-    ]);
+    // const stats = await PurchaseEntry.aggregate([
+    //   { $match: filter },
+    //   {
+    //     $group: {
+    //       _id: null,
+    //       grossTotalAmount: { $sum: "$grossTotalAmount" },
+    //       netTotalAmount: { $sum: "$netTotalAmount" },
+    //       commissionPaid: { $sum: "$commissionPaid" },
+    //       totalBox: { $sum: "$totalBox" },
+    //       totalKg: { $sum: "$totalKg" },
+    //       totalMarketFee: { $sum: "$marketFee" },
+    //     },
+    //   },
+    // ]);
 
-    const summary = stats[0] || {
-      grossTotalAmount: 0,
-      netTotalAmount: 0,
-      commissionPaid: 0,
-      totalBox: 0,
-      totalKg: 0,
-      totalMarketFee: 0,
-    };
+    // const summary = stats[0] || {
+    //   grossTotalAmount: 0,
+    //   netTotalAmount: 0,
+    //   commissionPaid: 0,
+    //   totalBox: 0,
+    //   totalKg: 0,
+    //   totalMarketFee: 0,
+    // };
       // Calculate total pages
       const totalEntries = await PurchaseEntry.countDocuments(filter);
       const totalPages = Math.ceil(totalEntries / limit);
@@ -279,7 +279,7 @@ console.log(req.query)
       page,
       totalPages,
       totalEntries,
-      summary,
+      // summary,
       purchaseEntries: entries,
     });
   } catch (error) {

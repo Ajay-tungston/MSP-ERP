@@ -201,8 +201,105 @@ const getSalesEntries = async (req, res) => {
   }
 };
 
+const getCustomerSalesReport = async (req, res) => {
+  try {
+    const { customerId, page = 1, limit = 10 } = req.query;
+    if (!customerId) {
+      return res.status(400).json({ message: "customerId is required" });
+    }
+
+    const skip = (page - 1) * limit;
+    const custObjId = new mongoose.Types.ObjectId(customerId);
+
+    const pipeline = [
+      // 1) Only sales entries containing that customer
+      { $match: { "customers.customer": custObjId } },
+
+      // 2) Unwind at the customer‐level
+      { $unwind: "$customers" },
+      { $match: { "customers.customer": custObjId } },
+
+      // 3) Unwind each sold item
+      { $unwind: "$customers.items" },
+
+      // 4) Lookup Item details
+      {
+        $lookup: {
+          from: "items",
+          localField: "customers.items.item",
+          foreignField: "_id",
+          as: "itemInfo",
+        }
+      },
+      // 5) Lookup Supplier details
+      {
+        $lookup: {
+          from: "suppliers",
+          localField: "customers.items.supplier",
+          foreignField: "_id",
+          as: "supplierInfo",
+        }
+      },
+
+      // 6) Project to the shape we want
+      {
+        $project: {
+          _id:               0,
+          transactionNumber: 1,
+          dateOfSale:        1,
+          customer:          "$customers.customer",
+          discount:          "$customers.discount",
+          // Item fields
+          item: {
+            _id:      { $arrayElemAt: ["$itemInfo._id", 0] },
+            itemName: { $arrayElemAt: ["$itemInfo.itemName", 0] },
+          },
+          // Supplier fields
+          supplier: {
+            _id:           { $arrayElemAt: ["$supplierInfo._id", 0] },
+            supplierName:  { $arrayElemAt: ["$supplierInfo.supplierName", 0] },
+          },
+          // Sale quantity and pricing
+          quantity:    "$customers.items.quantity",
+          unitPrice:   "$customers.items.unitPrice",
+          totalCost:   "$customers.items.totalCost",
+        }
+      },
+
+      // 7) Facet for pagination + total count
+      {
+        $facet: {
+          paginatedResults: [
+            { $skip: skip },
+            { $limit: parseInt(limit) }
+          ],
+          totalCount: [
+            { $count: "count" }
+          ]
+        }
+      }
+    ];
+
+    const agg = await SalesEntry.aggregate(pipeline);
+    const rows  = agg[0].paginatedResults;
+    const total = agg[0].totalCount[0]?.count || 0;
+
+    return res.json({
+      page:         parseInt(page),
+      limit:        parseInt(limit),
+      totalEntries: total,
+      totalPages:   Math.ceil(total / limit),
+      entries:      rows
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
 
 module.exports = {
   createSaleTransaction,
   getSalesEntries,
+  getCustomerSalesReport,
 };

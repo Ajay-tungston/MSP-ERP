@@ -8,7 +8,7 @@ const paymentSchema = new mongoose.Schema({
   },
   category: {
     type: String,
-    enum: ['Supplier', 'Customer', 'Bank', 'Employee', 'Other'],
+    enum: ['supplier', 'customer', 'Bank', 'employee','company', 'Other'],
     required: true,
   },
   supplier: {

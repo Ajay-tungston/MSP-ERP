@@ -33,7 +33,7 @@ const addPayment = async (req, res) => {
       return res.status(400).json({ message: "Invalid payment type." });
     }
 
-    if (!['Supplier', 'Customer', 'Bank', 'Employee', 'Other', 'Company'].includes(category)) {
+    if (!['supplier', 'customer', 'Bank', 'employee', 'Other', 'company'].includes(category)) {
       return res.status(400).json({ message: "Invalid category." });
     }
 
@@ -141,6 +141,10 @@ const getAllPayments = async (req, res) => {
       .sort({ date: -1 }) 
       .skip((page - 1) * limit)
       .limit(Number(limit))
+      .populate({ path: 'supplier', select: 'supplierName' })
+      .populate({ path: 'customer', select: 'customerName' })
+      .populate({ path: 'employee', select: 'employeeName' })
+      .populate({ path: 'company', select: 'companyName' })
       .lean();
 
     const total = await Payment.countDocuments(query);
@@ -157,5 +161,27 @@ const getAllPayments = async (req, res) => {
   }
 };
 
+const getPaymentById = async (req, res) => {
+  try {
+    const { id } = req.params;
 
-module.exports = { addPayment,getAllPayments };
+    const payment = await Payment.findById(id)
+      .populate({ path: 'supplier', select: 'supplierName' })
+      .populate({ path: 'customer', select: 'customerName' })
+      .populate({ path: 'employee', select: 'employeeName' })
+      .populate({ path: 'company', select: 'companyName' })
+      .lean();
+
+    if (!payment) {
+      return res.status(404).json({ message: "Payment not found." });
+    }
+
+    res.status(200).json(payment);
+  } catch (error) {
+    console.error("Error fetching payment:", error);
+    res.status(500).json({ message: "Internal server error." });
+  }
+};
+
+
+module.exports = { addPayment,getAllPayments,getPaymentById };

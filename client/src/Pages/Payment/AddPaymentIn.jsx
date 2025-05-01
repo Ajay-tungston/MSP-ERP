@@ -7,8 +7,9 @@ import {
   ComboboxOption,
 } from "@headlessui/react";
 import useAxiosPrivate from "../../hooks/useAxiosPrivate";
+import Swal from "sweetalert2";
 
-function AddPaymentIn({ setPopup }) {
+function AddPaymentIn({ setPopup, fetchPaymentInData }) {
   const [category, setCategory] = useState("supplier");
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [name, setName] = useState("");
@@ -48,10 +49,14 @@ function AddPaymentIn({ setPopup }) {
     if (!date) newErrors.date = "Date is required";
 
     // Validation for Name
-    if (!name) {
-      newErrors.name = "Name is required";
-    } else if (!nameList.includes(name)) {
-      newErrors.name = "Name must be one of the available options"; // You can customize this condition based on your needs
+    if (category === "Other") {
+      if (!name2) {
+        newErrors.name = "Name is required";
+      }
+    } else {
+      if (!name) {
+        newErrors.name = "Name is required";
+      }
     }
 
     // Validation for Amount
@@ -71,47 +76,57 @@ function AddPaymentIn({ setPopup }) {
         date,
         name,
         amount,
-        address,
       });
       try {
         const payload = {
           paymentType: "PaymentIn",
           category,
-          amount: "700",
+          amount,
           paymentMode: "Cash",
+          note,
         };
-        
+
         switch (category) {
           case "supplier":
-            payload.supplier = "67d00a4a2b3ff78bfe118a15";
+            payload.supplier = sellectedData?._id;
             break;
           case "employee":
-            payload.employee = "67d00a4a2b3ff78bfe118a15";
+            payload.employee = sellectedData?._id;
             break;
           case "customer":
-            payload.customer = "67d00a4a2b3ff78bfe118a15";
+            payload.customer = sellectedData?.id;
             break;
           case "company":
-            payload.company = "67d00a4a2b3ff78bfe118a15";
+            payload.company = sellectedData?._id;
             break;
-          case "bank":
-            payload.bank = "67d00a4a2b3ff78bfe118a15";
-            break;
-          case "other":
-            payload.other = "67d00a4a2b3ff78bfe118a15";
+          // case "bank":
+          //   payload.bank = sellectedData?._id;
+          //   break;
+          case "Other":
+            payload.otherPartyName = name2;
             break;
           default:
             break;
         }
-        
-        const response = await axiosInstance.post(`/admin/payment/add`, payload);
-      } catch (error) {}
-      alert("Data Saved!");
-      // Optionally reset the form
-      setCategory("");
-      setDate("");
-      setName("");
-      setAmount("");
+        const response = await axiosInstance.post(
+          `/admin/payment/add`,
+          payload
+        );
+        fetchPaymentInData();
+        Swal.fire({
+          title: "Payment added successfully!",
+          icon: "success",
+          draggable: true,
+        });
+        handleCancel();
+      } catch (error) {
+        Swal.fire({
+          title: "Something went wrong!",
+          icon: "error",
+          draggable: true,
+        });
+        console.log(error);
+      }
     }
   };
 
@@ -119,6 +134,7 @@ function AddPaymentIn({ setPopup }) {
     setCategory("");
     setDate("");
     setName("");
+    setName2("");
     setAmount("");
     setErrors({});
     setPopup("");
@@ -155,8 +171,8 @@ function AddPaymentIn({ setPopup }) {
                     <option value="customer">Customer</option>
                     <option value="supplier">Supplier</option>
                     <option value="company">Company</option>
-                    <option value="Bank">Bank</option>
-                    <option value="Others">Others</option>
+                    {/* <option value="Bank">Bank</option> */}
+                    <option value="Other">Others</option>
                   </select>
                 </div>
               </div>
@@ -195,7 +211,7 @@ function AddPaymentIn({ setPopup }) {
                   <div className="text-slate-500 text-xl font-normal font-['Urbanist']">
                     Name
                   </div>
-                  {category === "Bank" || category === "Others" ? (
+                  {category === "Bank" || category === "Other" ? (
                     <input
                       type="text"
                       value={name2}

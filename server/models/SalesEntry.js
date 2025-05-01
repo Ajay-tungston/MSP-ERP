@@ -11,10 +11,15 @@ const saleItemSchema = new mongoose.Schema({
     ref: "Supplier",
     required: true,
   },
-  quantity: {
+  quantityKg: {
     type: Number,
-    required: true,
-    min: [1, "Quantity must be at least 1"],
+    default: 0,
+    min: [0, "Kg quantity cannot be negative"],
+  },
+  quantityBox: {
+    type: Number,
+    default: 0,
+    min: [0, "Box quantity cannot be negative"],
   },
   unitPrice: {
     type: Number,
@@ -25,6 +30,11 @@ const saleItemSchema = new mongoose.Schema({
     type: Number,
     required: true,
     min: [0, "Total cost must be at least 0"],
+    // Calculate total cost using quantity and unit price
+    default: function() {
+      const totalQuantity = this.quantityKg + this.quantityBox; 
+      return totalQuantity * this.unitPrice;  // Adjust this as per your calculation logic
+    }
   }
 });
 
@@ -44,9 +54,16 @@ const saleCustomerSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
-  totalQuantity: {
+  // Inside saleCustomerSchema
+  totalQuantityKg: {
     type: Number,
     required: true,
+    default: 0
+  },
+  totalQuantityBox: {
+    type: Number,
+    required: true,
+    default: 0
   },
   items: {
     type: [saleItemSchema],
@@ -82,9 +99,15 @@ const saleTransactionSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
-  totalQuantity: {
+  totalQuantityKg: {
     type: Number,
     required: true,
+    default: 0
+  },
+  totalQuantityBox: {
+    type: Number,
+    required: true,
+    default: 0
   },
   status: {
     type: String,
@@ -93,4 +116,7 @@ const saleTransactionSchema = new mongoose.Schema({
   },
 }, { timestamps: true });
 
-module.exports = mongoose.model("SalesEntry", saleTransactionSchema);
+// Avoiding "OverwriteModelError"
+const SalesEntry = mongoose.models.SalesEntry || mongoose.model("SalesEntry", saleTransactionSchema);
+
+module.exports = SalesEntry;

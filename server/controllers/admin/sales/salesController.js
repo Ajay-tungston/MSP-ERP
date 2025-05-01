@@ -6,57 +6,97 @@ const PurchaseEntry = require("../../../models/PurchaseEntry");
 const getNextCounterNumber = require("../../../utils/counter");
 
 const mongoose = require("mongoose");
-
 const createSaleTransaction = async (req, res) => {
   try {
     const sales = Array.isArray(req.body) ? req.body : [req.body];
     const transactionNumber = await getNextCounterNumber("saleTransaction");
 
     const customersArray = [];
-    let grandTotal     = 0;
-    let grandQuantity  = 0;
+    let grandTotal = 0;
+    let grandQuantityKg = 0;
+    let grandQuantityBox = 0;
 
     for (const saleData of sales) {
       const { customerId, items, discount = 0 } = saleData;
 
-      // 1) Validate customer
+      // Find the customer by ID
       const customer = await Customer.findById(customerId);
       if (!customer) {
         return res.status(404).json({ message: `Customer ${customerId} not found` });
       }
 
       const customerItems = [];
-      let   customerTotal    = 0;
-      let   customerQuantity = 0;
+      let customerTotal = 0;
+      let customerQuantityKg = 0;
+      let customerQuantityBox = 0;
 
-      // 2) For each item sold, deduct from the matching Purchase
       for (const itemData of items) {
-        const { itemName, supplierId, quantity, unitPrice } = itemData;
+        const {
+          itemName,
+          supplierId,
+          unitPrice,
+          quantityKg: rawKg,
+          quantityBox: rawBox
+        } = itemData;
+console.log(itemData)
+        const quantityKg = parseFloat(rawKg) || 0;
+        const quantityBox = parseFloat(rawBox) || 0;
 
-        // 2a) Validate item & supplier
+        console.log("Received item quantities for", itemName, "=>", {
+          quantityKg,
+          quantityBox
+        });
+
+        // Validation checks
+        if (quantityKg < 0 || quantityBox < 0) {
+          return res.status(400).json({ message: `Invalid quantity values for ${itemName}` });
+        }
+
+        if (unitPrice == null || unitPrice < 0) {
+          return res.status(400).json({ message: `Invalid unit price for ${itemName}` });
+        }
+
+        if (quantityKg > 0 && quantityBox > 0) {
+          return res.status(400).json({ message: `You cannot select both Kg and Box for ${itemName}. Please choose one.` });
+        }
+        if (quantityKg ) {
+          if(quantityKg=== 0  )
+          return res.status(400).json({ message: `At least one of Kg or Box must be greater than 0 for ${itemName}` });
+        }
+        if (quantityBox ) {
+          if(quantityBox=== 0  )
+          return res.status(400).json({ message: `At least one of Kg or Box must be greater than 0 for ${itemName}` });
+        }
+
+
         const item = await Item.findOne({ itemName });
         if (!item) {
           return res.status(404).json({ message: `Item ${itemName} not found` });
         }
+
         if (!supplierId || !mongoose.Types.ObjectId.isValid(supplierId)) {
           return res.status(400).json({ message: `Invalid supplier ID: ${supplierId}` });
         }
+
         const supplier = await Supplier.findById(supplierId);
         if (!supplier) {
           return res.status(404).json({ message: `Supplier ${supplierId} not found` });
         }
 
-        // 2b) STEP 1: Atomically decrement soldQuantity & remainingQuantity
+        // Choose correct quantity to deduct
+        const totalQty = quantityKg > 0 ? quantityKg : quantityBox;
+
+        // Update the PurchaseEntry
         const updatedPurchase = await PurchaseEntry.findOneAndUpdate(
           {
-            supplier:               supplier._id,
-            "items.item":           item._id,
-            "items.remainingQuantity": { $gte: quantity }
+            supplier: supplier._id,
+            "items.item": item._id,
+            "items.remainingQuantity": { $gte: totalQty }
           },
           {
             $inc: {
-              "items.$.soldQuantity":      quantity,
-              "items.$.remainingQuantity": -quantity
+              "items.$.soldQuantity": totalQty,
+              "items.$.remainingQuantity": -totalQty
             }
           },
           { new: true }
@@ -68,12 +108,11 @@ const createSaleTransaction = async (req, res) => {
           });
         }
 
-        // 2c) Locate the updated sub-document
+        // Mark item as completed if fully sold
         const purchaseItem = updatedPurchase.items.find(pi =>
           pi.item.toString() === item._id.toString()
         );
 
-        // 2d) STEP 2: Mark that item completed if it hit zero
         if (purchaseItem.remainingQuantity === 0 && !purchaseItem.isCompleted) {
           await PurchaseEntry.updateOne(
             { _id: updatedPurchase._id, "items._id": purchaseItem._id },
@@ -81,7 +120,7 @@ const createSaleTransaction = async (req, res) => {
           );
         }
 
-        // 2e) STEP 3: If *all* sub-items are done, mark whole purchase completed
+        // Mark whole purchase as completed if all items are completed
         const fresh = await PurchaseEntry.findById(updatedPurchase._id).select("items isCompleted");
         if (!fresh.isCompleted && fresh.items.every(i => i.isCompleted)) {
           await PurchaseEntry.updateOne(
@@ -90,40 +129,50 @@ const createSaleTransaction = async (req, res) => {
           );
         }
 
-        // 2f) Record this sale‐line
-        const totalCost = unitPrice * quantity;
+        // Calculate total cost
+        const totalCost = totalQty * unitPrice;
+
+        // Add this item to customer
         customerItems.push({
-          item:      item._id,
-          supplier:  supplier._id,
-          quantity,
+          item: item._id,
+          supplier: supplier._id,
+          quantityKg,
+          quantityBox,
           unitPrice,
           totalCost
         });
-        customerTotal    += totalCost;
-        customerQuantity += quantity;
+
+        // Update customer totals
+        customerTotal += totalCost;
+        customerQuantityKg += quantityKg;
+        customerQuantityBox += quantityBox;
       }
 
-      // 3) Build customer‐level entry
+      // Add customer-level data
       customersArray.push({
-        customer:      customer._id,
-        items:         customerItems,
+        customer: customer._id,
+        items: customerItems,
         discount,
-        totalAmount:   customerTotal - discount,
-        totalQuantity: customerQuantity
+        totalAmount: customerTotal - discount,
+        totalQuantityKg: customerQuantityKg,
+        totalQuantityBox: customerQuantityBox
       });
 
-      grandTotal    += (customerTotal - discount);
-      grandQuantity += customerQuantity;
+      // Update global totals
+      grandTotal += customerTotal - discount;
+      grandQuantityKg += customerQuantityKg;
+      grandQuantityBox += customerQuantityBox;
     }
 
-    // 4) Finally, save the grouped sale transaction
+    // Save the final transaction
     const newSale = new SalesEntry({
       transactionNumber,
-      customers:      customersArray,
-      dateOfSale:     new Date(),
-      totalAmount:    grandTotal,
-      totalQuantity:  grandQuantity,
-      status:         "completed"
+      customers: customersArray,
+      dateOfSale: new Date(),
+      totalAmount: grandTotal,
+      totalQuantityKg: grandQuantityKg,
+      totalQuantityBox: grandQuantityBox,
+      status: "completed"
     });
 
     await newSale.save();
@@ -137,10 +186,11 @@ const createSaleTransaction = async (req, res) => {
     console.error("Sale creation error:", error);
     return res.status(500).json({
       message: "Internal Server Error",
-      error:   error.message
+      error: error.message
     });
   }
 };
+
 
 
 

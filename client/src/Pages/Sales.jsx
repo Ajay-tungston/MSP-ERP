@@ -12,7 +12,7 @@ import Swal from "sweetalert2";
 import { useNavigate, useParams } from "react-router-dom";
 
 const Sales = () => {
-  const { id:purchaseId } = useParams();
+  const { id: purchaseId } = useParams();
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -27,18 +27,21 @@ const Sales = () => {
   const [rows, setRows] = useState([
     {
       id: 1,
-      customer: "",
+      customerId: "",
+      customerLabel: "",
       supplierId: "",
-      customerName: "",
       itemName: "",
-      quantity: "",
-      unit: "",
-      unitPrice: "",
-      quantityType: "",
+      itemId: "",
+      quantityType: "",       // "kg" or "box"
+      quantityKg: 0,          // always numeric
+      quantityBox: 0,
+      unitPrice: 0,
       remainingQuantity: 0,
       error: "",
     },
   ]);
+  console.log("Rows before validation:", rows);
+
   // console.log("edjdekjdejkejefjhr",rows)
   // which row’s dropdown is open?
   const [activeCustomerIndex, setActiveCustomerIndex] = useState(null);
@@ -91,30 +94,13 @@ const Sales = () => {
     const fetchPurchase = async () => {
       setLoadingPurchase(true);
       try {
-        const res = await axiosInstance.get(`/admin/purchase/get/${purchaseId}`);
+        const res = await axiosInstance.get(
+          `/admin/purchase/get/${purchaseId}`
+        );
         setPurchase(res.data);
-       
-        // Initialize rows from purchase items still in stock
-        setRows((r) => {
-          // preserve existing rows if already editing
-          if (r.length > 1 || r[0].itemId) return r;
 
-          return res.data.items
-            .filter((it) => it.remainingQuantity > 0)
-            .map((it, idx) => ({
-              id: idx + 1,
-              customerId: "",
-              customerLabel: "",
-              itemName: it.item.itemName,
-              itemId: it.item._id,
-              quantity: "",
-              unitPrice: it.unitPrice,
-              quantityType: it.quantityType,
-              remainingQuantity: it.remainingQuantity,
-              error: "",
-            }));
-        });
-        // console.log("purchase response",res)
+        // Initialize rows from items still in stock
+     
       } catch (err) {
         console.error("Error fetching purchase:", err);
         setError("Failed to load purchase.");
@@ -122,8 +108,10 @@ const Sales = () => {
         setLoadingPurchase(false);
       }
     };
+
     fetchPurchase();
   }, [purchaseId, axiosInstance]);
+
   const sortAlphabetically = (data) => {
     return [...data].sort((a, b) => a.label.localeCompare(b.label));
   };
@@ -158,22 +146,30 @@ const Sales = () => {
   const handleChange = (i, field, val) => {
     const copy = [...rows];
     copy[i][field] = val;
-    setRows(copy);
+    
   };
- 
+
   const handleCustomerSelect = (i, customer) => {
     const copy = [...rows];
     copy[i].customer = customer.value;
-    copy[i].customerLabel= customer.label;
+    copy[i].customerLabel = customer.label;
     setRows(copy);
     setActiveCustomerIndex(null);
   };
 
-  const calculateSubtotal = (qty, price) => {
+  const calculateSubtotal = (qty, price, quantityType) => {
     const q = parseFloat(qty),
       p = parseFloat(price);
-    return isNaN(q) || isNaN(p) ? 0 : q * p;
+
+    // Check for valid quantity and price
+    if (isNaN(q) || isNaN(p)) {
+      return 0;
+    }
+
+    // Return the subtotal
+    return q * p;
   };
+
   const handleItemChange = (idx, itemName) => {
     const pi = purchase.items.find((it) => it.item.itemName === itemName);
     if (!pi) return;
@@ -193,31 +189,68 @@ const Sales = () => {
     );
   };
 
-
-  const getRemainingQuantity = (itemId, currentIndex = -1) => {
-    const selectedItem = purchase?.items?.find((i) => i.item._id === itemId);
+  const getRemainingQuantity = (itemId, quantityType, currentIndex = -1) => {
+    const selectedItem = purchase?.items?.find(
+      (i) => i.item._id === itemId && i.quantityType === quantityType
+    );
     if (!selectedItem) return 0;
 
-    // Sum all quantities except the current row
-    const usedQuantity = rows
-      .filter((row, index) => row.itemId === itemId && index !== currentIndex)
-      .reduce((sum, row) => sum + (parseInt(row.quantity) || 0), 0);
+    let remaining = selectedItem.remainingQuantity || 0;
 
-    const remaining = selectedItem.quantity - usedQuantity;
-    return remaining > 0 ? remaining : 0;
+    rows.forEach((row, index) => {
+      if (
+        row.itemId === itemId &&
+        row.quantityType === quantityType &&
+        index !== currentIndex
+      ) {
+        const q = parseFloat(row.quantity) || 0;
+        remaining -= q;
+      }
+    });
+
+    return Math.max(remaining, 0);
   };
 
-  // Quantity change handler
-  const handleQuantityChange = (idx, val) => {
-    const q = parseInt(val, 10) || "";
+  const handleQuantityChange = (index, value) => {
+    const q = value === "" ? "" : parseFloat(value);
+  
+    setRows((rs) =>
+      rs.map((r, i) =>
+        i === index
+          ? {
+              ...r,
+              quantity: q,
+              quantityKg: r.quantityType === "kg" ? q : "",
+              quantityBox: r.quantityType === "box" ? q : "",
+              error:
+                q > r.remainingQuantity
+                  ? `Max ${r.remainingQuantity} ${r.quantityType}`
+                  : "",
+            }
+          : r
+      )
+    );
+  };
+  
+  
+
+  const handleQuantityTypeChange = (index, value) => {
     setRows((rs) =>
       rs.map((r, i) => {
-        if (i !== idx) return r;
-        let err = "";
-        if (q > r.remainingQuantity) {
-          err = `Max ${r.remainingQuantity} ${r.quantityType}`;
-        }
-        return { ...r, quantity: q, error: err };
+        if (i !== index) return r;
+
+        // Get matching item from purchase
+        const selectedItem = purchase?.items?.find(
+          (it) => it.item._id === r.itemId && it.quantityType === value
+        );
+
+        return {
+          ...r,
+          quantityType: value,
+          quantity: "",
+          error: "",
+          unitPrice: selectedItem ? selectedItem.unitPrice : "",
+        };
       })
     );
   };
@@ -275,61 +308,84 @@ const Sales = () => {
         if (!r.itemName) {
           throw new Error(`Row ${i + 1}: Please select an item.`);
         }
-        if (!r.quantity || r.quantity <= 0) {
+        if (
+          !r.quantityType ||
+          (r.quantityType !== "kg" && r.quantityType !== "box")
+        ) {
+          throw new Error(`Row ${i + 1}: Please select a valid quantity type.`);
+        }
+
+        if (!r.quantity || Number(r.quantity) <= 0) {
           throw new Error(`Row ${i + 1}: Please enter a valid quantity.`);
         }
+        
+
         if (!r.unitPrice || r.unitPrice <= 0) {
           throw new Error(`Row ${i + 1}: Invalid unit price.`);
         }
+        // Check if entered quantity exceeds the available stock
+        const quantity = r.quantityType === "kg" ? r.quantityKg : r.quantityBox;
+        if (quantity > r.remainingQuantity) {
+          throw new Error(
+            `Row ${i + 1}: You cannot enter more than ${r.remainingQuantity} ${
+              r.quantityType
+            }.`
+          );
+        }
       }
-  
+
       // 2) Build the grouped sales payload
-      //    Each element in the array is one customer's mini-transaction
-      const salesPayload = rows.map((r) => ({
-        customerId: r.customer,    // your customer dropdown value
-        discount:   r.discount || 0,
-        items: [
-          {
-            itemName:   r.itemName,
-            supplierId: purchase.supplier._id, // make sure you set this on item select
-            quantity:   Number(r.quantity),
-            unitPrice:  Number(r.unitPrice),
-          },
-        ],
-      }));
-  
+      const salesPayload = rows.map((r) => {
+        // const quantity = : r.;
+        return {
+          customerId: r. customer,
+          discount: r.discount || 0,
+          items: [
+            {
+              itemName: r.itemName,
+              supplierId:purchase.supplier._id,
+              quantityKg:  r.quantityType === "kg" ?Number(r.quantityKg):"",
+              quantityBox: r.quantityType === "box" ? Number(r.quantityBox):"",
+              unitPrice: Number(r.unitPrice),
+            },
+          ],
+        };
+      });
+      console.log("Sales payload to backend:", salesPayload);
+
       // 3) Send it in one go
       await axiosInstance.post("/admin/sales/add", salesPayload);
-  
+
       Swal.fire({
         title: "All sales transactions added successfully!",
         icon: "success",
         draggable: true,
       });
-  
+
       // 4) Re-fetch the purchase to get updated remainingQuantity
       const { data: updatedPurchase } = await axiosInstance.get(
         `/admin/purchase/get/${purchase._id}`
       );
       setPurchase(updatedPurchase);
-  
-      // 5) Rebuild rows only for items still in stock
+
+      // 5) Rebuild rows for items still in stock
       const stillInStock = updatedPurchase.items
-        .filter((it) => it.remainingQuantity > 0)
+        .filter((it) => it.remainingQuantity > 0) // Check unified remaining quantity
         .map((it, idx) => ({
           id: idx + 1,
-          customer:          "",        // reset selection
-          customerLabel:     "",
-          itemName:          it.item.itemName,
-          itemId:            it.item._id,
-          supplierId:        updatedPurchase.supplier._id,
-          quantity:          "",
-          unitPrice:         it.unitPrice,
-          quantityType:      it.quantityType,
-          remainingQuantity: it.remainingQuantity,
-          error:             "",
+          customer: "",
+          customerLabel: "",
+          itemName: it.item.itemName,
+          itemId: it.item._id,
+          supplierId: updatedPurchase.supplier._id,
+          quantityKg: "",
+          quantityBox: "",
+          unitPrice: it.unitPrice,
+          quantityType: it.quantityType, // Using single quantityType field
+          remainingQuantity: it.remainingQuantity, // Single remaining quantity
+          error: "",
         }));
-  
+
       if (stillInStock.length) {
         setRows(stillInStock);
       } else {
@@ -338,7 +394,10 @@ const Sales = () => {
       }
     } catch (error) {
       Swal.fire({
-        title: error.response?.data?.message || error.message || "Something went wrong!",
+        title:
+          error.response?.data?.message ||
+          error.message ||
+          "Something went wrong!",
         icon: "error",
         draggable: true,
       });
@@ -347,14 +406,13 @@ const Sales = () => {
       setSubmitloading(false);
     }
   };
-  
 
   return (
     <div>
       <div className="  bg-[#fff] w-full h-screen  ">
         <div className="w-[665px] h-full left-[1200px] top-[148px] absolute bg-[#fff]">
           <div className="w-[653px] left-[6px] top-[176px] absolute inline-flex flex-col justify-start items-start">
-            <div className="self-stretch px-2.5 py-4 bg-[white]  outline-[0.20px] outline-offset-[-0.20px] outline-slate-600/40 inline-flex justify-start items-center gap-[5px]">
+            <div className="self-stretch px-2.5 py-4 bg-[white] outline-[0.20px] outline-offset-[-0.20px] outline-slate-600/40 inline-flex justify-start items-center gap-[5px]">
               <div className="flex-1 max-w-16 justify-center text-indigo-950 text-sm font-bold font-['Urbanist'] tracking-wide">
                 No.
               </div>
@@ -365,18 +423,28 @@ const Sales = () => {
                 Qty (KG)
               </div>
               <div className="min-w-32 justify-center text-indigo-950 text-sm font-bold font-['Urbanist'] tracking-wide">
-                Unit
+                Qty (Box)
               </div>
               <div className="min-w-32 justify-center text-indigo-950 text-sm font-bold font-['Urbanist'] tracking-wide">
                 Unit Price
               </div>
               <div className="w-20 justify-center text-indigo-950 text-sm font-bold font-['Urbanist'] tracking-wide">
-                total
+                Total
               </div>
             </div>
 
             {purchase?.items?.map((item, index) => {
-              const total = item.remainingQuantity * item.unitPrice;
+              const remainingQuantity = item.remainingQuantity ?? 0; // Use remainingQuantity field
+              const unitPrice = parseFloat(item.unitPrice ?? 0);
+              const quantityType = item.quantityType; // Assuming it can be "kg" or "box"
+
+              // Calculate the total based on the quantity type
+              let total = 0;
+              if (quantityType === "kg") {
+                total = remainingQuantity * unitPrice;
+              } else if (quantityType === "box") {
+                total = remainingQuantity * unitPrice;
+              }
 
               return (
                 <div
@@ -387,16 +455,16 @@ const Sales = () => {
                     {index + 1}
                   </div>
                   <div className="min-w-32 justify-center text-indigo-950 text-sm font-normal font-['Urbanist'] tracking-wide">
-                    {item.item.itemName}
+                    {item?.item?.itemName || "-"}
                   </div>
                   <div className="min-w-32 justify-center text-indigo-950 text-sm font-normal font-['Urbanist'] tracking-wide">
-                    {item.remainingQuantity}
+                    {quantityType === "kg" ? remainingQuantity + " kg" : "-"}
                   </div>
                   <div className="min-w-32 justify-center text-indigo-950 text-sm font-normal font-['Urbanist'] tracking-wide">
-                    {item.quantityType}
+                    {quantityType === "box" ? remainingQuantity + " box" : "-"}
                   </div>
                   <div className="min-w-32 justify-center text-indigo-950 text-sm font-normal font-['Urbanist'] tracking-wide">
-                    ₹{parseFloat(item.unitPrice).toFixed(2)}
+                    ₹{unitPrice.toFixed(2)}
                   </div>
                   <div className="w-20 justify-center text-indigo-950 text-sm font-normal font-['Urbanist'] tracking-wide">
                     ₹{total.toFixed(2)}
@@ -404,7 +472,44 @@ const Sales = () => {
                 </div>
               );
             })}
+
+            {/* Add total row */}
+            <div className="self-stretch px-2.5 py-4 bg-white outline-[0.20px] outline-offset-[-0.20px] outline-slate-600/40 inline-flex justify-start items-center gap-[5px]">
+              <div className="min-w-8 justify-center text-indigo-950 text-sm font-bold font-['Urbanist'] tracking-wide">
+                {/* Empty cell */}
+              </div>
+              <div className="min-w-32 justify-center text-indigo-950 text-sm font-bold font-['Urbanist'] tracking-wide">
+                {/* Empty cell */}
+              </div>
+              <div className="min-w-32 justify-center text-indigo-950 text-sm font-bold font-['Urbanist'] tracking-wide">
+                {/* Empty cell */}
+              </div>
+              <div className="min-w-32 justify-center text-indigo-950 text-sm font-bold font-['Urbanist'] tracking-wide">
+                {/* Empty cell */}
+              </div>
+              <div className="min-w-32 justify-center text-indigo-950 text-sm font-bold font-['Urbanist'] tracking-wide">
+                Total
+              </div>
+              <div className="w-20 justify-center text-indigo-950 text-sm font-bold font-['Urbanist'] tracking-wide">
+                ₹
+                {purchase?.items
+                  ?.reduce((total, item) => {
+                    const remainingQuantity = item.remainingQuantity ?? 0;
+                    const unitPrice = parseFloat(item.unitPrice ?? 0);
+                    const quantityType = item.quantityType;
+
+                    if (quantityType === "kg") {
+                      return total + remainingQuantity * unitPrice;
+                    } else if (quantityType === "box") {
+                      return total + remainingQuantity * unitPrice;
+                    }
+                    return total;
+                  }, 0)
+                  .toFixed(2)}
+              </div>
+            </div>
           </div>
+
           <div className="w-96 pb-6 left-[6px] top-[122px] absolute border-b border-none inline-flex justify-start items-center gap-2.5">
             <div className="justify-start text-indigo-950 text-3xl font-bold font-['Urbanist'] leading-10">
               Item list
@@ -443,7 +548,7 @@ const Sales = () => {
                   Item name
                 </div>
                 <div className="min-w-32 justify-center text-indigo-950 text-sm font-bold font-['Urbanist'] tracking-wide">
-                  Qty (KG)
+                  Quantity
                 </div>
                 <div className="w-20 justify-center text-indigo-950 text-sm font-bold font-['Urbanist'] tracking-wide">
                   Unit
@@ -595,13 +700,19 @@ const Sales = () => {
                       <option value="" disabled>
                         Select
                       </option>
-                      {purchase?.items?.map((item) => (
-                        <option key={item._id} value={item.item.itemName}>
-                          {item.item.itemName}
-                        </option>
-                      ))}
+                      {purchase?.items
+                        ?.map((item) => item.item.itemName) // Extract item names
+                        .filter(
+                          (value, index, self) => self.indexOf(value) === index
+                        ) // Remove duplicates
+                        .map((itemName, idx) => (
+                          <option key={idx} value={itemName}>
+                            {itemName}
+                          </option>
+                        ))}
                     </select>
                   </div>
+
                   {/* Quantity Input with Validation */}
 
                   <div className="min-w-32 justify-center text-slate-900 text-sm font-normal font-['Urbanist'] tracking-wide">
@@ -633,17 +744,20 @@ const Sales = () => {
                   </div>
                   <div className="w-20 justify-center text-slate-900 text-sm font-normal font-['Urbanist'] tracking-wide">
                     <select
-                      value={row.unit}
+                      value={row.quantityType} // use consistent field name
                       onChange={(e) =>
-                        handleChange(index, "unit", e.target.value)
+                        handleQuantityTypeChange(
+                          index,
+                          e.target.value.toLowerCase()
+                        )
                       }
                       className="w-20 bg-transparent outline-none text-slate-900 text-center -ml-15"
                     >
                       <option value="" disabled>
                         Select
                       </option>
-                      <option value="KG">KG</option>
-                      <option value="Box">Box</option>
+                      <option value="kg">KG</option>
+                      <option value="box">Box</option>
                     </select>
                   </div>
                   <div className="w-20 justify-center text-slate-900 text-sm font-normal font-['Urbanist'] tracking-wide">
@@ -688,9 +802,6 @@ const Sales = () => {
 
             <div className="self-stretch flex flex-col justify-start items-end gap-8">
               <div className="self-stretch px-4 flex flex-col justify-start items-start gap-12">
-              
-  
-
                 <div className="self-stretch inline-flex justify-between items-start flex-wrap content-start">
                   <div className="w-96 flex justify-between items-center">
                     <label
@@ -739,6 +850,6 @@ const Sales = () => {
       </div>
     </div>
   );
-  }
+};
 
 export default Sales;

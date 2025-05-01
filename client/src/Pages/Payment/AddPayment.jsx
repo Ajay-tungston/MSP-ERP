@@ -9,7 +9,7 @@ import {
 import useAxiosPrivate from "../../hooks/useAxiosPrivate";
 import Swal from "sweetalert2";
 
-function AddPaymentIn({ setPopup, fetchPaymentInData }) {
+function AddPayment({ setPopup, fetchData, type }) {
   const [category, setCategory] = useState("supplier");
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [name, setName] = useState("");
@@ -65,6 +65,9 @@ function AddPaymentIn({ setPopup, fetchPaymentInData }) {
     } else if (parseFloat(amount) <= 0) {
       newErrors.amount = "Amount is invalid";
     }
+    if(note&&note.length>100){
+      newErrors.note="Max length is 100 characters."
+    }
 
     // Set the errors state
     setErrors(newErrors);
@@ -79,7 +82,7 @@ function AddPaymentIn({ setPopup, fetchPaymentInData }) {
       });
       try {
         const payload = {
-          paymentType: "PaymentIn",
+          paymentType: type,
           category,
           amount,
           paymentMode: "Cash",
@@ -112,7 +115,7 @@ function AddPaymentIn({ setPopup, fetchPaymentInData }) {
           `/admin/payment/add`,
           payload
         );
-        fetchPaymentInData();
+        fetchData();
         Swal.fire({
           title: "Payment added successfully!",
           icon: "success",
@@ -145,7 +148,7 @@ function AddPaymentIn({ setPopup, fetchPaymentInData }) {
       <div className="w-[900px] px-8 py-10 bg-gray-100 rounded-3xl shadow-lg">
         <div className="flex flex-col gap-6">
           <div className="text-indigo-950 text-3xl font-bold font-['Urbanist']">
-            Payment Out
+            {type === "PaymentIn" ? "Payment In" : "Payment Out"}
           </div>
 
           <div className="flex justify-between gap-8">
@@ -292,29 +295,43 @@ function AddPaymentIn({ setPopup, fetchPaymentInData }) {
             </div>
           </div>
 
-          {/* Address */}
-          {errors.address && (
-            <span className="text-red-600 text-sm ml-6">{errors.address}</span>
-          )}
-          {(category === "supplier" ||
-            category === "employee" ||
-            category === "customer") &&
-            sellectedData && (
-              <div className="px-6 py-4 bg-gray-50 rounded-2xl">
+          <div>
+            {(category === "supplier" ||
+              category === "employee" ||
+              category === "customer") &&
+              sellectedData && (
+                <div className="mb-4">
+                  <label className="text-slate-500 text-xl font-normal font-['Urbanist'] pl-6 ">
+                    Address:
+                  </label>
+                  <div className="px-6 py-4 mt-2 bg-gray-50 rounded-2xl">
+                    <textarea
+                      value={sellectedData?.address}
+                      placeholder="Enter address"
+                      className="w-full h-full bg-transparent outline-none resize-none text-slate-500 text-xl font-normal font-['Urbanist']"
+                    ></textarea>
+                  </div>
+                </div>
+              )}
+            <div>
+           
+              <label className="text-slate-500 text-xl font-normal font-['Urbanist'] pl-6">
+                Note:
+              </label>
+              {errors.note && (
+                  <span className="text-red-600 text-sm ml-6">
+                    {errors.note}
+                  </span>
+                )}
+              <div className="px-6 py-4 mt-2 bg-gray-50 rounded-2xl">
                 <textarea
-                  value={sellectedData?.address}
-                  placeholder="Enter address"
+                  value={note}
+                  onChange={(e) => setnote(e.target.value)}
+                  placeholder="Enter a note"
                   className="w-full h-full bg-transparent outline-none resize-none text-slate-500 text-xl font-normal font-['Urbanist']"
                 ></textarea>
               </div>
-            )}
-          <div className="px-6 py-4 bg-gray-50 rounded-2xl">
-            <textarea
-              value={note}
-              onChange={(e) => setnote(e.target.value)}
-              placeholder="Enter a note"
-              className="w-full h-full bg-transparent outline-none resize-none text-slate-500 text-xl font-normal font-['Urbanist']"
-            ></textarea>
+            </div>
           </div>
 
           {/* Buttons */}
@@ -338,4 +355,4 @@ function AddPaymentIn({ setPopup, fetchPaymentInData }) {
   );
 }
 
-export default AddPaymentIn;
+export default AddPayment;

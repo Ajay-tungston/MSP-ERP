@@ -99,6 +99,9 @@ const addPayment = async (req, res) => {
     if (category === 'Other' && (!otherPartyName || validator.isEmpty(otherPartyName))) {
       return res.status(400).json({ message: "Other party name is required." });
     }
+    if(note&&note.length>100){
+      return res.status(400).json({ message: "max note length is 100" });
+    }
 
     // Create and Save Payment
     const newPayment = new Payment({

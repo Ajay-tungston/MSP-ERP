@@ -21,6 +21,7 @@ const IndividualReports = () => {
     const [totalPages, setTotalPages] = useState(1);
     const [totalStats, setTotalStats] = useState({});
     const [reportsData, setReportsData] = useState([]);
+    console.log("dfhvjgoib",reportsData)
     const [loading, setLoading] = useState(false);
     const [selectedSupplier, setSelectedSupplier] = useState(null);
 
@@ -33,7 +34,7 @@ const IndividualReports = () => {
     const [startDate, setStartDate] = useState(today);
     const [endDate, setEndDate] = useState(today);
 
-    const limit = 1;
+    const limit = 5;
     useEffect(() => {
         const fetchSuppliers = async () => {
             try {
@@ -69,7 +70,7 @@ const IndividualReports = () => {
             if (selectedSupplier) {
                 try {
                     const response = await axiosInstance.get(
-                        `admin/purchase/totalStats?startDate=${startDate}&endDate=${endDate}&supplierId=${selectedSupplier}`
+                        `admin/purchase/totalStats?startDate=${startDate}&endDate=${endDate}&supplierId=${selectedSupplier?._id}`
                     );
                     console.log("data", response);
 
@@ -112,7 +113,7 @@ const IndividualReports = () => {
                 params: {
                     page: currentPage,
                     limit,
-                    supplierId: selectedSupplier,
+                    supplierId: selectedSupplier?._id,
                     startDate,
                     endDate,
                 },
@@ -129,23 +130,118 @@ const IndividualReports = () => {
     console.log("totalStats", totalStats);
 
     const fetchPrintData = async () => {
-        try {
-          const response = await axiosInstance.get(
-            `admin/purchase/supplier/report?startDate=${startDate}&endDate=${endDate}&supplierId=${selectedSupplier}&noPagination=true`
-          );
-          openPurchaseRegisterPrintPage(
-            response?.data?.purchaseEntries || [],
-            totalStats,
-            startDate,
-            endDate,
-            searchTerm ,
-            supplierName
-            // Supplier Name
-          );
-        } catch (error) {
-          console.error("Error fetching print data", error);
+        if (!selectedSupplier?._id) {
+            alert("Please select a supplier before printing.");
+            return;
         }
-      };
+    
+        try {
+            const response = await axiosInstance.get(
+                `admin/purchase/supplier/report?startDate=${startDate}&endDate=${endDate}&supplierId=${selectedSupplier._id}&noPagination=true`
+            );
+    
+            openPurchaseRegisterPrintPage(
+                response?.data?.purchaseEntries || [],
+                totalStats,
+                startDate,
+                endDate,
+                searchTerm,
+                selectedSupplier.supplierName
+            );
+        } catch (error) {
+            console.error("Error fetching print data", error);
+            console.error("Error details:", error.response?.data || error.message);
+        }
+    };
+    const openPurchaseRegisterPrintPage = (purchaseEntries, totalStats, startDate, endDate, supplierName) => {
+        const printWindow = window.open('', '_blank');
+        
+        const style = `
+            <style>
+                body { font-family: sans-serif; padding: 20px; }
+                table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+                th { background-color: #f0f0f0; }
+                .header { text-align: center; font-size: 20px; font-weight: bold; margin-bottom: 20px; }
+            </style>
+        `;
+    
+        let html = `
+            <html>
+            <head>
+                <title>Purchase Report</title>
+                ${style}
+            </head>
+            <body>
+                <div class="header">
+                    <h1>Purchase Report</h1>
+                    <p><strong>Supplier:</strong> ${supplierName}</p>
+                    <p><strong>Date Range:</strong> ${startDate} to ${endDate}</p>
+                 
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Qty (KG)</th>
+                            <th>Qty (Box)</th>
+                            <th>Commission</th>
+                            <th>Gross Total</th>
+                            <th>Market Fee</th>
+                            <th>Net Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+    
+        // Loop through purchaseEntries to display the data
+        purchaseEntries.forEach(entry => {
+            html += `
+                <tr>
+                    <td>${new Date(entry.dateOfPurchase).toLocaleDateString("en-GB")}</td>
+                    <td>${entry.totalKg}</td>
+                    <td>${entry.totalBox}</td>
+                    <td>${entry.commissionPaid?.toFixed(2)}</td>
+                    <td>${entry.grossTotalAmount?.toFixed(2)}</td>
+                     <td>${entry.marketFee?.toFixed(2) || "0.00"}</td>
+                    <td>${entry.netTotalAmount?.toFixed(2)}</td>
+                </tr>
+            `;
+        });
+    
+        html += `
+            </tbody>
+        </table>
+    
+        <div>
+            <strong>Total Net Amount:</strong> ${totalStats?.netTotalAmount?.toFixed(2) || "0.00"}<br>
+            <strong>Total Commission:</strong> ${totalStats?.totalCommission?.toFixed(2) || "0.00"}<br>
+            <strong>Total Qty (KG):</strong> ${totalStats?.totalKg || 0}<br>
+            <strong>Total Qty (Box):</strong> ${totalStats?.totalBox || 0}<br>
+            <strong>Total Gross Amount:</strong> ${totalStats?.grossTotalAmount?.toFixed(2) || "0.00"}<br>
+                   <strong>Total Expense:</strong> ${totalStats?.totalMarketFee?.toFixed(2) || "0.00"}<br>
+        </div>
+    
+        <script>
+            window.onload = function() {
+                window.print();
+                setTimeout(() => window.close(), 1000);
+            };
+        </script>
+    
+        </body>
+        </html>
+        `;
+    
+        printWindow.document.write(html);
+        printWindow.document.close();
+    };
+    
+
+
+
+
+    
       const handleSingleEntryPrint = (entry, supplierName, startDate, endDate) => {
         const printWindow = window.open("", "_blank");
         const style = `
@@ -165,15 +261,31 @@ const IndividualReports = () => {
             </head>
             <body>
               <h2>Individual Purchase Entry</h2>
-              <p><strong>Supplier:</strong> ${supplierName }</p>
+              <p><strong>Supplier:</strong> ${supplierName}</p>
               <p><strong>Date Range:</strong> ${startDate} to ${endDate}</p>
               <hr />
-              <p><strong>Date:</strong> ${new Date(entry.dateOfPurchase).toLocaleDateString("en-GB")}</p>
-              <p><strong>Qty (KG):</strong> ${entry.totalKg}</p>
-              <p><strong>Qty (Box):</strong> ${entry.totalBox}</p>
-              <p><strong>Commission:</strong> ${entry.commissionPaid?.toFixed(2)}</p>
-              <p><strong>Gross Total:</strong> ${entry.grossTotalAmount?.toFixed(2)}</p>
-              <p><strong>Net Total:</strong> ${entry.netTotalAmount?.toFixed(2)}</p>
+              <table>
+                <tr>
+                  <th>Date</th>
+                  <th>Qty (KG)</th>
+                  <th>Qty (Box)</th>
+                  <th>Commission</th>
+                  <th>Gross Total</th>
+                  <th>Market Fee</th> 
+
+                  <th>Net Total</th>
+                </tr>
+                <tr>
+                  <td>${new Date(entry.dateOfPurchase).toLocaleDateString("en-GB")}</td>
+                  <td>${entry.totalKg}</td>
+                  <td>${entry.totalBox}</td>
+                  <td>${entry.commissionPaid?.toFixed(2)}</td>
+                  <td>${entry.grossTotalAmount?.toFixed(2)}</td>
+                  <td>${entry.marketFee?.toFixed(2) || "0.00"}</td> 
+
+                  <td>${entry.netTotalAmount?.toFixed(2)}</td>
+                </tr>
+              </table>
       
               <script>
                 window.onload = function() {
@@ -188,7 +300,8 @@ const IndividualReports = () => {
         printWindow.document.write(html);
         printWindow.document.close();
       };
-      console.log(response)
+      
+   
       
     return (
         <div className="w-full px-4 md:px-8 lg:px-12">
@@ -203,16 +316,18 @@ const IndividualReports = () => {
                     Individual Purchase Report
                 </div>
 
-                <div className="absolute top-[66px] right-10 px-8 py-4 bg-gray-50 rounded-xl inline-flex items-center gap-3">
+                <button 
+                onClick={fetchPrintData}
+                className="absolute top-[66px] right-10 px-8 py-4 bg-gray-50 rounded-xl inline-flex items-center gap-3 cursor-pointer">
                     <BsPrinter className="w-8 h-8 text-indigo-950" />
                     <div className="text-indigo-950 text-xl font-bold">Print</div>
-                </div>
+                </button>
 
                 {/* Filters */}
                 <div className="left-[41px] top-[178px] absolute inline-flex justify-between items-center gap-8">
                     <Combobox value={selectedSupplier} onChange={(value) => {
                         setSearchTeam(value.supplierName);
-                        setSelectedSupplier(value._id);
+                        setSelectedSupplier(value);
                         setCurrentPage(1); // Reset page
                     }}>
                         <div className="relative h-14 pl-2 pr-4 bg-gray-50 rounded-2xl flex items-center gap-2">
@@ -272,7 +387,7 @@ const IndividualReports = () => {
                 {/* Table */}
                 <table className="w-fit left-0 top-[288px] absolute inline-flex flex-col justify-start items-start">
                     <thead className="self-stretch bg-gray-50 border-b border-gray-200">
-                        <tr className="p-2 py-3 bg-gray-50 border-b border-gray-200 inline-flex justify-start items-center gap-14 w-full">
+                        <tr className="p-2 py-3 bg-gray-50 border-b border-gray-200 inline-flex justify-start items-center gap-8 w-full">
                             <th className="min-w-16 text-indigo-950 text-xl font-bold font-['Urbanist'] tracking-wide">
                                 No.
                             </th>
@@ -286,12 +401,15 @@ const IndividualReports = () => {
                             <th className="min-w-24 text-indigo-950 text-xl font-bold font-['Urbanist'] tracking-wide">
                                 Qty (Box)
                             </th>
-                            <th className="min-w-24 text-indigo-950 text-xl font-bold font-['Urbanist'] tracking-wide">
+                            <th className="min-w-24 text-indigo-950 text-xl font-bold font-['Urbanist'] tracking-wide pl-10">
                                 Commision
                             </th>
                             <th className="min-w-32 text-indigo-950 text-xl font-bold font-['Urbanist'] tracking-wide">
                                 Gross
                             </th>
+                            <th className="min-w-32 text-indigo-950 text-xl font-bold font-['Urbanist'] tracking-wide">
+                            Expenses {/* New Column */}
+            </th>
                             <th className="min-w-32 text-indigo-950 text-xl font-bold font-['Urbanist'] tracking-wide pr-10">
                                 Total
                             </th>
@@ -308,7 +426,7 @@ const IndividualReports = () => {
                         ) : reportsData.length === 0 ? (
                             <tr>
                                 <td colSpan="9" className="text-center py-10">
-                                    <span className="text-red-500 text-xl font-bold pl-50">
+                                    <span className="text-gray-500 text-xl font-bold pl-50">
                                         No more reports available for the selected date range.
                                     </span>
                                 </td>
@@ -316,7 +434,7 @@ const IndividualReports = () => {
                         ) : (
                            
                                 reportsData.map((entry, index) => (
-                                    <tr key={entry._id} className="self-stretch bg-white border-b border-gray-200 inline-flex justify-start items-center gap-15 px-8 py-2">
+                                    <tr key={entry._id} className="self-stretch bg-white border-b border-gray-200 inline-flex justify-start items-center gap-12 px-2 py-2">
                                         <td className="min-w-16 text-slate-900 text-xl">{index + 1}</td>
                                         <td className="min-w-32 text-slate-900 text-xl">
                                             {new Date(entry.dateOfPurchase).toLocaleDateString("en-GB")}
@@ -331,16 +449,20 @@ const IndividualReports = () => {
                                         </td>
 
                                         <td className="min-w-24 text-slate-900 text-xl">{entry.grossTotalAmount?.toFixed(2)}</td>
+                                        <td className="min-w-32 text-slate-900 text-xl">
+                        {entry.marketFee?.toFixed(2) || "0.00"} {/* Render Market Fee */}
+                    </td>
                                         <td className="min-w-24 text-slate-900 text-xl">{entry.netTotalAmount?.toFixed(2)}</td>
+                            
                                         <td
   className="w-5 relative cursor-pointer"
-  onClick={() => handleSingleEntryPrint(entry, supplierName, startDate, endDate)}
+  onClick={() => handleSingleEntryPrint(entry, selectedSupplier?.supplierName, startDate, endDate)}
 >
   <BsPrinter />
 </td>
 
-                                        <td className="w-5  relative"><TbPencilMinus /></td>
-                                        <td className="w-5 relative">   <FaWhatsapp /></td>
+                                        <td className="w-5  relative cursor-pointer"><TbPencilMinus /></td>
+                                        <td className="w-5 relative cursor-pointer">   <FaWhatsapp /></td>
                                     </tr>
                                 ))
                             )}

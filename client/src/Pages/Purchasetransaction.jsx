@@ -42,7 +42,7 @@ function Purchasetransaction() {
     setItems(updatedItems);
     setError("");
   };
- 
+  const supplierNameRef = useRef(null);
   const [supplierSearch, setSupplierSearch] = useState("");
   const [supplierList, setSupplierList] = useState([]);
   const [selectedSupplier, setSelectedSupplier] = useState(null);
@@ -51,6 +51,7 @@ function Purchasetransaction() {
     useState(false);
   const [supplierCodeInputFocused, setSupplierCodeInputFocused] =
     useState(false);
+    const dateRef = useRef(null);
 
   const [itemSearch, setItemSearch] = useState("");
   const [itemList, setItemList] = useState([]);
@@ -186,6 +187,41 @@ function Purchasetransaction() {
   const totalDeduction = Number(marketFee) + Number(commission);
 
   const handleSubmit = async () => {
+    if (!selectedSupplier) {
+      // setErrors(prev => ({ ...prev, supplierName: 'Please select a supplier' }));
+      supplierNameRef.current.focus();
+      return;
+    }
+      // Validate item rows
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i];
+
+    // Validate item name
+    if (!item.name) {
+      inputRefs.current[i]?.[0]?.focus();
+     
+      return;
+    }
+
+    // Validate quantity (kg or box must be filled)
+    if (!item.kg && !item.box) {
+      inputRefs.current[i]?.[2]?.focus();
+    
+      return;
+    }
+
+    // Validate price
+    if (!item.price || parseFloat(item.price) <= 0) {
+      inputRefs.current[i]?.[4]?.focus();
+     
+      return;
+    }
+    if (!dateOfPurchase) {
+      dateRef.current?.focus();
+      return;
+    }
+    
+  };
     setSubmitloading(true);
     try {
       const formattedItems = items.map((item) => ({
@@ -267,6 +303,7 @@ function Purchasetransaction() {
                   </label>
                   <input
                     type="date"
+                    ref={dateRef}
                     value={dateOfPurchase}
                     onChange={(e) => setDateOfPurchase(e.target.value)}
                     className="flex-1 px-6 py-4 bg-gray-50 rounded-xl text-gray-400 text-xl"
@@ -292,6 +329,7 @@ function Purchasetransaction() {
                         aria-label="Supplier Code"
                         displayValue={(supplier) => supplier?.supplierCode}
                         onChange={(e) => setSupplierSearch(e.target.value)}
+                        ref={supplierNameRef} 
                         onFocus={() => setSupplierCodeInputFocused(true)}
                         onBlur={() => setSupplierCodeInputFocused(false)}
                         autoComplete="off"
@@ -426,12 +464,16 @@ function Purchasetransaction() {
                     readOnly
                     onKeyDown={(e) => handleKeyDown(e, index, 0)}
                     ref={(el) => {
-                      if (!inputRefs.current[index])
-                        inputRefs.current[index] = [];
-                      inputRefs.current[index][0] = el;
+                      if (!inputRefs.current[index]) inputRefs.current[index] = [];
+                      inputRefs.current[index][0] = el; // Item name
+                      // ...
+                      inputRefs.current[index][2] = el; // Qty (KG)
+                      inputRefs.current[index][3] = el; // Qty (Box)
+                      inputRefs.current[index][4] = el; // Price
                     }}
                     className="col-span-1 bg-white border-none outline-none placeholder:text-gray-400 w-full"
                     placeholder="No."
+                    
                   />
 
                   {/* Item Name */}
@@ -489,33 +531,44 @@ function Purchasetransaction() {
                   </div>
 
                   {/* Quantity */}
-                  <input
-                    type="number"
-                    name="kg"
-                    value={item.kg}
-                    disabled={
-                      !itemList.some((option) => option.itemName === item.name)
-                    }
-                    onChange={(e) => handleInputChange(index, e)}
-                    onKeyDown={(e) => handleKeyDown(e, index, 2)}
-                    ref={(el) => (inputRefs.current[index][2] = el)}
-                    className="col-span-2 bg-white border-none outline-none placeholder:text-gray-400 w-full"
-                    placeholder="Qty(Kg)"
-                  />
+              {/* KG Input */}
+<input
+  type="number"
+  name="kg"
+  value={item.kg}
+  disabled={
+    !itemList.some((option) => option.itemName === item.name) || !!item.box
+  }
+  onChange={(e) => {
+    const updatedItems = [...items];
+    updatedItems[index].kg = e.target.value;
+    setItems(updatedItems);
+  }}
+  onKeyDown={(e) => handleKeyDown(e, index, 2)}
+  ref={(el) => (inputRefs.current[index][2] = el)}
+  className="col-span-2 bg-white border-none outline-none placeholder:text-gray-400 w-full"
+  placeholder="Qty(Kg)"
+/>
 
-                  <input
-                    type="number"
-                    name="box"
-                    value={item.box}
-                    disabled={
-                      !itemList.some((option) => option.itemName === item.name)
-                    }
-                    onChange={(e) => handleInputChange(index, e)}
-                    onKeyDown={(e) => handleKeyDown(e, index, 3)}
-                    ref={(el) => (inputRefs.current[index][3] = el)}
-                    className="col-span-2 bg-white border-none outline-none placeholder:text-gray-400 w-full"
-                    placeholder="Qty(Box)"
-                  />
+{/* BOX Input */}
+<input
+  type="number"
+  name="box"
+  value={item.box}
+  disabled={
+    !itemList.some((option) => option.itemName === item.name) || !!item.kg
+  }
+  onChange={(e) => {
+    const updatedItems = [...items];
+    updatedItems[index].box = e.target.value;
+    setItems(updatedItems);
+  }}
+  onKeyDown={(e) => handleKeyDown(e, index, 3)}
+  ref={(el) => (inputRefs.current[index][3] = el)}
+  className="col-span-2 bg-white border-none outline-none placeholder:text-gray-400 w-full"
+  placeholder="Qty(Box)"
+/>
+
                   {/* Unit Selector */}
                   {/* <select
                 name="unit"
@@ -682,9 +735,9 @@ function Purchasetransaction() {
                     </div>
                   </div>
                 ))}
-                <button className="bg-blue-800" onClick={handleSubmit}>
+               <button className="bg-blue-800" onClick={handleSubmit}>
                   save
-                </button>
+                </button> 
               </div>
             </div>
           </div>

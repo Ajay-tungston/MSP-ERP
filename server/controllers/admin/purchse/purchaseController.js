@@ -103,6 +103,98 @@ const createPurchaseEntry = async (req, res) => {
   }
 };
 
+const updatePurchaseEntry = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { supplierId, items, dateOfPurchase, marketFee } = req.body;
+
+    if (!supplierId || !items || !dateOfPurchase || marketFee == null) {
+      return res.status(400).json({ error: "All fields are required" });
+    }
+
+    const supplier = await Supplier.findById(supplierId);
+    if (!supplier) {
+      return res.status(404).json({ message: "Supplier not found" });
+    }
+
+    if (!validator.isISO8601(dateOfPurchase)) {
+      return res.status(400).json({ error: "Invalid date format" });
+    }
+
+    const inputDate = new Date(dateOfPurchase);
+    const now = new Date();
+    if (inputDate > now) {
+      return res
+        .status(400)
+        .json({ error: "Date of purchase cannot be in the future" });
+    }
+
+    if (typeof marketFee !== "number" || marketFee < 0) {
+      return res
+        .status(400)
+        .json({ error: "Market fee must be a non-negative number" });
+    }
+
+    const purchaseEntry = await PurchaseEntry.findById(id);
+    if (!purchaseEntry) {
+      return res.status(404).json({ message: "Purchase Entry not found" });
+    }
+
+    let grossTotalAmount = 0;
+    let totalKg = 0;
+    let totalBox = 0;
+    const purchaseItems = [];
+
+    for (let itemDetails of items) {
+      const { itemName, quantity, unitType, unitPrice } = itemDetails;
+
+      const item = await Item.findOne({ itemName });
+      if (!item) {
+        return res.status(404).json({ message: `Item ${itemName} not found` });
+      }
+
+      const totalCost = quantity * unitPrice;
+
+      purchaseItems.push({
+        item: item._id,
+        quantity: quantity,
+        quantityType: unitType,
+        remainingQuantity: quantity,
+        unitPrice,
+        totalCost,
+      });
+      grossTotalAmount += totalCost;
+      unitType === "kg" ? (totalKg += quantity) : (totalBox += quantity);
+    }
+
+    const commissionPaid = (grossTotalAmount * supplier.commission) / 100;
+    const netTotalAmount = grossTotalAmount - (commissionPaid + marketFee);
+
+    // Update fields
+    purchaseEntry.supplier = supplier._id;
+    purchaseEntry.items = purchaseItems;
+    purchaseEntry.grossTotalAmount = grossTotalAmount;
+    purchaseEntry.netTotalAmount = netTotalAmount;
+    purchaseEntry.totalBox = totalBox;
+    purchaseEntry.totalKg = totalKg;
+    purchaseEntry.commissionPaid = commissionPaid;
+    purchaseEntry.dateOfPurchase = dateOfPurchase;
+    purchaseEntry.marketFee = marketFee;
+
+    await purchaseEntry.save();
+
+    res.status(200).json({ message: "Purchase Entry Updated", purchaseEntry });
+  } catch (error) {
+    console.error(error);
+    if (error.name === "ValidationError") {
+      const errors = Object.values(error.errors).map((err) => err.message);
+      return res.status(400).json({ errors });
+    }
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+
 const getAllPurchaseEntries = async (req, res) => {
   try {
     const {
@@ -334,4 +426,5 @@ module.exports = {
   getPurchaseById,
   getTotalPurchaseStats,
   getSupplierPurchaseReport,
+  updatePurchaseEntry
 };

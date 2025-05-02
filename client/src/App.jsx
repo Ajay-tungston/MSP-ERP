@@ -38,48 +38,17 @@ import Whatsapp from "./Pages/Whatsapp";
 import Payment from "./Pages/Payment/Payment";
 import AddPayment from "./Pages/Payment/AddPayment";
 import IndividualSales from "./Pages/IndividualSales";
+import EditPurchaseTransaction from "./Pages/purchase/EditPurchaseTransaction";
 
 function App() {
   return (
     <>
       <Routes>
-        <Route path="/" element={<Layout />}>
-          <Route path="/mastercustomer" element={<Customer />} />
-          <Route path="/route-customer" element={<Routecustomer />} />
-          <Route path="/supplier" element={<Supplier />} />
-          <Route path="/employee" element={<Employee />} />
-          <Route
-            path="/purchase-transaction"
-            element={<Purchasetransaction />}
-          />
-
-          <Route path='/commission' element={<Commission />} />
-          <Route path='/item' element={<Item />} />
-          <Route path='/route-expense' element={<RouteExpense />} />
-          <Route path='/individual-report' element={<IndividualReports />} />
-          <Route path='/sales-transaction' element={<SalesTransaction />} />
-          <Route path='/sales/:id' element={<Sales />} />
-          <Route path='/cashbook' element={<Cashbook />} />
-          <Route path='/purchase-report' element={<PurchaseReport />} />
-          <Route path='/localsales-report' element={<LocalsalesReport />} />
-          <Route path='/whatsapp' element={<Whatsapp />} />
-          <Route path="/trail" element={<TrialBalance />}/>
-          <Route path="/individualsales" element={<IndividualSales/>}/>
-        </Route>
-
-        <Route path="/sales" element={<Sales />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/add-item" element={<AddItem />} />
-        <Route path="/otp" element={<Otp />} />
+       <Route path="/login" element={<Login />} />
+         <Route path="/otp" element={<Otp />} />
         <Route path="/forgot-password" element={<ForgetPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
-        <Route path="/add-commission" element={<AddCommission />} />
-        <Route path="/add-company" element={<AddCompany />} />
-        <Route path="/expense" element={<AddExpense />} />
-        <Route path="/add-employe" element={<Addemploye />} />
-        <Route path="/purchase-transaction" element={<Purchasetransaction />} />
-        <Route path="/add-customer" element={<AddCustomer />} />
-        <Route path="/add-supplier" element={<AddSupplier />} />
+       
 
         <Route element={<PersistLogin />}>
           <Route element={<RequireAuth />}>
@@ -88,29 +57,38 @@ function App() {
               <Route path="/mastercustomer" element={<Customer />} />
               <Route path="/route-customer" element={<Routecustomer />} />
               <Route path="/supplier" element={<Supplier />} />
-              <Route path="/payment/:type" element={<Payment />} />
-              <Route path="/company" element={<Company />} />
-              <Route path="/commission" element={<Commission />} />
+              <Route path="/employee" element={<Employee />} />
               <Route path="/item" element={<Item />} />
               <Route path="/route-expense" element={<RouteExpense />} />
+
+
+              <Route path="/commission" element={<Commission />} />
+              <Route path="/company" element={<Company />} />
+              <Route path="/purchase-transaction" element={<Purchasetransaction />} />
+              <Route path="/edit-puchase/:id" element={<EditPurchaseTransaction />} />
+              <Route path='/sales-transaction' element={<SalesTransaction />} />
+              <Route path='/sales/:id' element={<Sales />} />
+             <Route path="/payment/:type" element={<Payment />} />
+
+              <Route path='/cashbook' element={<Cashbook />} />
+              <Route path='/purchase-report' element={<PurchaseReport />} />
+              <Route path='/individual-report' element={<IndividualReports />} />
+              <Route path='/localsales-report' element={<LocalsalesReport />} />
+
+              <Route path="/trail" element={<TrialBalance />}/>
+              <Route path="/individualsales" element={<IndividualSales/>}/>
+
+
+              <Route path='/whatsapp' element={<Whatsapp />} />
+
+
+              <Route path="/updatecustomer/:id" element={<EditCustomerModal />} />
             </Route>
           </Route>
         </Route>
-        <Route path="/login" element={<Login />} />
-        <Route path="/add-item" element={<AddItem />} />
-        <Route path="/otp" element={<Otp />} />
-        <Route path="/forgot-password" element={<ForgetPassword />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
-        <Route path="/add-commission" element={<AddCommission />} />
-        <Route path="/add-company" element={<AddCompany />} />
-        <Route path="/expense" element={<AddExpense />} />
-        <Route path="/add-employe" element={<Addemploye />} />
-        <Route path="/purchase-transaction" element={<Purchasetransaction />} />
-        <Route path="/updatecustomer/:id" element={<EditCustomerModal />} />
-        {/* <Route path="/add-supplier" element={<AddSuppconsole.log('App component rendered');lier />} /> */}
-        <Route path="/company" element={<Company />} />
-        <Route path="/trail" element={<TrialBalance />} />
-        {/* <Route path="/add-payment" element={<AddPayment />} /> */}
+       
+    
+       
       </Routes>
     </>
   );

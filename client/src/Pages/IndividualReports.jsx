@@ -11,6 +11,7 @@ import {
 } from "@headlessui/react";
 import useAxiosPrivate from "../hooks/useAxiosPrivate";
 import OvalSpinner from "../Components/spinners/OvalSpinner";
+import { useNavigate } from "react-router-dom";
 
 const IndividualReports = () => {
     const axiosInstance = useAxiosPrivate();
@@ -33,7 +34,7 @@ const IndividualReports = () => {
 
     const [startDate, setStartDate] = useState(today);
     const [endDate, setEndDate] = useState(today);
-
+const navigate=useNavigate()
     const limit = 5;
     useEffect(() => {
         const fetchSuppliers = async () => {
@@ -239,7 +240,7 @@ const IndividualReports = () => {
 
 
 
-
+console.log("reportsData=",reportsData)
 
 
     const handleSingleEntryPrint = (entry, supplierName, startDate, endDate) => {
@@ -464,7 +465,7 @@ const IndividualReports = () => {
                                         <BsPrinter />
                                     </td>
 
-                                    <td className="w-5  relative cursor-pointer"><TbPencilMinus /></td>
+                                    <td className="w-5  relative cursor-pointer" onClick={()=>navigate(`/edit-puchase/${entry?._id}`)}><TbPencilMinus /></td>
                                     <td className="w-5 relative cursor-pointer">   <FaWhatsapp /></td>
                                 </tr>
                             ))

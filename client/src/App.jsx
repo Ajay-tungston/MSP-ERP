@@ -37,6 +37,7 @@ import TrialBalance from "./Pages/TrialBalance";
 import Whatsapp from "./Pages/Whatsapp";
 import Payment from "./Pages/Payment/Payment";
 import AddPayment from "./Pages/Payment/AddPayment";
+import IndividualSales from "./Pages/IndividualSales";
 
 function App() {
   return (
@@ -52,17 +53,18 @@ function App() {
             element={<Purchasetransaction />}
           />
 
-          <Route path="/commission" element={<Commission />} />
-          <Route path="/item" element={<Item />} />
-          <Route path="/route-expense" element={<RouteExpense />} />
-          <Route path="/individual-report" element={<IndividualReports />} />
-          <Route path="/sales-transaction" element={<SalesTransaction />} />
-          <Route path="/sales/:id" element={<Sales />} />
-          <Route path="/cashbook" element={<Cashbook />} />
-          <Route path="/purchase-report" element={<PurchaseReport />} />
-          <Route path="/localsales-report" element={<LocalsalesReport />} />
-          <Route path="/whatsapp" element={<Whatsapp />} />
-          <Route path="/trail" element={<TrialBalance />} />
+          <Route path='/commission' element={<Commission />} />
+          <Route path='/item' element={<Item />} />
+          <Route path='/route-expense' element={<RouteExpense />} />
+          <Route path='/individual-report' element={<IndividualReports />} />
+          <Route path='/sales-transaction' element={<SalesTransaction />} />
+          <Route path='/sales/:id' element={<Sales />} />
+          <Route path='/cashbook' element={<Cashbook />} />
+          <Route path='/purchase-report' element={<PurchaseReport />} />
+          <Route path='/localsales-report' element={<LocalsalesReport />} />
+          <Route path='/whatsapp' element={<Whatsapp />} />
+          <Route path="/trail" element={<TrialBalance />}/>
+          <Route path="/individualsales" element={<IndividualSales/>}/>
         </Route>
 
         <Route path="/sales" element={<Sales />} />

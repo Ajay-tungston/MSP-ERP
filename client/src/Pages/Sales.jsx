@@ -12,29 +12,38 @@ import Swal from "sweetalert2";
 import { useNavigate, useParams } from "react-router-dom";
 
 const Sales = () => {
-  const { id } = useParams();
+  const { id: purchaseId } = useParams();
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [purchase, setPurchase] = useState();
-  console.log("Add purchase", purchase);
+  // console.log("Add purchase", purchase);
   const axiosInstance = useAxiosPrivate();
+  const [loadingPurchase, setLoadingPurchase] = useState(true);
   const [submitLoading, setSubmitloading] = useState(false);
-
-  // rows holds each line of the sales form
+    const [dateOfSale, setDateOfSale] = useState(
+      new Date().toLocaleDateString("en-CA")
+    );
+  
   const [rows, setRows] = useState([
     {
       id: 1,
-      customer: "",
+      customerId: "",
+      customerLabel: "",
       supplierId: "",
-      customerName: "",
       itemName: "",
-      quantity: "",
-      unit: "",
-      unitPrice: "",
+      itemId: "",
+      quantityType: "",      
+      quantityKg: 0,          
+      quantityBox: 0,
+      unitPrice: 0,
+      remainingQuantity: 0,
+      error: "",
     },
   ]);
-  console.log("ejhfbwkbf", rows);
+  console.log("Rows before validation:", rows);
+
+  // console.log("edjdekjdejkejefjhr",rows)
   // which row’s dropdown is open?
   const [activeCustomerIndex, setActiveCustomerIndex] = useState(null);
   // what the user has typed when searching
@@ -83,23 +92,26 @@ const Sales = () => {
   }, [searchTerm, axiosInstance]);
 
   useEffect(() => {
-    const fetchPurchaseById = async () => {
+    const fetchPurchase = async () => {
+      setLoadingPurchase(true);
       try {
-        const response = await axiosInstance.get(`/admin/purchase/get/${id}`);
+        const res = await axiosInstance.get(
+          `/admin/purchase/get/${purchaseId}`
+        );
+        setPurchase(res.data);
 
-        setPurchase(response.data);
+        // Initialize rows from items still in stock
+     
       } catch (err) {
         console.error("Error fetching purchase:", err);
-        setError("Failed to fetch purchase details.");
+        setError("Failed to load purchase.");
       } finally {
-        setLoading(false);
+        setLoadingPurchase(false);
       }
     };
 
-    if (id) {
-      fetchPurchaseById();
-    }
-  }, [id]);
+    fetchPurchase();
+  }, [purchaseId, axiosInstance]);
 
   const sortAlphabetically = (data) => {
     return [...data].sort((a, b) => a.label.localeCompare(b.label));
@@ -114,7 +126,7 @@ const Sales = () => {
 
   // Sort the filtered results alphabetically
   const sortedCustomers = sortAlphabetically(filteredCustomers);
-
+  
   const [selectedCustomerIndex, setSelectedCustomerIndex] = useState(-1);
   const inputRef = useRef(null);
   const resultsListRef = useRef(null);
@@ -135,72 +147,124 @@ const Sales = () => {
   const handleChange = (i, field, val) => {
     const copy = [...rows];
     copy[i][field] = val;
-    setRows(copy);
+    
   };
 
   const handleCustomerSelect = (i, customer) => {
+    console.log("customer",customer)
+    console.log("i",i)
     const copy = [...rows];
     copy[i].customer = customer.value;
     copy[i].customerLabel = customer.label;
+    
+    console.log("copy",copy)
     setRows(copy);
     setActiveCustomerIndex(null);
   };
 
-  const calculateSubtotal = (qty, price) => {
+  const calculateSubtotal = (qty, price, quantityType) => {
     const q = parseFloat(qty),
       p = parseFloat(price);
-    return isNaN(q) || isNaN(p) ? 0 : q * p;
-  };
-  const handleItemChange = (index, selectedItemName) => {
-    const updatedRows = [...rows];
 
-    // Find the selected item object from purchase items
-    const selectedItem = purchase?.items?.find(
-      (item) => item.item.itemName === selectedItemName
-    );
-
-    if (selectedItem) {
-      updatedRows[index].itemName = selectedItem.item.itemName;
-      updatedRows[index].itemId = selectedItem.item._id; // ⬅️ SAVE itemId
-      updatedRows[index].supplierId = selectedItem.supplierId; // ⬅️ SAVE supplierId
+    // Check for valid quantity and price
+    if (isNaN(q) || isNaN(p)) {
+      return 0;
     }
 
-    setRows(updatedRows);
+    // Return the subtotal
+    return q * p;
   };
 
-  //Helper function to calculate remaining quantity
-  const getRemainingQuantity = (itemId, currentIndex = -1) => {
+  const handleItemChange = (idx, itemName) => {
+    const pi = purchase.items.find((it) => it.item.itemName === itemName);
+    if (!pi) return;
+    setRows((rs) =>
+      rs.map((r, i) =>
+        i === idx
+          ? {
+              ...r,
+              itemName: pi.item.itemName,
+              itemId: pi.item._id,
+              unitPrice: pi.unitPrice,
+              quantityType: pi.quantityType,
+              remainingQuantity: pi.remainingQuantity,
+            }
+          : r
+      )
+    );
+  };
+
+  const getRemainingQuantity = (itemId, quantityType, currentIndex = -1) => {
     const selectedItem = purchase?.items?.find(
-      (i) => i.item.itemName === itemId
+      (i) => i.item._id === itemId && i.quantityType === quantityType
     );
     if (!selectedItem) return 0;
 
-    // Sum all quantities except the current row
-    const usedQuantity = rows
-      .filter((row, index) => row.item === itemId && index !== currentIndex)
-      .reduce((sum, row) => sum + (parseInt(row.quantity) || 0), 0);
+    let remaining = selectedItem.remainingQuantity || 0;
 
-    const remaining = selectedItem.quantity - usedQuantity;
-    return remaining > 0 ? remaining : 0;
+    rows.forEach((row, index) => {
+      if (
+        row.itemId === itemId &&
+        row.quantityType === quantityType &&
+        index !== currentIndex
+      ) {
+        const q = parseFloat(row.quantity) || 0;
+        remaining -= q;
+      }
+    });
+
+    return Math.max(remaining, 0);
   };
 
-  // Quantity change handler
   const handleQuantityChange = (index, value) => {
-    const quantity = parseInt(value) || 0;
-    const currentRow = rows[index];
+    const q = value === "" ? "" : parseFloat(value);
+  console.log("value=", value)
+    setRows((rs) =>
+      rs.map((r, i) =>
+      {if (i !== index) return r;
 
-    const remaining = getRemainingQuantity(currentRow.item, index);
-    const selectedItem = purchase?.items?.find(
-      (i) => i.item._id === currentRow.item
+        const matchingPurchaseItem =purchase?.items?.find(
+          (pi) =>
+            pi?.item?._id === r.itemId && pi.quantityType === r.quantityType
+        );
+  
+        const maxQty = matchingPurchaseItem?.remainingQuantity || 0;
+        const error =
+          q !== "" && q > maxQty
+            ? `Max ${maxQty} ${r.quantityType}`
+            : "";
+  
+        return {
+          ...r,
+          quantity: q,
+          quantityKg: r.quantityType === "kg" ? q : "",
+          quantityBox: r.quantityType === "box" ? q : "",
+          error,
+        };}
+      )
     );
+  };
+  
+  
 
-    let error = null;
-    if (selectedItem && quantity > remaining) {
-      error = `Only ${remaining}Kg of ${selectedItem.item.itemName} is available`;
-    }
+  const handleQuantityTypeChange = (index, value) => {
+    setRows((rs) =>
+      rs.map((r, i) => {
+        if (i !== index) return r;
 
-    setRows(
-      rows.map((row, i) => (i === index ? { ...row, quantity, error } : row))
+        // Get matching item from purchase
+        const selectedItem = purchase?.items?.find(
+          (it) => it.item._id === r.itemId && it.quantityType === value
+        );
+
+        return {
+          ...r,
+          quantityType: value,
+          quantity: "",
+          error: "",
+          unitPrice: selectedItem ? selectedItem.unitPrice : "",
+        };
+      })
     );
   };
 
@@ -245,52 +309,58 @@ const Sales = () => {
         break;
     }
   };
+
   const handleAddSale = async () => {
     setSubmitloading(true);
     try {
-      const newRows = [...rows]; // Clone the rows
-
-      for (let i = 0; i < newRows.length; i++) {
-        const rowData = newRows[i];
-        console.log(`Processing row ${i + 1}`, rowData);
-
-        // Validation
-        if (!rowData.customer) {
+      // 1) Validate form
+      for (let i = 0; i < rows.length; i++) {
+        const r = rows[i];
+        if (!r.customer) {
           throw new Error(`Row ${i + 1}: Please select a customer.`);
         }
-        if (!rowData.itemName) {
+        if (!r.itemName) {
           throw new Error(`Row ${i + 1}: Please select an item.`);
         }
-        if (!rowData.quantity || rowData.quantity <= 0) {
-          throw new Error(`Row ${i + 1}: Please enter a valid quantity.`);
-        }
-        if (!rowData.unitPrice || rowData.unitPrice <= 0) {
-          throw new Error(`Row ${i + 1}: Invalid unit price.`);
+        if (
+          !r.quantityType ||
+          (r.quantityType !== "kg" && r.quantityType !== "box")
+        ) {
+          throw new Error(`Row ${i + 1}: Please select a valid quantity type.`);
         }
 
-        // Prepare payload
-        const salePayload = {
-          customerId: rowData.customer,
-          discount: rowData.discount || 0,
-          status: "completed",
+        if (!r.quantity || Number(r.quantity) <= 0) {
+          throw new Error(`Row ${i + 1}: Please enter a valid quantity.`);
+        }
+        
+
+        if (!r.unitPrice || r.unitPrice <= 0) {
+          throw new Error(`Row ${i + 1}: Invalid unit price.`);
+        }
+      
+     
+      const salesPayload = rows.map((r) => {
+        // const quantity = : r.;
+        return {
+          purchase:purchase?._id,
+          customer: r. customer,
+          discount: r.discount || 0,
+          dateOfSale,
           items: [
             {
-              itemName: rowData.itemName,
-              supplierId: purchase.supplier._id,
-              quantity: Number(rowData.quantity),
-              unitPrice: Number(rowData.unitPrice),
+              item: r.itemId,
+              supplier:purchase?.supplier?._id,
+              quantityType:r.quantityType,
+              quantity:r.quantityType === "kg" ? r.quantityKg : r.quantityBox,
+              unitPrice: Number(r.unitPrice), 
             },
           ],
         };
+      });
+      console.log("Sales payload to backend:", salesPayload);
 
-        console.log(`Payload for row ${i + 1}:`, salePayload);
-
-        const response = await axiosInstance.post(
-          "/admin/sales/add",
-          salePayload
-        );
-        console.log(`Response for row ${i + 1}:`, response);
-      }
+      // 3) Send it in one go
+      await axiosInstance.post("/admin/sales/add", salesPayload);
 
       Swal.fire({
         title: "All sales transactions added successfully!",
@@ -298,28 +368,49 @@ const Sales = () => {
         draggable: true,
       });
 
-      // Reset all rows after successful submission
-      setRows([
-        {
-          id: 1,
-          customer: "",
-          supplierId: "",
-          customerName: "",
-          itemName: "",
-          quantity: "",
-          unit: "",
-          unitPrice: "",
-        },
-      ]);
+      // 4) Re-fetch the purchase to get updated remainingQuantity
+      const { data: updatedPurchase } = await axiosInstance.get(
+        `/admin/purchase/get/${purchase._id}`
+      );
+      setPurchase(updatedPurchase);
 
-      navigate("/sales-transactions");
-    } catch (error) {
+      // 5) Rebuild rows for items still in stock
+      // const stillInStock = updatedPurchase.items
+      //   .filter((it) => it.remainingQuantity > 0) // Check unified remaining quantity
+      //   .map((it, idx) => ({
+      //     id: idx + 1,
+      //     customer: "",
+      //     customerLabel: "",
+      //     itemName: it.item.itemName,
+      //     itemId: it.item._id,
+      //     supplierId: updatedPurchase.supplier._id,
+      //     quantityKg: "",
+      //     quantityBox: "",
+      //     unitPrice: it.unitPrice,
+      //     quantityType: it.quantityType, // Using single quantityType field
+      //     remainingQuantity: it.remainingQuantity, // Single remaining quantity
+      //     error: "",
+      //   }));
+
+      // if (stillInStock.length) {
+      //   setRows(stillInStock);
+      // } else {
+      //   // nothing left → go back to register
+      //   navigate("/sales-transaction");
+      // }
+      navigate("/sales-transaction");
+    }
+  }
+     catch (error) {
       Swal.fire({
-        title: error.message || "Something went wrong!",
+        title:
+          error.response?.data?.message ||
+          error.message ||
+          "Something went wrong!",
         icon: "error",
         draggable: true,
       });
-      console.error(error);
+      console.error("handleAddSale error:", error);
     } finally {
       setSubmitloading(false);
     }
@@ -329,8 +420,9 @@ const Sales = () => {
     <div>
       <div className="  bg-[#fff] w-full h-screen  ">
         <div className="w-[665px] h-full left-[1200px] top-[148px] absolute bg-[#fff]">
+       
           <div className="w-[653px] left-[6px] top-[176px] absolute inline-flex flex-col justify-start items-start">
-            <div className="self-stretch px-2.5 py-4 bg-[white]  outline-[0.20px] outline-offset-[-0.20px] outline-slate-600/40 inline-flex justify-start items-center gap-[5px]">
+            <div className="self-stretch px-2.5 py-4 bg-[white] outline-[0.20px] outline-offset-[-0.20px] outline-slate-600/40 inline-flex justify-start items-center gap-[5px]">
               <div className="flex-1 max-w-16 justify-center text-indigo-950 text-sm font-bold font-['Urbanist'] tracking-wide">
                 No.
               </div>
@@ -341,18 +433,28 @@ const Sales = () => {
                 Qty (KG)
               </div>
               <div className="min-w-32 justify-center text-indigo-950 text-sm font-bold font-['Urbanist'] tracking-wide">
-                Unit
+                Qty (Box)
               </div>
               <div className="min-w-32 justify-center text-indigo-950 text-sm font-bold font-['Urbanist'] tracking-wide">
                 Unit Price
               </div>
               <div className="w-20 justify-center text-indigo-950 text-sm font-bold font-['Urbanist'] tracking-wide">
-                total
+                Total
               </div>
             </div>
 
             {purchase?.items?.map((item, index) => {
-              const total = item.quantity * item.unitPrice;
+              const remainingQuantity = item.remainingQuantity ?? 0; // Use remainingQuantity field
+              const unitPrice = parseFloat(item.unitPrice ?? 0);
+              const quantityType = item.quantityType; // Assuming it can be "kg" or "box"
+
+              // Calculate the total based on the quantity type
+              let total = 0;
+              if (quantityType === "kg") {
+                total = remainingQuantity * unitPrice;
+              } else if (quantityType === "box") {
+                total = remainingQuantity * unitPrice;
+              }
 
               return (
                 <div
@@ -363,16 +465,16 @@ const Sales = () => {
                     {index + 1}
                   </div>
                   <div className="min-w-32 justify-center text-indigo-950 text-sm font-normal font-['Urbanist'] tracking-wide">
-                    {item.item.itemName}
+                    {item?.item?.itemName || "-"}
                   </div>
                   <div className="min-w-32 justify-center text-indigo-950 text-sm font-normal font-['Urbanist'] tracking-wide">
-                    {item.quantity}
+                    {quantityType === "kg" ? remainingQuantity + " kg" : "-"}
                   </div>
                   <div className="min-w-32 justify-center text-indigo-950 text-sm font-normal font-['Urbanist'] tracking-wide">
-                    {item.quantityType}
+                    {quantityType === "box" ? remainingQuantity + " box" : "-"}
                   </div>
                   <div className="min-w-32 justify-center text-indigo-950 text-sm font-normal font-['Urbanist'] tracking-wide">
-                    ₹{parseFloat(item.unitPrice).toFixed(2)}
+                    ₹{unitPrice.toFixed(2)}
                   </div>
                   <div className="w-20 justify-center text-indigo-950 text-sm font-normal font-['Urbanist'] tracking-wide">
                     ₹{total.toFixed(2)}
@@ -380,8 +482,46 @@ const Sales = () => {
                 </div>
               );
             })}
+
+            {/* Add total row */}
+            <div className="self-stretch px-2.5 py-4 bg-white outline-[0.20px] outline-offset-[-0.20px] outline-slate-600/40 inline-flex justify-start items-center gap-[5px]">
+              <div className="min-w-8 justify-center text-indigo-950 text-sm font-bold font-['Urbanist'] tracking-wide">
+                {/* Empty cell */}
+              </div>
+              <div className="min-w-32 justify-center text-indigo-950 text-sm font-bold font-['Urbanist'] tracking-wide">
+                {/* Empty cell */}
+              </div>
+              <div className="min-w-32 justify-center text-indigo-950 text-sm font-bold font-['Urbanist'] tracking-wide">
+                {/* Empty cell */}
+              </div>
+              <div className="min-w-32 justify-center text-indigo-950 text-sm font-bold font-['Urbanist'] tracking-wide">
+                {/* Empty cell */}
+              </div>
+              <div className="min-w-32 justify-center text-indigo-950 text-sm font-bold font-['Urbanist'] tracking-wide">
+                Total
+              </div>
+              <div className="w-20 justify-center text-indigo-950 text-sm font-bold font-['Urbanist'] tracking-wide">
+                ₹
+                {purchase?.items
+                  ?.reduce((total, item) => {
+                    const remainingQuantity = item.remainingQuantity ?? 0;
+                    const unitPrice = parseFloat(item.unitPrice ?? 0);
+                    const quantityType = item.quantityType;
+
+                    if (quantityType === "kg") {
+                      return total + remainingQuantity * unitPrice;
+                    } else if (quantityType === "box") {
+                      return total + remainingQuantity * unitPrice;
+                    }
+                    return total;
+                  }, 0)
+                  .toFixed(2)}
+              </div>
+            </div>
           </div>
+
           <div className="w-96 pb-6 left-[6px] top-[122px] absolute border-b border-none inline-flex justify-start items-center gap-2.5">
+            
             <div className="justify-start text-indigo-950 text-3xl font-bold font-['Urbanist'] leading-10">
               Item list
             </div>
@@ -389,19 +529,33 @@ const Sales = () => {
         </div>
         <div className="w-[865px] h-full left-[329px] top-[148px] absolute bg-[#EEEEEE] shadow-[0px_4px_5.800000190734863px_0px_rgba(0,0,0,0.25)] overflow-y-scroll ">
           <div className="w-[782px] left-[44px] top-[80px] absolute inline-flex flex-col justify-start items-start gap-2.5">
+         
             <div className="inline-flex justify-start items-center gap-3">
               <div className="justify-start text-slate-500 text-xl font-normal font-['Urbanist']">
                 Transactions <span></span>Sales
               </div>
             </div>
             <div className="self-stretch flex flex-col justify-start items-start gap-11">
-              <div className="self-stretch pb-6 border-b border-zinc-100 inline-flex justify-start items-center gap-2.5">
+              <div className="self-stretch pb-12 border-b border-zinc-100 inline-flex justify-start items-center gap-2.5">
                 <div className="justify-start text-indigo-950 text-3xl font-bold font-['Urbanist'] leading-10">
                   Sales register
                 </div>
               </div>
             </div>
+            
           </div>
+          <div className="flex items-center px-96 mt-12 gap-6 w-full md:w-[48%]">
+                  <label className="min-w-44 text-slate-500 text-xl font-normal">
+                    Date of Sale <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="date"
+                    value={dateOfSale}
+                    onChange={(e) => setDateOfSale(e.target.value)}
+                    className="flex-1 px-6 py-4 bg-gray-50 rounded-xl text-gray-400 text-xl"
+                    placeholder="DD/MM/YYYY"
+                  />
+                </div>
         </div>
 
         <div className="w-[851px] left-[337px] top-[324px] absolute inline-flex flex-col justify-start items-start bf gap-3.5  ">
@@ -419,7 +573,7 @@ const Sales = () => {
                   Item name
                 </div>
                 <div className="min-w-32 justify-center text-indigo-950 text-sm font-bold font-['Urbanist'] tracking-wide">
-                  Qty (KG)
+                  Quantity
                 </div>
                 <div className="w-20 justify-center text-indigo-950 text-sm font-bold font-['Urbanist'] tracking-wide">
                   Unit
@@ -571,13 +725,19 @@ const Sales = () => {
                       <option value="" disabled>
                         Select
                       </option>
-                      {purchase?.items?.map((item) => (
-                        <option key={item._id} value={item.item.itemName}>
-                          {item.item.itemName}
-                        </option>
-                      ))}
+                      {purchase?.items
+                        ?.map((item) => item.item.itemName) // Extract item names
+                        .filter(
+                          (value, index, self) => self.indexOf(value) === index
+                        ) // Remove duplicates
+                        .map((itemName, idx) => (
+                          <option key={idx} value={itemName}>
+                            {itemName}
+                          </option>
+                        ))}
                     </select>
                   </div>
+
                   {/* Quantity Input with Validation */}
 
                   <div className="min-w-32 justify-center text-slate-900 text-sm font-normal font-['Urbanist'] tracking-wide">
@@ -586,15 +746,15 @@ const Sales = () => {
                         type="number"
                         min="0"
                         max={
-                          row.itemName
-                            ? getRemainingQuantity(row.itemName, index)
+                          row.itemId
+                            ? getRemainingQuantity(row.itemId, index)
                             : undefined
                         }
                         value={row.quantity}
                         onChange={(e) =>
                           handleQuantityChange(index, e.target.value)
                         }
-                        disabled={!row.itemName} // <-- Changed from row.item to row.itemName
+                        disabled={!row.itemId}
                         className={`w-25 bg-transparent outline-none text-slate-900 -ml-8 ${
                           row.error ? "border-b border-red-500" : ""
                         }`}
@@ -609,17 +769,20 @@ const Sales = () => {
                   </div>
                   <div className="w-20 justify-center text-slate-900 text-sm font-normal font-['Urbanist'] tracking-wide">
                     <select
-                      value={row.unit}
+                      value={row.quantityType} // use consistent field name
                       onChange={(e) =>
-                        handleChange(index, "unit", e.target.value)
+                        handleQuantityTypeChange(
+                          index,
+                          e.target.value.toLowerCase()
+                        )
                       }
                       className="w-20 bg-transparent outline-none text-slate-900 text-center -ml-15"
                     >
                       <option value="" disabled>
                         Select
                       </option>
-                      <option value="KG">KG</option>
-                      <option value="Box">Box</option>
+                      <option value="kg">KG</option>
+                      <option value="box">Box</option>
                     </select>
                   </div>
                   <div className="w-20 justify-center text-slate-900 text-sm font-normal font-['Urbanist'] tracking-wide">
@@ -639,7 +802,6 @@ const Sales = () => {
                   </div>
                 </div>
               ))}
-
               {/* Add new row button */}
               <div
                 className="col-span-6 rounded-lg px-6 py-4 cursor-pointer flex items-center justify-center gap-3 text-indigo-900 text-xl hover:bg-gray-100 transition"
@@ -665,70 +827,6 @@ const Sales = () => {
 
             <div className="self-stretch flex flex-col justify-start items-end gap-8">
               <div className="self-stretch px-4 flex flex-col justify-start items-start gap-12">
-                <div className="self-stretch pb-6 border-b border-slate-600/40 inline-flex justify-start items-center gap-2.5">
-                  <div className="justify-start text-indigo-950 text-3xl font-semibold font-['Urbanist'] leading-10">
-                    Deductions
-                  </div>
-                </div>
-                <div className="self-stretch pb-8 border-b border-zinc-100 inline-flex justify-between items-start flex-wrap content-start">
-                  <div className="w-96 flex justify-between items-center">
-                    <label
-                      className="w-24 justify-start text-slate-600/40 text-sm font-normal font-['Urbanist']"
-                      htmlFor="commission"
-                    >
-                      Commission (%)
-                    </label>
-                    <div className="w-64 h-12 px-6 py-4 bg-gray-50 rounded-xl flex justify-start items-center gap-2">
-                      <input
-                        type="number"
-                        id="commission"
-                        name="commission"
-                        placeholder="Fetch from Customer Master"
-                        className="w-full bg-transparent outline-none text-indigo-950 text-sm font-medium font-['Urbanist']"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="w-96 flex justify-between items-center">
-                    <label
-                      className="w-24 justify-start text-slate-600/40 text-sm font-normal font-['Urbanist']"
-                      htmlFor="discount"
-                    >
-                      Discount (%)
-                    </label>
-                    <div className="w-64 h-12 px-6 py-4 bg-gray-50 rounded-xl flex justify-start items-center gap-2">
-                      <input
-                        type="number"
-                        id="discount"
-                        name="discount"
-                        placeholder="Fetch from Customer Master"
-                        className="w-full bg-transparent outline-none text-indigo-950 text-sm font-medium font-['Urbanist']"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex justify-start items-center gap-2 mt-10">
-                    <label
-                      className="w-30 justify-start text-slate-600/40 text-sm font-normal font-['Urbanist']"
-                      htmlFor="totalDeductions"
-                    >
-                      Total Deductions
-                    </label>
-                    <div className="w-64 h-12 px-6 py-4 bg-gray-50 rounded-xl flex justify-start items-center gap-3">
-                      <div className="justify-start text-indigo-950 text-xl font-bold font-['Urbanist']">
-                        ₹
-                      </div>
-                      <input
-                        type="text"
-                        id="totalDeductions"
-                        name="totalDeductions"
-                        readOnly
-                        className="w-full bg-transparent outline-none text-indigo-950 text-sm font-bold font-['Urbanist']"
-                      />
-                    </div>
-                  </div>
-                </div>
-
                 <div className="self-stretch inline-flex justify-between items-start flex-wrap content-start">
                   <div className="w-96 flex justify-between items-center">
                     <label

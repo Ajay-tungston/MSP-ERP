@@ -51,12 +51,13 @@ function Purchasetransaction() {
     useState(false);
   const [supplierCodeInputFocused, setSupplierCodeInputFocused] =
     useState(false);
-    const dateRef = useRef(null);
+  const dateRef = useRef(null);
 
   const [itemSearch, setItemSearch] = useState("");
   const [itemList, setItemList] = useState([]);
   const [itemLoading, setItemLoading] = useState(false);
   const [itemInputFocused, setItemInputFocused] = useState(false);
+  const [showActionModal, setShowActionModal] = useState(false);
 
   const [purchaseCount, setPurchaseCount] = useState(1);
   const [submitLoading, setSubmitloading] = useState(false);
@@ -192,36 +193,35 @@ function Purchasetransaction() {
       supplierNameRef.current.focus();
       return;
     }
-      // Validate item rows
-  for (let i = 0; i < items.length; i++) {
-    const item = items[i];
+    // Validate item rows
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
 
-    // Validate item name
-    if (!item.name) {
-      inputRefs.current[i]?.[0]?.focus();
-     
-      return;
-    }
+      // Validate item name
+      if (!item.name) {
+        inputRefs.current[i]?.[0]?.focus();
 
-    // Validate quantity (kg or box must be filled)
-    if (!item.kg && !item.box) {
-      inputRefs.current[i]?.[2]?.focus();
-    
-      return;
-    }
+        return;
+      }
 
-    // Validate price
-    if (!item.price || parseFloat(item.price) <= 0) {
-      inputRefs.current[i]?.[4]?.focus();
-     
-      return;
-    }
-    if (!dateOfPurchase) {
-      dateRef.current?.focus();
-      return;
-    }
-    
-  };
+      // Validate quantity (kg or box must be filled)
+      if (!item.kg && !item.box) {
+        inputRefs.current[i]?.[2]?.focus();
+
+        return;
+      }
+
+      // Validate price
+      if (!item.price || parseFloat(item.price) <= 0) {
+        inputRefs.current[i]?.[4]?.focus();
+
+        return;
+      }
+      if (!dateOfPurchase) {
+        dateRef.current?.focus();
+        return;
+      }
+    };
     setSubmitloading(true);
     try {
       const formattedItems = items.map((item) => ({
@@ -255,8 +255,11 @@ function Purchasetransaction() {
       setSelectedSupplier("");
       setItemSearch("");
       setItemList([]);
-      navigate("/");
-    } catch (error) {
+
+    }
+    
+  
+    catch (error) {
       Swal.fire({
         title: "Something went wrong!",
         icon: "error",
@@ -265,10 +268,85 @@ function Purchasetransaction() {
       console.log(error);
     } finally {
       setSubmitloading(false);
-     
+
     }
   };
-
+ 
+  const handlePurchasePrint = () => {
+    const printWindow = window.open("", "_blank");
+  
+    const style = `
+      <style>
+        body { font-family: sans-serif; padding: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+        th { background-color: #f0f0f0; }
+      </style>
+    `;
+  
+    const html = `
+      <html>
+        <head>
+          <title>Purchase Entry</title>
+          ${style}
+        </head>
+        <body>
+          <h2>Individual Purchase Entry</h2>
+          <p><strong>Supplier:</strong> ${selectedSupplier?.supplierName || "-"}</p>
+          <p><strong>Date of Purchase:</strong> ${new Date(dateOfPurchase).toLocaleDateString("en-GB")}</p>
+          <hr />
+          <table>
+            <thead>
+              <tr>
+                <th>No</th>
+                <th>Item</th>
+                <th>Qty (KG)</th>
+                <th>Qty (Box)</th>
+                <th>Price</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${items
+                .map(
+                  (item, index) => `
+                <tr>
+                  <td>${index + 1}</td>
+                  <td>${item.name}</td>
+                  <td>${item.kg || "-"}</td>
+                  <td>${item.box || "-"}</td>
+                  <td>${item.price}</td>
+                  <td>${item.total}</td>
+                </tr>`
+                )
+                .join("")}
+            </tbody>
+          </table>
+  <table>
+  <tr>
+        <td>  <h3>Total (KG): ${totalQuantityInKg}</h3></td>
+        <td>  <h3>Total (Box): ${totalQuantityInBox}</h3></td>
+   <td>       <h3>Gross Total: ₹${totalPrice}</h3></td>
+     <td>     <h3>Commission: ₹${commission?.toFixed(2) || "0.00"}</h3></td>
+       <td>   <h3>Market Fee: ₹${marketFee?.toFixed(2) || "0.00"}</h3></td>
+      <td>    <h3>Net Total: ₹${(totalPrice - totalDeduction).toFixed(2)}</h3></td>
+          </tr>
+  </table>
+          <script>
+            window.onload = function() {
+              window.print();
+              setTimeout(() => window.close(), 500);
+            };
+          </script>
+        </body>
+      </html>
+    `;
+  
+    printWindow.document.write(html);
+    printWindow.document.close();
+  };
+  
+  
   return (
     <>
       {submitLoading ? (
@@ -329,7 +407,7 @@ function Purchasetransaction() {
                         aria-label="Supplier Code"
                         displayValue={(supplier) => supplier?.supplierCode}
                         onChange={(e) => setSupplierSearch(e.target.value)}
-                        ref={supplierNameRef} 
+                        ref={supplierNameRef}
                         onFocus={() => setSupplierCodeInputFocused(true)}
                         onBlur={() => setSupplierCodeInputFocused(false)}
                         autoComplete="off"
@@ -363,7 +441,7 @@ function Purchasetransaction() {
                           supplierCodeInputFocused &&
                           !selectedSupplier && (
                             <div className="w-full border border-gray-200 rounded-xl bg-white max-h-60 overflow-y-auto shadow-lg px-6 py-3 text-gray-700">
-                             No matching suppliers
+                              No matching suppliers
                             </div>
                           )
                         )}
@@ -420,7 +498,7 @@ function Purchasetransaction() {
                           supplierNameInputFocused &&
                           !selectedSupplier && (
                             <div className="w-full border border-gray-200 rounded-xl bg-white max-h-60 overflow-y-auto shadow-lg px-6 py-3 text-gray-700">
-                             No matching suppliers
+                              No matching suppliers
                             </div>
                           )
                         )}
@@ -473,7 +551,7 @@ function Purchasetransaction() {
                     }}
                     className="col-span-1 bg-white border-none outline-none placeholder:text-gray-400 w-full"
                     placeholder="No."
-                    
+
                   />
 
                   {/* Item Name */}
@@ -531,43 +609,43 @@ function Purchasetransaction() {
                   </div>
 
                   {/* Quantity */}
-              {/* KG Input */}
-<input
-  type="number"
-  name="kg"
-  value={item.kg}
-  disabled={
-    !itemList.some((option) => option.itemName === item.name) || !!item.box
-  }
-  onChange={(e) => {
-    const updatedItems = [...items];
-    updatedItems[index].kg = e.target.value;
-    setItems(updatedItems);
-  }}
-  onKeyDown={(e) => handleKeyDown(e, index, 2)}
-  ref={(el) => (inputRefs.current[index][2] = el)}
-  className="col-span-2 bg-white border-none outline-none placeholder:text-gray-400 w-full"
-  placeholder="Qty(Kg)"
-/>
+                  {/* KG Input */}
+                  <input
+                    type="number"
+                    name="kg"
+                    value={item.kg}
+                    disabled={
+                      !itemList.some((option) => option.itemName === item.name) || !!item.box
+                    }
+                    onChange={(e) => {
+                      const updatedItems = [...items];
+                      updatedItems[index].kg = e.target.value;
+                      setItems(updatedItems);
+                    }}
+                    onKeyDown={(e) => handleKeyDown(e, index, 2)}
+                    ref={(el) => (inputRefs.current[index][2] = el)}
+                    className="col-span-2 bg-white border-none outline-none placeholder:text-gray-400 w-full"
+                    placeholder="Qty(Kg)"
+                  />
 
-{/* BOX Input */}
-<input
-  type="number"
-  name="box"
-  value={item.box}
-  disabled={
-    !itemList.some((option) => option.itemName === item.name) || !!item.kg
-  }
-  onChange={(e) => {
-    const updatedItems = [...items];
-    updatedItems[index].box = e.target.value;
-    setItems(updatedItems);
-  }}
-  onKeyDown={(e) => handleKeyDown(e, index, 3)}
-  ref={(el) => (inputRefs.current[index][3] = el)}
-  className="col-span-2 bg-white border-none outline-none placeholder:text-gray-400 w-full"
-  placeholder="Qty(Box)"
-/>
+                  {/* BOX Input */}
+                  <input
+                    type="number"
+                    name="box"
+                    value={item.box}
+                    disabled={
+                      !itemList.some((option) => option.itemName === item.name) || !!item.kg
+                    }
+                    onChange={(e) => {
+                      const updatedItems = [...items];
+                      updatedItems[index].box = e.target.value;
+                      setItems(updatedItems);
+                    }}
+                    onKeyDown={(e) => handleKeyDown(e, index, 3)}
+                    ref={(el) => (inputRefs.current[index][3] = el)}
+                    className="col-span-2 bg-white border-none outline-none placeholder:text-gray-400 w-full"
+                    placeholder="Qty(Box)"
+                  />
 
                   {/* Unit Selector */}
                   {/* <select
@@ -676,9 +754,8 @@ function Purchasetransaction() {
                   // { label: " ($/KG)", value: "0" },
                   {
                     label: "Total Deductions",
-                    value: `₹ ${
-                      totalDeduction ? totalDeduction.toFixed(2) : 0
-                    }`,
+                    value: `₹ ${totalDeduction ? totalDeduction.toFixed(2) : 0
+                      }`,
                   },
                 ].map((label, idx) => (
                   <div
@@ -724,22 +801,79 @@ function Purchasetransaction() {
                         </span>
                       )}
                       <span
-                        className={`text-xl ${
-                          item.label === "Net Payable"
+                        className={`text-xl ${item.label === "Net Payable"
                             ? "text-indigo-950 font-bold"
                             : "text-gray-400"
-                        }`}
+                          }`}
                       >
                         {item.value}
                       </span>
                     </div>
                   </div>
                 ))}
-               <button className="bg-blue-800" onClick={handleSubmit}>
-                  save
-                </button> 
-              </div>
-            </div>
+              <div className="flex justify-end gap-4 mt-6">
+  <button
+    className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700"
+    onClick={handleSubmit}
+  >
+    Save
+  </button>
+  <button
+  className="bg-purple-600 text-white px-6 py-2 rounded hover:bg-purple-700"
+  onClick={() => {
+    const formattedItems = items.map((item) => ({
+      itemName: item.name,
+      quantity: Number(item.kg ? item.kg : item.box),
+      unitPrice: Number(item.price),
+      unitType: item.kg ? "kg" : "box",
+    }));
+
+    const transaction = {
+      supplier: selectedSupplier,
+      dateOfPurchase,
+      items: formattedItems,
+      marketFee,
+      commission,
+      totalDeduction,
+      totalQuantityInKg,
+      totalQuantityInBox,
+      totalPrice,
+      netPayable: (totalPrice - totalDeduction).toFixed(2),
+    };
+
+    handlePurchasePrint(transaction);
+  }}
+>
+  Print
+</button>
+  <button
+    className="bg-gray-400 text-white px-6 py-2 rounded hover:bg-gray-500"
+    onClick={() => {
+      // You can clear the form or reset states here
+      setItems([
+        {
+          name: "",
+          kg: "",
+          box: "",
+          price: "",
+          total: "0.00",
+        },
+      ]);
+      setSupplierSearch("");
+      setSupplierList([]);
+      setSelectedSupplier("");
+      setItemSearch("");
+      setItemList([]);
+      setDateOfPurchase("");
+    }}
+  >
+    Cancel
+  </button>
+</div>
+
+</div>
+</div>
+
           </div>
         </div>
       )}

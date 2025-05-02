@@ -21,7 +21,7 @@ const IndividualReports = () => {
     const [totalPages, setTotalPages] = useState(1);
     const [totalStats, setTotalStats] = useState({});
     const [reportsData, setReportsData] = useState([]);
-    console.log("dfhvjgoib",reportsData)
+    console.log("dfhvjgoib", reportsData)
     const [loading, setLoading] = useState(false);
     const [selectedSupplier, setSelectedSupplier] = useState(null);
 
@@ -134,12 +134,12 @@ const IndividualReports = () => {
             alert("Please select a supplier before printing.");
             return;
         }
-    
+
         try {
             const response = await axiosInstance.get(
                 `admin/purchase/supplier/report?startDate=${startDate}&endDate=${endDate}&supplierId=${selectedSupplier._id}&noPagination=true`
             );
-    
+
             openPurchaseRegisterPrintPage(
                 response?.data?.purchaseEntries || [],
                 totalStats,
@@ -155,7 +155,7 @@ const IndividualReports = () => {
     };
     const openPurchaseRegisterPrintPage = (purchaseEntries, totalStats, startDate, endDate, supplierName) => {
         const printWindow = window.open('', '_blank');
-        
+
         const style = `
             <style>
                 body { font-family: sans-serif; padding: 20px; }
@@ -165,7 +165,7 @@ const IndividualReports = () => {
                 .header { text-align: center; font-size: 20px; font-weight: bold; margin-bottom: 20px; }
             </style>
         `;
-    
+
         let html = `
             <html>
             <head>
@@ -193,7 +193,7 @@ const IndividualReports = () => {
                     </thead>
                     <tbody>
         `;
-    
+
         // Loop through purchaseEntries to display the data
         purchaseEntries.forEach(entry => {
             html += `
@@ -208,7 +208,7 @@ const IndividualReports = () => {
                 </tr>
             `;
         });
-    
+
         html += `
             </tbody>
         </table>
@@ -232,17 +232,17 @@ const IndividualReports = () => {
         </body>
         </html>
         `;
-    
+
         printWindow.document.write(html);
         printWindow.document.close();
     };
-    
 
 
 
 
-    
-      const handleSingleEntryPrint = (entry, supplierName, startDate, endDate) => {
+
+
+    const handleSingleEntryPrint = (entry, supplierName, startDate, endDate) => {
         const printWindow = window.open("", "_blank");
         const style = `
           <style>
@@ -252,7 +252,7 @@ const IndividualReports = () => {
             th { background-color: #f0f0f0; }
           </style>
         `;
-      
+
         const html = `
           <html>
             <head>
@@ -296,13 +296,13 @@ const IndividualReports = () => {
             </body>
           </html>
         `;
-      
+
         printWindow.document.write(html);
         printWindow.document.close();
-      };
-      
-   
-      
+    };
+
+
+
     return (
         <div className="w-full px-4 md:px-8 lg:px-12">
             <div className="h-screen relative bg-white rounded-3xl overflow-hidden mt-10">
@@ -316,9 +316,9 @@ const IndividualReports = () => {
                     Individual Purchase Report
                 </div>
 
-                <button 
-                onClick={fetchPrintData}
-                className="absolute top-[66px] right-10 px-8 py-4 bg-gray-50 rounded-xl inline-flex items-center gap-3 cursor-pointer">
+                <button
+                    onClick={fetchPrintData}
+                    className="absolute top-[66px] right-10 px-8 py-4 bg-gray-50 rounded-xl inline-flex items-center gap-3 cursor-pointer">
                     <BsPrinter className="w-8 h-8 text-indigo-950" />
                     <div className="text-indigo-950 text-xl font-bold">Print</div>
                 </button>
@@ -387,39 +387,42 @@ const IndividualReports = () => {
                 {/* Table */}
                 <table className="w-fit left-0 top-[288px] absolute inline-flex flex-col justify-start items-start">
                     <thead className="self-stretch bg-gray-50 border-b border-gray-200">
-                        <tr className="p-2 py-3 bg-gray-50 border-b border-gray-200 inline-flex justify-start items-center gap-8 w-full">
-                            <th className="min-w-16 text-indigo-950 text-xl font-bold font-['Urbanist'] tracking-wide">
+                        <tr className="p-2 py-3 bg-gray-50 border-b border-gray-200 inline-flex justify-start items-center gap-12 w-full">
+                            <th className="min-w-4 text-indigo-950 text-xl font-bold font-['Urbanist'] tracking-wide">
                                 No.
                             </th>
                             <th className="min-w-32 text-indigo-950 text-xl font-bold font-['Urbanist'] tracking-wide">
                                 Date
                             </th>
 
-                            <th className="min-w-24 text-indigo-950 text-xl font-bold font-['Urbanist'] tracking-wide">
+                            <th className="min-w-20 text-indigo-950 text-xl font-bold font-['Urbanist'] tracking-wide">
                                 Qty (KG)
                             </th>
-                            <th className="min-w-24 text-indigo-950 text-xl font-bold font-['Urbanist'] tracking-wide">
+                            <th className="min-w-20 text-indigo-950 text-xl font-bold font-['Urbanist'] tracking-wide">
                                 Qty (Box)
                             </th>
-                            <th className="min-w-24 text-indigo-950 text-xl font-bold font-['Urbanist'] tracking-wide pl-10">
+                            <th className="min-w-24 text-indigo-950 text-xl font-bold font-['Urbanist'] tracking-wide ">
                                 Commision
                             </th>
                             <th className="min-w-32 text-indigo-950 text-xl font-bold font-['Urbanist'] tracking-wide">
                                 Gross
                             </th>
+                            <th className="min-w-32 text-indigo-950 text-xl font-bold font-['Urbanist'] tracking-wide ">
+                                Expenses {/* New Column */}
+                            </th>
                             <th className="min-w-32 text-indigo-950 text-xl font-bold font-['Urbanist'] tracking-wide">
-                            Expenses {/* New Column */}
-            </th>
-                            <th className="min-w-32 text-indigo-950 text-xl font-bold font-['Urbanist'] tracking-wide pr-10">
                                 Total
                             </th>
+                            <th className="min-w-24"></th>
+                            <th className="min-w-24"></th>
+
                         </tr>
                     </thead>
                     <tbody>
                         {loading ? (
                             <tr>
                                 <td colSpan="9" className="text-center py-10">
-                                  <OvalSpinner/>
+                                    <OvalSpinner />
                                     {/* You can replace this span with a spinner component if available */}
                                 </td>
                             </tr>
@@ -432,40 +435,40 @@ const IndividualReports = () => {
                                 </td>
                             </tr>
                         ) : (
-                           
-                                reportsData.map((entry, index) => (
-                                    <tr key={entry._id} className="self-stretch bg-white border-b border-gray-200 inline-flex justify-start items-center gap-12 px-2 py-2">
-                                        <td className="min-w-16 text-slate-900 text-xl">{index + 1}</td>
-                                        <td className="min-w-32 text-slate-900 text-xl">
-                                            {new Date(entry.dateOfPurchase).toLocaleDateString("en-GB")}
-                                        </td>
+
+                            reportsData.map((entry, index) => (
+                                <tr key={entry._id} className="self-stretch bg-white border-b border-gray-200 inline-flex justify-start items-center gap-12 px-10 py-2">
+                                    <td className="min-w-4 text-slate-900 bg-red-500 text-xl">{index + 1}</td>
+                                    <td className="min-w-32 text-slate-900 bg-green-500 text-xl">
+                                        {new Date(entry.dateOfPurchase).toLocaleDateString("en-GB")}
+                                    </td>
 
 
-                                        <td className="min-w-24 text-slate-900 text-xl">{entry.totalKg
-                                        }</td>
-                                        <td className="min-w-23 text-slate-900 text-xl">{entry.totalBox}</td>
-                                        <td className="min-w-24 text-slate-900 text-xl ">
-                                            {entry.commissionPaid?.toFixed(2)}
-                                        </td>
+                                    <td className="min-w-20 text-slate-900 text-xl">{entry.totalKg
+                                    }</td>
+                                    <td className="min-w-20 text-slate-900 text-xl">{entry.totalBox}</td>
+                                    <td className="min-w-24 text-slate-900 text-xl ">
+                                        {entry.commissionPaid?.toFixed(2)}
+                                    </td>
 
-                                        <td className="min-w-24 text-slate-900 text-xl">{entry.grossTotalAmount?.toFixed(2)}</td>
-                                        <td className="min-w-32 text-slate-900 text-xl">
-                        {entry.marketFee?.toFixed(2) || "0.00"} {/* Render Market Fee */}
-                    </td>
-                                        <td className="min-w-24 text-slate-900 text-xl">{entry.netTotalAmount?.toFixed(2)}</td>
-                            
-                                        <td
-  className="w-5 relative cursor-pointer"
-  onClick={() => handleSingleEntryPrint(entry, selectedSupplier?.supplierName, startDate, endDate)}
->
-  <BsPrinter />
-</td>
+                                    <td className="min-w-32 text-slate-900 text-xl">{entry.grossTotalAmount?.toFixed(2)}</td>
+                                    <td className="min-w-32 text-slate-900 text-xl ">
+                                        {entry.marketFee?.toFixed(2) || "0.00"} {/* Render Market Fee */}
+                                    </td>
+                                    <td className="min-w-32 text-slate-900 text-xl ">{entry.netTotalAmount?.toFixed(2)}</td>
 
-                                        <td className="w-5  relative cursor-pointer"><TbPencilMinus /></td>
-                                        <td className="w-5 relative cursor-pointer">   <FaWhatsapp /></td>
-                                    </tr>
-                                ))
-                            )}
+                                    <td
+                                        className="w-5 relative cursor-pointer"
+                                        onClick={() => handleSingleEntryPrint(entry, selectedSupplier?.supplierName, startDate, endDate)}
+                                    >
+                                        <BsPrinter />
+                                    </td>
+
+                                    <td className="w-5  relative cursor-pointer"><TbPencilMinus /></td>
+                                    <td className="w-5 relative cursor-pointer">   <FaWhatsapp /></td>
+                                </tr>
+                            ))
+                        )}
                     </tbody>
                 </table>
 
@@ -502,7 +505,7 @@ const IndividualReports = () => {
 
                 </div>
 
-                <div className=" py-2 left-0 top-[750px] absolute bg-white border-b border-gray-200 inline-flex justify-between items-center gap-40 p-4">
+                <div className=" py-2 left-0 top-[750px] absolute bg-white border-b border-gray-200 inline-flex justify-between items-center gap-28 p-4">
                     <div className="flex items-center gap-6">
                         <span className="text-slate-500/40 text-xl">Commission</span>
                         <span className="text-slate-900 text-xl font-bold">

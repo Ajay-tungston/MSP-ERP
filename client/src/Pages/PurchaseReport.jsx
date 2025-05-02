@@ -10,7 +10,7 @@ import { openPurchaseRegisterPrintPage } from "../utils/printPurchaseRegister";
 function PurchaseReport() {
   const [totalPages, setTotalPages] = useState(1);
   const [currentPage, setCurrentPage] = useState(1);
-  const limit = 1;
+  const limit = 8;
   const [isLoading, setIsLoading] = useState(false);
   const [startDate, setStartDate] = useState(
     new Date().toLocaleDateString("en-CA")

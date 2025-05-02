@@ -21,7 +21,7 @@ const createSaleTransaction = async (req, res) => {
     // Build customer blocks
     const customersArray = [];
     let grandTotal = 0;
-
+let purchaseDta
     for (const saleData of sales) {
       const { customer: customerId, discount = 0, items, purchase } = saleData;
       const purchaseEntry = await PurchaseEntry.findById(purchase);
@@ -29,7 +29,7 @@ const createSaleTransaction = async (req, res) => {
       if (!purchaseEntry) {
         throw new Error("Purchase entry not found");
       }
-
+      purchaseDta=purchase
     
 
       // Validate customer block
@@ -210,7 +210,7 @@ const createSaleTransaction = async (req, res) => {
         : new Date(),
       totalAmount: grandTotal,
       status: "completed",
-      purchase,
+      purchase:purchaseDta,
       customers: customersArray,
     });
 

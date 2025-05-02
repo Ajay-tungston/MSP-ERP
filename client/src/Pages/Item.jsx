@@ -62,9 +62,8 @@ function Item() {
   };
   return (
  <>
-      <div className=" h-fit relative bg-gray-50  outline-1 outline-offset-[-1px] outline-white overflow-hidden mt-10">
- </div>
-    <div className={`w-[1491px]   absolute bg-white rounded-3xl overflow-hidden ${popup ? 'backdrop-blur-xl':''}`}>
+   
+    <div className={`w-full absolute bg-white rounded-3xl overflow-hidden ${popup ? 'backdrop-blur-xl':''}`}>
         <div className="left-[48px] top-[66px] absolute inline-flex justify-start items-center gap-3">
         <div className="inline-flex items-center gap-1 text-slate-500 text-xl font-normal font-['Urbanist']">
   <span>Master</span>
@@ -158,7 +157,7 @@ function Item() {
 
          </div>
          <div className="left-[48px] top-[118px] absolute justify-start text-indigo-950 text-4xl font-bold font-['Urbanist'] leading-[50.40px]">Item</div>
-         <div className="flex justify-between items-center mt-[700px] text-gray-600 ml-10 mr-30">
+         <div className="flex justify-between items-center mt-[700px] text-gray-600  pr-96">
           <span>Page {currentPage} of {totalPages}</span>
           <div className="flex space-x-2">
             <button

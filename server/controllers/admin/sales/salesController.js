@@ -100,13 +100,13 @@ let purchaseDta
             .status(404)
             .json({ message: `Supplier ${supplierId} not found` });
         }
-
         //for updating purchase schema
         const purchaseItem = purchaseEntry.items.find(
           (i) =>
             i.item.toString() === itemId &&
-            i.quantityType === quantityType
+          i.quantityType === quantityType
         );
+
 
         if (!purchaseItem) {
           throw new Error("Item not found in purchase entry");

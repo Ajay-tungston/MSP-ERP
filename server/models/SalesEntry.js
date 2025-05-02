@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 
+// Item-level schema
 const saleItemSchema = new mongoose.Schema({
   item: {
     type: mongoose.Schema.Types.ObjectId,
@@ -11,15 +12,15 @@ const saleItemSchema = new mongoose.Schema({
     ref: "Supplier",
     required: true,
   },
-  quantityKg: {
-    type: Number,
-    default: 0,
-    min: [0, "Kg quantity cannot be negative"],
+  quantityType: {
+    type: String,
+    enum: ["kg", "box"],
+    required: true
   },
-  quantityBox: {
+  quantity: {
     type: Number,
-    default: 0,
-    min: [0, "Box quantity cannot be negative"],
+    required: true,
+    min: [0, "Quantity must be greater than 0"]
   },
   unitPrice: {
     type: Number,
@@ -29,16 +30,11 @@ const saleItemSchema = new mongoose.Schema({
   totalCost: {
     type: Number,
     required: true,
-    min: [0, "Total cost must be at least 0"],
-    // Calculate total cost using quantity and unit price
-    default: function() {
-      const totalQuantity = this.quantityKg + this.quantityBox; 
-      return totalQuantity * this.unitPrice;  // Adjust this as per your calculation logic
-    }
+    min: [0, "Total cost must be at least 0"]
   }
 });
 
-// NEW: customer-level structure inside the transaction
+// Customer-level schema
 const saleCustomerSchema = new mongoose.Schema({
   customer: {
     type: mongoose.Schema.Types.ObjectId,
@@ -54,17 +50,6 @@ const saleCustomerSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
-  // Inside saleCustomerSchema
-  totalQuantityKg: {
-    type: Number,
-    required: true,
-    default: 0
-  },
-  totalQuantityBox: {
-    type: Number,
-    required: true,
-    default: 0
-  },
   items: {
     type: [saleItemSchema],
     validate: {
@@ -76,6 +61,7 @@ const saleCustomerSchema = new mongoose.Schema({
   },
 });
 
+// Transaction-level schema
 const saleTransactionSchema = new mongoose.Schema({
   transactionNumber: {
     type: Number,
@@ -99,24 +85,18 @@ const saleTransactionSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
-  totalQuantityKg: {
-    type: Number,
-    required: true,
-    default: 0
-  },
-  totalQuantityBox: {
-    type: Number,
-    required: true,
-    default: 0
-  },
   status: {
     type: String,
     enum: ["pending", "completed", "returned"],
     default: "completed",
   },
+  purchase: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Purchase",
+    required: true,
+  },
 }, { timestamps: true });
 
-// Avoiding "OverwriteModelError"
 const SalesEntry = mongoose.models.SalesEntry || mongoose.model("SalesEntry", saleTransactionSchema);
 
 module.exports = SalesEntry;

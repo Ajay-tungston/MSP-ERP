@@ -19,11 +19,12 @@ const Sales = () => {
   const [purchase, setPurchase] = useState();
   // console.log("Add purchase", purchase);
   const axiosInstance = useAxiosPrivate();
-  const [loadingCustomers, setLoadingCustomers] = useState(false);
   const [loadingPurchase, setLoadingPurchase] = useState(true);
   const [submitLoading, setSubmitloading] = useState(false);
-
-  // rows holds each line of the sales form
+    const [dateOfSale, setDateOfSale] = useState(
+      new Date().toLocaleDateString("en-CA")
+    );
+  
   const [rows, setRows] = useState([
     {
       id: 1,
@@ -32,8 +33,8 @@ const Sales = () => {
       supplierId: "",
       itemName: "",
       itemId: "",
-      quantityType: "",       // "kg" or "box"
-      quantityKg: 0,          // always numeric
+      quantityType: "",      
+      quantityKg: 0,          
       quantityBox: 0,
       unitPrice: 0,
       remainingQuantity: 0,
@@ -125,7 +126,7 @@ const Sales = () => {
 
   // Sort the filtered results alphabetically
   const sortedCustomers = sortAlphabetically(filteredCustomers);
-
+  
   const [selectedCustomerIndex, setSelectedCustomerIndex] = useState(-1);
   const inputRef = useRef(null);
   const resultsListRef = useRef(null);
@@ -150,9 +151,13 @@ const Sales = () => {
   };
 
   const handleCustomerSelect = (i, customer) => {
+    console.log("customer",customer)
+    console.log("i",i)
     const copy = [...rows];
     copy[i].customer = customer.value;
     copy[i].customerLabel = customer.label;
+    
+    console.log("copy",copy)
     setRows(copy);
     setActiveCustomerIndex(null);
   };
@@ -213,21 +218,29 @@ const Sales = () => {
 
   const handleQuantityChange = (index, value) => {
     const q = value === "" ? "" : parseFloat(value);
-  
+  console.log("value=", value)
     setRows((rs) =>
       rs.map((r, i) =>
-        i === index
-          ? {
-              ...r,
-              quantity: q,
-              quantityKg: r.quantityType === "kg" ? q : "",
-              quantityBox: r.quantityType === "box" ? q : "",
-              error:
-                q > r.remainingQuantity
-                  ? `Max ${r.remainingQuantity} ${r.quantityType}`
-                  : "",
-            }
-          : r
+      {if (i !== index) return r;
+
+        const matchingPurchaseItem =purchase?.items?.find(
+          (pi) =>
+            pi?.item?._id === r.itemId && pi.quantityType === r.quantityType
+        );
+  
+        const maxQty = matchingPurchaseItem?.remainingQuantity || 0;
+        const error =
+          q !== "" && q > maxQty
+            ? `Max ${maxQty} ${r.quantityType}`
+            : "";
+  
+        return {
+          ...r,
+          quantity: q,
+          quantityKg: r.quantityType === "kg" ? q : "",
+          quantityBox: r.quantityType === "box" ? q : "",
+          error,
+        };}
       )
     );
   };
@@ -296,6 +309,7 @@ const Sales = () => {
         break;
     }
   };
+
   const handleAddSale = async () => {
     setSubmitloading(true);
     try {
@@ -323,30 +337,22 @@ const Sales = () => {
         if (!r.unitPrice || r.unitPrice <= 0) {
           throw new Error(`Row ${i + 1}: Invalid unit price.`);
         }
-        // Check if entered quantity exceeds the available stock
-        const quantity = r.quantityType === "kg" ? r.quantityKg : r.quantityBox;
-        if (quantity > r.remainingQuantity) {
-          throw new Error(
-            `Row ${i + 1}: You cannot enter more than ${r.remainingQuantity} ${
-              r.quantityType
-            }.`
-          );
-        }
-      }
-
-      // 2) Build the grouped sales payload
+      
+     
       const salesPayload = rows.map((r) => {
         // const quantity = : r.;
         return {
-          customerId: r. customer,
+          purchase:purchase?._id,
+          customer: r. customer,
           discount: r.discount || 0,
+          dateOfSale,
           items: [
             {
-              itemName: r.itemName,
-              supplierId:purchase.supplier._id,
-              quantityKg:  r.quantityType === "kg" ?Number(r.quantityKg):"",
-              quantityBox: r.quantityType === "box" ? Number(r.quantityBox):"",
-              unitPrice: Number(r.unitPrice),
+              item: r.itemId,
+              supplier:purchase?.supplier?._id,
+              quantityType:r.quantityType,
+              quantity:r.quantityType === "kg" ? r.quantityKg : r.quantityBox,
+              unitPrice: Number(r.unitPrice), 
             },
           ],
         };
@@ -369,30 +375,33 @@ const Sales = () => {
       setPurchase(updatedPurchase);
 
       // 5) Rebuild rows for items still in stock
-      const stillInStock = updatedPurchase.items
-        .filter((it) => it.remainingQuantity > 0) // Check unified remaining quantity
-        .map((it, idx) => ({
-          id: idx + 1,
-          customer: "",
-          customerLabel: "",
-          itemName: it.item.itemName,
-          itemId: it.item._id,
-          supplierId: updatedPurchase.supplier._id,
-          quantityKg: "",
-          quantityBox: "",
-          unitPrice: it.unitPrice,
-          quantityType: it.quantityType, // Using single quantityType field
-          remainingQuantity: it.remainingQuantity, // Single remaining quantity
-          error: "",
-        }));
+      // const stillInStock = updatedPurchase.items
+      //   .filter((it) => it.remainingQuantity > 0) // Check unified remaining quantity
+      //   .map((it, idx) => ({
+      //     id: idx + 1,
+      //     customer: "",
+      //     customerLabel: "",
+      //     itemName: it.item.itemName,
+      //     itemId: it.item._id,
+      //     supplierId: updatedPurchase.supplier._id,
+      //     quantityKg: "",
+      //     quantityBox: "",
+      //     unitPrice: it.unitPrice,
+      //     quantityType: it.quantityType, // Using single quantityType field
+      //     remainingQuantity: it.remainingQuantity, // Single remaining quantity
+      //     error: "",
+      //   }));
 
-      if (stillInStock.length) {
-        setRows(stillInStock);
-      } else {
-        // nothing left → go back to register
-        navigate("/sales-transaction");
-      }
-    } catch (error) {
+      // if (stillInStock.length) {
+      //   setRows(stillInStock);
+      // } else {
+      //   // nothing left → go back to register
+      //   navigate("/sales-transaction");
+      // }
+      navigate("/sales-transaction");
+    }
+  }
+     catch (error) {
       Swal.fire({
         title:
           error.response?.data?.message ||
@@ -411,6 +420,7 @@ const Sales = () => {
     <div>
       <div className="  bg-[#fff] w-full h-screen  ">
         <div className="w-[665px] h-full left-[1200px] top-[148px] absolute bg-[#fff]">
+       
           <div className="w-[653px] left-[6px] top-[176px] absolute inline-flex flex-col justify-start items-start">
             <div className="self-stretch px-2.5 py-4 bg-[white] outline-[0.20px] outline-offset-[-0.20px] outline-slate-600/40 inline-flex justify-start items-center gap-[5px]">
               <div className="flex-1 max-w-16 justify-center text-indigo-950 text-sm font-bold font-['Urbanist'] tracking-wide">
@@ -511,6 +521,7 @@ const Sales = () => {
           </div>
 
           <div className="w-96 pb-6 left-[6px] top-[122px] absolute border-b border-none inline-flex justify-start items-center gap-2.5">
+            
             <div className="justify-start text-indigo-950 text-3xl font-bold font-['Urbanist'] leading-10">
               Item list
             </div>
@@ -518,19 +529,33 @@ const Sales = () => {
         </div>
         <div className="w-[865px] h-full left-[329px] top-[148px] absolute bg-[#EEEEEE] shadow-[0px_4px_5.800000190734863px_0px_rgba(0,0,0,0.25)] overflow-y-scroll ">
           <div className="w-[782px] left-[44px] top-[80px] absolute inline-flex flex-col justify-start items-start gap-2.5">
+         
             <div className="inline-flex justify-start items-center gap-3">
               <div className="justify-start text-slate-500 text-xl font-normal font-['Urbanist']">
                 Transactions <span></span>Sales
               </div>
             </div>
             <div className="self-stretch flex flex-col justify-start items-start gap-11">
-              <div className="self-stretch pb-6 border-b border-zinc-100 inline-flex justify-start items-center gap-2.5">
+              <div className="self-stretch pb-12 border-b border-zinc-100 inline-flex justify-start items-center gap-2.5">
                 <div className="justify-start text-indigo-950 text-3xl font-bold font-['Urbanist'] leading-10">
                   Sales register
                 </div>
               </div>
             </div>
+            
           </div>
+          <div className="flex items-center px-96 mt-12 gap-6 w-full md:w-[48%]">
+                  <label className="min-w-44 text-slate-500 text-xl font-normal">
+                    Date of Sale <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="date"
+                    value={dateOfSale}
+                    onChange={(e) => setDateOfSale(e.target.value)}
+                    className="flex-1 px-6 py-4 bg-gray-50 rounded-xl text-gray-400 text-xl"
+                    placeholder="DD/MM/YYYY"
+                  />
+                </div>
         </div>
 
         <div className="w-[851px] left-[337px] top-[324px] absolute inline-flex flex-col justify-start items-start bf gap-3.5  ">

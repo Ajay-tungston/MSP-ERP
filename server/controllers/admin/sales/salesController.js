@@ -9,190 +9,223 @@ const mongoose = require("mongoose");
 const createSaleTransaction = async (req, res) => {
   try {
     const sales = Array.isArray(req.body) ? req.body : [req.body];
+    if (sales.length === 0) {
+      return res
+        .status(400)
+        .json({ message: "At least one sale block is required" });
+    }
+
+    // Get next transaction number
     const transactionNumber = await getNextCounterNumber("saleTransaction");
 
+    // Build customer blocks
     const customersArray = [];
     let grandTotal = 0;
-    let grandQuantityKg = 0;
-    let grandQuantityBox = 0;
 
     for (const saleData of sales) {
-      const { customerId, items, discount = 0 } = saleData;
+      const { customer: customerId, discount = 0, items, purchase } = saleData;
+      const purchaseEntry = await PurchaseEntry.findById(purchase);
 
-      // Find the customer by ID
-      const customer = await Customer.findById(customerId);
-      if (!customer) {
-        return res.status(404).json({ message: `Customer ${customerId} not found` });
+      if (!purchaseEntry) {
+        throw new Error("Purchase entry not found");
       }
 
-      const customerItems = [];
+    
+
+      // Validate customer block
+      if (!mongoose.isValidObjectId(customerId)) {
+        return res
+          .status(400)
+          .json({ message: `Invalid customer ID: ${customerId}` });
+      }
+      if (!Array.isArray(items) || items.length === 0) {
+        return res
+          .status(400)
+          .json({ message: "Each sale block needs at least one item" });
+      }
+
+      const customer = await Customer.findById(customerId);
+      if (!customer) {
+        return res
+          .status(404)
+          .json({ message: `Customer ${customerId} not found` });
+      }
+
       let customerTotal = 0;
-      let customerQuantityKg = 0;
-      let customerQuantityBox = 0;
+      const lineItems = [];
 
-      for (const itemData of items) {
+      for (const itm of items) {
         const {
-          itemName,
-          supplierId,
+          item: itemId,
+          supplier: supplierId,
+          quantityType,
+          quantity,
           unitPrice,
-          quantityKg: rawKg,
-          quantityBox: rawBox
-        } = itemData;
-console.log(itemData)
-        const quantityKg = parseFloat(rawKg) || 0;
-        const quantityBox = parseFloat(rawBox) || 0;
+        } = itm;
 
-        console.log("Received item quantities for", itemName, "=>", {
-          quantityKg,
-          quantityBox
-        });
-
-        // Validation checks
-        if (quantityKg < 0 || quantityBox < 0) {
-          return res.status(400).json({ message: `Invalid quantity values for ${itemName}` });
+        if (!mongoose.isValidObjectId(itemId)) {
+          return res
+            .status(400)
+            .json({ message: `Invalid item ID: ${itemId}` });
+        }
+        if (!mongoose.isValidObjectId(supplierId)) {
+          return res
+            .status(400)
+            .json({ message: `Invalid supplier ID: ${supplierId}` });
+        }
+        if (!["kg", "box"].includes(quantityType)) {
+          return res
+            .status(400)
+            .json({ message: `Invalid quantityType for item ${itemId}` });
+        }
+        if (typeof quantity !== "number" || quantity <= 0) {
+          return res
+            .status(400)
+            .json({ message: `Quantity must be > 0 for item ${itemId}` });
+        }
+        if (typeof unitPrice !== "number" || unitPrice < 0) {
+          return res
+            .status(400)
+            .json({ message: `Invalid unitPrice for item ${itemId}` });
         }
 
-        if (unitPrice == null || unitPrice < 0) {
-          return res.status(400).json({ message: `Invalid unit price for ${itemName}` });
-        }
-
-        if (quantityKg > 0 && quantityBox > 0) {
-          return res.status(400).json({ message: `You cannot select both Kg and Box for ${itemName}. Please choose one.` });
-        }
-        if (quantityKg ) {
-          if(quantityKg=== 0  )
-          return res.status(400).json({ message: `At least one of Kg or Box must be greater than 0 for ${itemName}` });
-        }
-        if (quantityBox ) {
-          if(quantityBox=== 0  )
-          return res.status(400).json({ message: `At least one of Kg or Box must be greater than 0 for ${itemName}` });
-        }
-
-
-        const item = await Item.findOne({ itemName });
+        const item = await Item.findById(itemId);
         if (!item) {
-          return res.status(404).json({ message: `Item ${itemName} not found` });
-        }
-
-        if (!supplierId || !mongoose.Types.ObjectId.isValid(supplierId)) {
-          return res.status(400).json({ message: `Invalid supplier ID: ${supplierId}` });
+          return res.status(404).json({ message: `Item ${itemId} not found` });
         }
 
         const supplier = await Supplier.findById(supplierId);
         if (!supplier) {
-          return res.status(404).json({ message: `Supplier ${supplierId} not found` });
+          return res
+            .status(404)
+            .json({ message: `Supplier ${supplierId} not found` });
         }
 
-        // Choose correct quantity to deduct
-        const totalQty = quantityKg > 0 ? quantityKg : quantityBox;
-
-        // Update the PurchaseEntry
-        const updatedPurchase = await PurchaseEntry.findOneAndUpdate(
-          {
-            supplier: supplier._id,
-            "items.item": item._id,
-            "items.remainingQuantity": { $gte: totalQty }
-          },
-          {
-            $inc: {
-              "items.$.soldQuantity": totalQty,
-              "items.$.remainingQuantity": -totalQty
-            }
-          },
-          { new: true }
+        //for updating purchase schema
+        const purchaseItem = purchaseEntry.items.find(
+          (i) =>
+            i.item.toString() === itemId &&
+            i.quantityType === quantityType
         );
 
-        if (!updatedPurchase) {
-          return res.status(400).json({
-            message: `Only limited stock for ${itemName} from this supplier`
-          });
+        if (!purchaseItem) {
+          throw new Error("Item not found in purchase entry");
         }
 
-        // Mark item as completed if fully sold
-        const purchaseItem = updatedPurchase.items.find(pi =>
-          pi.item.toString() === item._id.toString()
-        );
+        // Update sold and remaining quantities
+        purchaseItem.soldQuantity += quantity;
+        purchaseItem.remainingQuantity = purchaseItem.quantity - purchaseItem.soldQuantity;
 
-        if (purchaseItem.remainingQuantity === 0 && !purchaseItem.isCompleted) {
-          await PurchaseEntry.updateOne(
-            { _id: updatedPurchase._id, "items._id": purchaseItem._id },
-            { $set: { "items.$.isCompleted": true } }
-          );
+        // Ensure values are within valid bounds
+        if (purchaseItem.remainingQuantity < 0) {
+          throw new Error("Sold quantity exceeds available quantity");
         }
 
-        // Mark whole purchase as completed if all items are completed
-        const fresh = await PurchaseEntry.findById(updatedPurchase._id).select("items isCompleted");
-        if (!fresh.isCompleted && fresh.items.every(i => i.isCompleted)) {
-          await PurchaseEntry.updateOne(
-            { _id: updatedPurchase._id },
-            { $set: { isCompleted: true } }
-          );
-        }
+        // Update completion status
+        purchaseItem.isCompleted = purchaseItem.remainingQuantity === 0;
 
-        // Calculate total cost
-        const totalCost = totalQty * unitPrice;
+        // Save the changes
+        await purchaseEntry.save();
+        // const updatedPurchase = await PurchaseEntry.findOneAndUpdate(
+        //   {
+        //     supplier: supplier._id,
+        //     "items.item": item._id,
+        //     "items.quantityType": quantityType,
+        //     "items.remainingQuantity": { $gte: quantity }
+        //   },
+        //   {
+        //     $inc: {
+        //       "items.$[elem].soldQuantity": quantity,
+        //       "items.$[elem].remainingQuantity": -quantity
+        //     }
+        //   },
+        //   {
+        //     arrayFilters: [
+        //       {
+        //         "elem.item": item._id,
+        //         "elem.quantityType": quantityType
+        //       }
+        //     ],
+        //     new: true
+        //   }
+        // );
 
-        // Add this item to customer
-        customerItems.push({
+        // if (!updatedPurchase) {
+        //   return res.status(400).json({
+        //     message: `Insufficient ${quantityType} stock for item ${item._id}`
+        //   });
+        // }
+
+        // const sub = updatedPurchase.items.find(
+        //   pi => pi.item.equals(item._id) && pi.quantityType === quantityType
+        // );
+        // if (sub.remainingQuantity === 0 && !sub.isCompleted) {
+        //   await PurchaseEntry.updateOne(
+        //     {
+        //       _id: updatedPurchase._id,
+        //       "items._id": sub._id,
+        //       "items.quantityType": quantityType
+        //     },
+        //     { $set: { "items.$.isCompleted": true } }
+        //   );
+        // }
+
+        // const fresh = await PurchaseEntry.findById(updatedPurchase._id).select("items isCompleted");
+        // if (!fresh.isCompleted && fresh.items.every(i => i.isCompleted)) {
+        //   await PurchaseEntry.updateOne(
+        //     { _id: updatedPurchase._id },
+        //     { $set: { isCompleted: true } }
+        //   );
+        // }
+
+        
+
+        const totalCost = quantity * unitPrice;
+        customerTotal += totalCost;
+
+        lineItems.push({
           item: item._id,
           supplier: supplier._id,
-          quantityKg,
-          quantityBox,
+          quantityType,
+          quantity,
           unitPrice,
-          totalCost
+          totalCost,
         });
-
-        // Update customer totals
-        customerTotal += totalCost;
-        customerQuantityKg += quantityKg;
-        customerQuantityBox += quantityBox;
       }
 
-      // Add customer-level data
       customersArray.push({
         customer: customer._id,
-        items: customerItems,
         discount,
         totalAmount: customerTotal - discount,
-        totalQuantityKg: customerQuantityKg,
-        totalQuantityBox: customerQuantityBox
+        items: lineItems,
       });
 
-      // Update global totals
       grandTotal += customerTotal - discount;
-      grandQuantityKg += customerQuantityKg;
-      grandQuantityBox += customerQuantityBox;
     }
 
-    // Save the final transaction
-    const newSale = new SalesEntry({
+    const saleDoc = new SalesEntry({
       transactionNumber,
-      customers: customersArray,
-      dateOfSale: new Date(),
+      dateOfSale: sales[0].dateOfSale
+        ? new Date(sales[0].dateOfSale)
+        : new Date(),
       totalAmount: grandTotal,
-      totalQuantityKg: grandQuantityKg,
-      totalQuantityBox: grandQuantityBox,
-      status: "completed"
+      status: "completed",
+      purchase,
+      customers: customersArray,
     });
 
-    await newSale.save();
+    await saleDoc.save();
 
-    return res.status(201).json({
-      message: "Grouped sales transaction saved",
-      sale: newSale
-    });
-
-  } catch (error) {
-    console.error("Sale creation error:", error);
-    return res.status(500).json({
-      message: "Internal Server Error",
-      error: error.message
+    return res
+      .status(201)
+      .json({ message: "Sales transaction saved", sale: saleDoc });
+  } catch (err) {
+    console.error("Sale creation error:", err);
+    return res.status(err.status || 500).json({
+      message: err.message || "Internal server error",
     });
   }
 };
-
-
-
 
 const getSalesEntries = async (req, res) => {
   try {
@@ -279,7 +312,7 @@ const getCustomerSalesReport = async (req, res) => {
           localField: "customers.items.item",
           foreignField: "_id",
           as: "itemInfo",
-        }
+        },
       },
       // 5) Lookup Supplier details
       {
@@ -288,65 +321,59 @@ const getCustomerSalesReport = async (req, res) => {
           localField: "customers.items.supplier",
           foreignField: "_id",
           as: "supplierInfo",
-        }
+        },
       },
 
       // 6) Project to the shape we want
       {
         $project: {
-          _id:               0,
+          _id: 0,
           transactionNumber: 1,
-          dateOfSale:        1,
-          customer:          "$customers.customer",
-          discount:          "$customers.discount",
+          dateOfSale: 1,
+          customer: "$customers.customer",
+          discount: "$customers.discount",
           // Item fields
           item: {
-            _id:      { $arrayElemAt: ["$itemInfo._id", 0] },
+            _id: { $arrayElemAt: ["$itemInfo._id", 0] },
             itemName: { $arrayElemAt: ["$itemInfo.itemName", 0] },
           },
           // Supplier fields
           supplier: {
-            _id:           { $arrayElemAt: ["$supplierInfo._id", 0] },
-            supplierName:  { $arrayElemAt: ["$supplierInfo.supplierName", 0] },
+            _id: { $arrayElemAt: ["$supplierInfo._id", 0] },
+            supplierName: { $arrayElemAt: ["$supplierInfo.supplierName", 0] },
           },
           // Sale quantity and pricing
-          quantity:    "$customers.items.quantity",
-          unitPrice:   "$customers.items.unitPrice",
-          totalCost:   "$customers.items.totalCost",
-        }
+          quantity: "$customers.items.quantity",
+          unitPrice: "$customers.items.unitPrice",
+          totalCost: "$customers.items.totalCost",
+        },
       },
 
       // 7) Facet for pagination + total count
       {
         $facet: {
-          paginatedResults: [
-            { $skip: skip },
-            { $limit: parseInt(limit) }
-          ],
-          totalCount: [
-            { $count: "count" }
-          ]
-        }
-      }
+          paginatedResults: [{ $skip: skip }, { $limit: parseInt(limit) }],
+          totalCount: [{ $count: "count" }],
+        },
+      },
     ];
 
     const agg = await SalesEntry.aggregate(pipeline);
-    const rows  = agg[0].paginatedResults;
+    const rows = agg[0].paginatedResults;
     const total = agg[0].totalCount[0]?.count || 0;
 
     return res.json({
-      page:         parseInt(page),
-      limit:        parseInt(limit),
+      page: parseInt(page),
+      limit: parseInt(limit),
       totalEntries: total,
-      totalPages:   Math.ceil(total / limit),
-      entries:      rows
+      totalPages: Math.ceil(total / limit),
+      entries: rows,
     });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
-
 
 module.exports = {
   createSaleTransaction,

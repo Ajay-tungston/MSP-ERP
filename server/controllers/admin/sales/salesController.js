@@ -286,7 +286,8 @@ const getSalesEntries = async (req, res) => {
 
 const getCustomerSalesReport = async (req, res) => {
   try {
-    const { customerId, page = 1, limit = 10 } = req.query;
+    const { customerId, page = 1, limit = 10, startDate, endDate } = req.query;
+
     if (!customerId) {
       return res.status(400).json({ message: "customerId is required" });
     }
@@ -294,9 +295,25 @@ const getCustomerSalesReport = async (req, res) => {
     const skip = (page - 1) * limit;
     const custObjId = new mongoose.Types.ObjectId(customerId);
 
+    // Build date filter if provided
+    const dateFilter = {};
+    if (startDate) dateFilter.$gte = new Date(startDate);
+    if (endDate) dateFilter.$lte = new Date(endDate);
+
+    const matchStage = {
+      "customers.customer": custObjId,
+    };
+    
+    if (startDate || endDate) {
+      matchStage.dateOfSale = {};
+      if (startDate) matchStage.dateOfSale.$gte = new Date(startDate);
+      if (endDate) matchStage.dateOfSale.$lte = new Date(endDate);
+    }
+    
+
     const pipeline = [
-      // 1) Only sales entries containing that customer
-      { $match: { "customers.customer": custObjId } },
+      // 1) Match sales containing the customer and (optional) date range
+      { $match: matchStage },
 
       // 2) Unwind at the customer‐level
       { $unwind: "$customers" },
@@ -332,21 +349,35 @@ const getCustomerSalesReport = async (req, res) => {
           dateOfSale: 1,
           customer: "$customers.customer",
           discount: "$customers.discount",
-          // Item fields
+      
           item: {
             _id: { $arrayElemAt: ["$itemInfo._id", 0] },
             itemName: { $arrayElemAt: ["$itemInfo.itemName", 0] },
           },
-          // Supplier fields
+      
           supplier: {
             _id: { $arrayElemAt: ["$supplierInfo._id", 0] },
             supplierName: { $arrayElemAt: ["$supplierInfo.supplierName", 0] },
           },
-          // Sale quantity and pricing
-          quantity: "$customers.items.quantity",
+      
+          quantityKg: {
+            $cond: [
+              { $eq: ["$customers.items.quantityType", "kg"] },
+              "$customers.items.quantity",
+              0
+            ]
+          },
+          quantityBox: {
+            $cond: [
+              { $eq: ["$customers.items.quantityType", "box"] },
+              "$customers.items.quantity",
+              0
+            ]
+          },
+          
           unitPrice: "$customers.items.unitPrice",
           totalCost: "$customers.items.totalCost",
-        },
+        }
       },
 
       // 7) Facet for pagination + total count
@@ -375,8 +406,58 @@ const getCustomerSalesReport = async (req, res) => {
   }
 };
 
+const getCustomerSalesByDate = async (req, res) => {
+  try {
+    const { customerId, date } = req.query;
+
+    if (!customerId || !date) {
+      return res.status(400).json({ message: 'Customer ID and date are required' });
+    }
+
+    const startOfDay = new Date(date);
+    const endOfDay = new Date(date);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    // Find all transactions on the given date
+    const transactions = await SalesEntry.find({
+      dateOfSale: { $gte: startOfDay, $lte: endOfDay }
+    })
+    .populate('customers.customer')
+    .populate('customers.items.item')
+    .populate('customers.items.supplier');
+
+    let report = [];
+    let entryNo = 1;
+
+    transactions.forEach(transaction => {
+      transaction.customers.forEach(customerEntry => {
+        if (customerEntry.customer._id.toString() === customerId) {
+          customerEntry.items.forEach(item => {
+            report.push({
+              No: entryNo++,
+              Date: transaction.dateOfSale.toISOString().split('T')[0],
+              Item: item.item.itemName || "N/A", 
+              Supplier: item.supplier.supplierName || "N/A", 
+              'Qty (KG)': item.quantityType === "kg" ? item.quantity : "-",
+              'Qty (Box)': item.quantityType === "box" ? item.quantity : "-",
+              Price: item.unitPrice,
+              Total: item.totalCost
+            });
+          });
+        }
+      });
+    });
+
+    res.json(report);
+  } catch (error) {
+    console.error('Error fetching sales report:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
 module.exports = {
   createSaleTransaction,
   getSalesEntries,
   getCustomerSalesReport,
+  getCustomerSalesByDate,
 };

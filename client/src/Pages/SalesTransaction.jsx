@@ -168,13 +168,13 @@ const SalesRegister = () => {
 
       {isModalOpen && (
         <div className="fixed inset-0 z-50 bg-white bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full p-6 relative">
+          <div className="bg-[white] rounded-lg shadow-xl max-w-4xl w-full p-6 relative">
             <button
               onClick={() => setIsModalOpen(false)}
               className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
             ></button>
 
-            <div className="flex justify-between items-center mb-4">
+            <div className="flex  justify-between items-center mb-4">
               <h1 className="text-2xl font-bold">New sale</h1>
               <button
                 onClick={() => setIsModalOpen(false)}
@@ -185,7 +185,7 @@ const SalesRegister = () => {
             </div>
 
             <div className="overflow-x-auto">
-              <table className="min-w-full rounded-md overflow-hidden text-sm text-left">
+              <table className="min-w-full rounded-md  overflow-hidden text-sm text-left">
                 <thead className="bg-[#EEEEEE] text-black font-semibold">
                   <tr>
                     <th className="px-4 py-2">No</th>

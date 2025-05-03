@@ -44,7 +44,7 @@ export default function Commission() {
             <div className="flex justify-between items-center">
                 <h1 className="text-2xl font-bold text-gray-900">Commission</h1>
                 <div className="flex space-x-3 -mt-10 mr-10">
-                    {/* ✅ Button now navigates to /addcommission */}
+              
                     <button
                         onClick={() => navigate('/add-commission')}
                         className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-2 rounded-lg flex items-center gap-2"

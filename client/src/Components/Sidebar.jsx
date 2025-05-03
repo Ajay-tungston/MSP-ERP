@@ -43,6 +43,7 @@ export default function Sidebar() {
     "Purchase Report": "/purchase-report",
     "Ind.Purchase Report": "/individual-report",
     "Local Sales Report": "/localsales-report",
+    "Individual Sales Report":"/individualsales",
     "Route Sales Report": "/reports/expense",
     "Trial Sales Report": "/trail"
   };

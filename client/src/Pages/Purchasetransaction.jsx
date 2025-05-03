@@ -11,6 +11,7 @@ import { debounce } from "lodash";
 import OvalSpinner from "../Components/spinners/OvalSpinner";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
+import { handlePurchasePrint } from "../utils/purchaseBill";
 
 function Purchasetransaction() {
   const [items, setItems] = useState([
@@ -22,7 +23,7 @@ function Purchasetransaction() {
       total: "0.00",
     },
   ]);
-  const [error, setError] = useState("")
+  const [error, setError] = useState("");
   const inputRefs = useRef([]);
 
   const handleInputChange = (index, e) => {
@@ -187,7 +188,7 @@ function Purchasetransaction() {
 
   const totalDeduction = Number(marketFee) + Number(commission);
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (isPrint) => {
     if (!selectedSupplier) {
       // setErrors(prev => ({ ...prev, supplierName: 'Please select a supplier' }));
       supplierNameRef.current.focus();
@@ -221,7 +222,7 @@ function Purchasetransaction() {
         dateRef.current?.focus();
         return;
       }
-    };
+    }
     setSubmitloading(true);
     try {
       const formattedItems = items.map((item) => ({
@@ -234,8 +235,23 @@ function Purchasetransaction() {
         supplierId: selectedSupplier?._id,
         items: formattedItems,
         dateOfPurchase,
-        marketFee
+        marketFee,
       });
+      if(isPrint){
+        const transaction = {
+          selectedSupplier,
+          purchaseCount,
+          dateOfPurchase,
+          items,
+          totalQuantityInBox,
+          totalQuantityInKg,
+          totalPrice,
+          commission,
+          marketFee,
+          totalDeduction,
+        };
+        handlePurchasePrint(transaction);
+      }
       Swal.fire({
         title: "Purchase transaction added successfully!",
         icon: "success",
@@ -255,11 +271,7 @@ function Purchasetransaction() {
       setSelectedSupplier("");
       setItemSearch("");
       setItemList([]);
-
-    }
-    
-  
-    catch (error) {
+    } catch (error) {
       Swal.fire({
         title: "Something went wrong!",
         icon: "error",
@@ -268,85 +280,9 @@ function Purchasetransaction() {
       console.log(error);
     } finally {
       setSubmitloading(false);
-
     }
   };
- 
-  const handlePurchasePrint = () => {
-    const printWindow = window.open("", "_blank");
-  
-    const style = `
-      <style>
-        body { font-family: sans-serif; padding: 20px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-        th { background-color: #f0f0f0; }
-      </style>
-    `;
-  
-    const html = `
-      <html>
-        <head>
-          <title>Purchase Entry</title>
-          ${style}
-        </head>
-        <body>
-          <h2>Individual Purchase Entry</h2>
-          <p><strong>Supplier:</strong> ${selectedSupplier?.supplierName || "-"}</p>
-          <p><strong>Date of Purchase:</strong> ${new Date(dateOfPurchase).toLocaleDateString("en-GB")}</p>
-          <hr />
-          <table>
-            <thead>
-              <tr>
-                <th>No</th>
-                <th>Item</th>
-                <th>Qty (KG)</th>
-                <th>Qty (Box)</th>
-                <th>Price</th>
-                <th>Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${items
-                .map(
-                  (item, index) => `
-                <tr>
-                  <td>${index + 1}</td>
-                  <td>${item.name}</td>
-                  <td>${item.kg || "-"}</td>
-                  <td>${item.box || "-"}</td>
-                  <td>${item.price}</td>
-                  <td>${item.total}</td>
-                </tr>`
-                )
-                .join("")}
-            </tbody>
-          </table>
-  <table>
-  <tr>
-        <td>  <h3>Total (KG): ${totalQuantityInKg}</h3></td>
-        <td>  <h3>Total (Box): ${totalQuantityInBox}</h3></td>
-   <td>       <h3>Gross Total: ₹${totalPrice}</h3></td>
-     <td>     <h3>Commission: ₹${commission?.toFixed(2) || "0.00"}</h3></td>
-       <td>   <h3>Market Fee: ₹${marketFee?.toFixed(2) || "0.00"}</h3></td>
-      <td>    <h3>Net Total: ₹${(totalPrice - totalDeduction).toFixed(2)}</h3></td>
-          </tr>
-  </table>
-          <script>
-            window.onload = function() {
-              window.print();
-              setTimeout(() => window.close(), 500);
-            };
-          </script>
-        </body>
-      </html>
-    `;
-  
-    printWindow.document.write(html);
-    printWindow.document.close();
-  };
-  
-  
+
   return (
     <>
       {submitLoading ? (
@@ -542,7 +478,8 @@ function Purchasetransaction() {
                     readOnly
                     onKeyDown={(e) => handleKeyDown(e, index, 0)}
                     ref={(el) => {
-                      if (!inputRefs.current[index]) inputRefs.current[index] = [];
+                      if (!inputRefs.current[index])
+                        inputRefs.current[index] = [];
                       inputRefs.current[index][0] = el; // Item name
                       // ...
                       inputRefs.current[index][2] = el; // Qty (KG)
@@ -551,7 +488,6 @@ function Purchasetransaction() {
                     }}
                     className="col-span-1 bg-white border-none outline-none placeholder:text-gray-400 w-full"
                     placeholder="No."
-
                   />
 
                   {/* Item Name */}
@@ -615,7 +551,9 @@ function Purchasetransaction() {
                     name="kg"
                     value={item.kg}
                     disabled={
-                      !itemList.some((option) => option.itemName === item.name) || !!item.box
+                      !itemList.some(
+                        (option) => option.itemName === item.name
+                      ) || !!item.box
                     }
                     onChange={(e) => {
                       const updatedItems = [...items];
@@ -634,7 +572,9 @@ function Purchasetransaction() {
                     name="box"
                     value={item.box}
                     disabled={
-                      !itemList.some((option) => option.itemName === item.name) || !!item.kg
+                      !itemList.some(
+                        (option) => option.itemName === item.name
+                      ) || !!item.kg
                     }
                     onChange={(e) => {
                       const updatedItems = [...items];
@@ -754,8 +694,9 @@ function Purchasetransaction() {
                   // { label: " ($/KG)", value: "0" },
                   {
                     label: "Total Deductions",
-                    value: `₹ ${totalDeduction ? totalDeduction.toFixed(2) : 0
-                      }`,
+                    value: `₹ ${
+                      totalDeduction ? totalDeduction.toFixed(2) : 0
+                    }`,
                   },
                 ].map((label, idx) => (
                   <div
@@ -801,79 +742,56 @@ function Purchasetransaction() {
                         </span>
                       )}
                       <span
-                        className={`text-xl ${item.label === "Net Payable"
+                        className={`text-xl ${
+                          item.label === "Net Payable"
                             ? "text-indigo-950 font-bold"
                             : "text-gray-400"
-                          }`}
+                        }`}
                       >
                         {item.value}
                       </span>
                     </div>
                   </div>
                 ))}
-              <div className="flex justify-end gap-4 mt-6">
-  <button
-    className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700"
-    onClick={handleSubmit}
-  >
-    Save
-  </button>
-  <button
-  className="bg-purple-600 text-white px-6 py-2 rounded hover:bg-purple-700"
-  onClick={() => {
-    const formattedItems = items.map((item) => ({
-      itemName: item.name,
-      quantity: Number(item.kg ? item.kg : item.box),
-      unitPrice: Number(item.price),
-      unitType: item.kg ? "kg" : "box",
-    }));
-
-    const transaction = {
-      supplier: selectedSupplier,
-      dateOfPurchase,
-      items: formattedItems,
-      marketFee,
-      commission,
-      totalDeduction,
-      totalQuantityInKg,
-      totalQuantityInBox,
-      totalPrice,
-      netPayable: (totalPrice - totalDeduction).toFixed(2),
-    };
-
-    handlePurchasePrint(transaction);
-  }}
->
-  Print
-</button>
-  <button
-    className="bg-gray-400 text-white px-6 py-2 rounded hover:bg-gray-500"
-    onClick={() => {
-      // You can clear the form or reset states here
-      setItems([
-        {
-          name: "",
-          kg: "",
-          box: "",
-          price: "",
-          total: "0.00",
-        },
-      ]);
-      setSupplierSearch("");
-      setSupplierList([]);
-      setSelectedSupplier("");
-      setItemSearch("");
-      setItemList([]);
-      setDateOfPurchase("");
-    }}
-  >
-    Cancel
-  </button>
-</div>
-
-</div>
-</div>
-
+                <div className="flex justify-end gap-4 mt-6">
+                  <button
+                    className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700"
+                    onClick={()=>handleSubmit(false)}
+                  >
+                    Save
+                  </button>
+                  <button
+                    className="bg-purple-600 text-white px-6 py-2 rounded hover:bg-purple-700"
+                    onClick={()=>handleSubmit(true)}
+                  >
+                    Print
+                  </button>
+                  <button
+                    className="bg-gray-400 text-white px-6 py-2 rounded hover:bg-gray-500"
+                    onClick={() => {
+                      // You can clear the form or reset states here
+                      setItems([
+                        {
+                          name: "",
+                          kg: "",
+                          box: "",
+                          price: "",
+                          total: "0.00",
+                        },
+                      ]);
+                      setSupplierSearch("");
+                      setSupplierList([]);
+                      setSelectedSupplier("");
+                      setItemSearch("");
+                      setItemList([]);
+                      setDateOfPurchase("");
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}

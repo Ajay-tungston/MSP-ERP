@@ -15,4 +15,7 @@ router.put("/edit/:id",verifyJwt,checkPurchaseEditable,updatePurchaseEntry)
 router.get("/incomplete",verifyJwt,getIncompletePurchases)
 router.get("/get/:id",verifyJwt,getPurchaseById)
 
+//for securly check is this purchse editable
+router.get("/get-secure/:id",verifyJwt,checkPurchaseEditable,getPurchaseById)
+
 module.exports=router

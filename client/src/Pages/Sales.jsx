@@ -4,6 +4,7 @@ import {
   XCircleIcon,
   PlusCircleIcon,
   MagnifyingGlassIcon,
+  TrashIcon,
 } from "@heroicons/react/24/outline";
 import useAxiosPrivate from "../hooks/useAxiosPrivate";
 import { ChevronDownIcon } from "lucide-react";
@@ -142,12 +143,11 @@ const Sales = () => {
 
   // if (loading) return <p>Loading customers...</p>;
   if (error) return <p className="text-red-600">{error}</p>;
-
   const handleChange = (i, field, val) => {
     const copy = [...rows];
     copy[i][field] = val;
+    setRows(copy);
   };
-
   const handleCustomerSelect = (i, customer) => {
     console.log("customer", customer);
     console.log("i", i);
@@ -335,69 +335,40 @@ const Sales = () => {
         if (!r.unitPrice || r.unitPrice <= 0) {
           throw new Error(`Row ${i + 1}: Invalid unit price.`);
         }
-
-        const salesPayload = rows.map((r) => {
-          // const quantity = : r.;
-          return {
-            purchase: purchase?._id,
-            customer: r.customer,
-            discount: r.discount || 0,
-            dateOfSale,
-            items: [
-              {
-                item: r.itemId,
-                supplier: purchase?.supplier?._id,
-                quantityType: r.quantityType,
-                quantity:
-                  r.quantityType === "kg" ? r.quantityKg : r.quantityBox,
-                unitPrice: Number(r.unitPrice),
-              },
-            ],
-          };
-        });
-        console.log("Sales payload to backend:", salesPayload);
-
-        // 3) Send it in one go
-        await axiosInstance.post("/admin/sales/add", salesPayload);
-
-        Swal.fire({
-          title: "All sales transactions added successfully!",
-          icon: "success",
-          draggable: true,
-        });
-
-        // 4) Re-fetch the purchase to get updated remainingQuantity
-        const { data: updatedPurchase } = await axiosInstance.get(
-          `/admin/purchase/get/${purchase._id}`
-        );
-        setPurchase(updatedPurchase);
-
-        // 5) Rebuild rows for items still in stock
-        // const stillInStock = updatedPurchase.items
-        //   .filter((it) => it.remainingQuantity > 0) // Check unified remaining quantity
-        //   .map((it, idx) => ({
-        //     id: idx + 1,
-        //     customer: "",
-        //     customerLabel: "",
-        //     itemName: it.item.itemName,
-        //     itemId: it.item._id,
-        //     supplierId: updatedPurchase.supplier._id,
-        //     quantityKg: "",
-        //     quantityBox: "",
-        //     unitPrice: it.unitPrice,
-        //     quantityType: it.quantityType, // Using single quantityType field
-        //     remainingQuantity: it.remainingQuantity, // Single remaining quantity
-        //     error: "",
-        //   }));
-
-        // if (stillInStock.length) {
-        //   setRows(stillInStock);
-        // } else {
-        //   // nothing left → go back to register
-        //   navigate("/sales-transaction");
-        // }
-        navigate("/sales-transaction");
       }
+      const salesPayload = rows.map((r) => {
+        // const quantity = : r.;
+        return {
+          purchase: purchase?._id,
+          customer: r.customer,
+          discount: r.discount || 0,
+          dateOfSale,
+          items: [
+            {
+              item: r.itemId,
+              supplier: purchase?.supplier?._id,
+              quantityType: r.quantityType,
+              quantity: r.quantityType === "kg" ? r.quantityKg : r.quantityBox,
+              unitPrice: Number(r.unitPrice),
+            },
+          ],
+        };
+      });
+      // 3) Send it in one go
+      await axiosInstance.post("/admin/sales/add", salesPayload);
+
+      Swal.fire({
+        title: "All sales transactions added successfully!",
+        icon: "success",
+        draggable: true,
+      });
+
+      // // 4) Re-fetch the purchase to get updated remainingQuantity
+      // const { data: updatedPurchase } = await axiosInstance.get(
+      //   `/admin/purchase/get/${purchase._id}`
+      // );
+      // setPurchase(updatedPurchase);
+      navigate("/sales-transaction");
     } catch (error) {
       Swal.fire({
         title:
@@ -412,6 +383,13 @@ const Sales = () => {
       setSubmitloading(false);
     }
   };
+  const handleDeleteRow = (index) => {
+    setRows((prev) => {
+      if (prev.length <= 1) return prev; // Prevent deleting the last row
+      return prev.filter((_, i) => i !== index);
+    });
+  };
+  
 
   return (
     <div>
@@ -591,7 +569,7 @@ const Sales = () => {
                   </div>
                   <div
                     ref={(el) => (wrapperRefs.current[index] = el)}
-                    className="min-w-32 -ml-4 justify-center text-slate-900 text-sm font-normal font-['Urbanist'] tracking-wide relative"
+                    className="min-w-32 ml-8 justify-center text-slate-900 text-sm font-normal font-['Urbanist'] tracking-wide relative"
                   >
                     {/* Trigger */}
                     <div
@@ -709,7 +687,7 @@ const Sales = () => {
                       </div>
                     )}
                   </div>
-                  <div className="min-w-32 justify-center text-slate-900 text-sm font-normal font-['Urbanist'] tracking-wide">
+                  <div className="min-w-32 px-2 justify-center text-slate-900 text-sm font-normal font-['Urbanist'] tracking-wide">
                     <select
                       value={row.itemName}
                       onChange={(e) => handleItemChange(index, e.target.value)}
@@ -733,7 +711,7 @@ const Sales = () => {
 
                   {/* Quantity Input with Validation */}
 
-                  <div className="min-w-32 justify-center text-slate-900 text-sm font-normal font-['Urbanist'] tracking-wide">
+                  <div className="min-w-32 px-8 justify-center text-slate-900 text-sm font-normal font-['Urbanist'] tracking-wide">
                     <div className="flex flex-col">
                       <input
                         type="number"
@@ -778,7 +756,7 @@ const Sales = () => {
                       <option value="box">Box</option>
                     </select>
                   </div>
-                  <div className="w-20 justify-center text-slate-900 text-sm font-normal font-['Urbanist'] tracking-wide">
+                  <div className="w-20 px-2 justify-center text-slate-900 text-sm font-normal font-['Urbanist'] tracking-wide">
                     <input
                       type="number"
                       min="0"
@@ -790,8 +768,15 @@ const Sales = () => {
                       className="w-full bg-transparent outline-none text-slate-900 -ml-8"
                     />
                   </div>
-                  <div className="min-w-32 justify-center text-slate-900 text-sm font-normal font-['Urbanist'] tracking-wide">
+                  <div className="min-w-32 px-8 justify-center text-slate-900 text-sm font-normal font-['Urbanist'] tracking-wide">
                     ₹{calculateSubtotal(row.quantity, row.unitPrice).toFixed(2)}
+                  </div>
+
+                  <div className="w-5 px- flex justify-center items-center">
+                    <TrashIcon
+                      className="w-5 h-5 text-red-500 hover:text-red-700 cursor-pointer"
+                      onClick={() => handleDeleteRow(index)}
+                    />
                   </div>
                 </div>
               ))}
@@ -848,7 +833,10 @@ const Sales = () => {
               <div className="self-stretch flex justify-end items-center gap-4 mt-8 md:mr-25">
                 <div className="flex gap-4">
                   {/* Cancel Button */}
-                  <button className="flex items-center gap-2 border border-red-500 text-red-500 px-4 py-2 rounded-lg hover:bg-red-100 transition">
+                  <button
+                    onClick={() => navigate("/sales-transaction")}
+                    className="flex items-center gap-2 border border-red-500 text-red-500 px-4 py-2 rounded-lg hover:bg-red-100 transition"
+                  >
                     <XCircleIcon className="w-5 h-5" />
                     Cancel
                   </button>

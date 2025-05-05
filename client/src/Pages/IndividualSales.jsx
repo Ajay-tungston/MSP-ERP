@@ -1,28 +1,24 @@
 // src/Pages/IndividualSales.jsx
 import React, { useState, useEffect, useRef } from "react";
-import { CalendarIcon, PrinterIcon } from 'lucide-react';
+import { CalendarIcon, PrinterIcon } from "lucide-react";
 import { LuPencilLine } from "react-icons/lu";
 import useAxiosPrivate from "../hooks/useAxiosPrivate";
 import debounce from "lodash/debounce";
-
+import { IndividualsalesReport } from "../utils/individualSalesReport";
 export default function IndividualSales() {
-  const axios = useAxiosPrivate();
+  const axiosInstance = useAxiosPrivate();
 
   // Customer search + selection
   const [customerName, setCustomerName] = useState("");
-  const [customerId, setCustomerId]     = useState("");
-  const [suggestions, setSuggestions]   = useState([]);
+  const [customerId, setCustomerId] = useState("");
+  const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const suggRef = useRef(null);
 
-  // Pagination & data
-  const [page, setPage]         = useState(1);
-  const [limit]                 = useState(10);
-  const [totalPages, setTotalPages] = useState(1);
-  const [entries, setEntries]   = useState([]);
+  const [entries, setEntries] = useState([]);
 
   // Date filter (optional)
-  const [date, setDate]         = useState("");
+  const [date, setDate] = useState("");
 
   // Close suggestions on outside click
   useEffect(() => {
@@ -43,66 +39,94 @@ export default function IndividualSales() {
     }
     const fetch = debounce(async (q) => {
       try {
-        const res = await axios.get(`/admin/customer/getname?q=${encodeURIComponent(q)}`);
-        setSuggestions(res.data.customers.map(c => ({
-          id: c.id, name: c.name
-        })));
+        const res = await axiosInstance.get(
+          `/admin/customer/getname?q=${encodeURIComponent(q)}`
+        );
+        setSuggestions(
+          res.data.customers.map((c) => ({
+            id: c.id,
+            name: c.name,
+          }))
+        );
         setShowSuggestions(true);
-      } catch { /* swallow */ }
+      } catch {
+        /* swallow */
+      }
     }, 300);
     fetch(customerName);
     return () => fetch.cancel();
-  }, [customerName, axios]);
+  }, [customerName, axiosInstance]);
 
   // 2) Fetch individual sales for selected customer & page
-  const fetchSales = async (custId, pg=1) => {
-    if (!custId) return;
+  const fetchSalesByDate = async (custId, dateStr) => {
+    if (!custId || !dateStr) return;
     try {
-      const res = await axios.get("/admin/sales/salesindividual", {
-        params: { customerId: custId, page: pg, limit }
+      const res = await axiosInstance.get("/admin/sales/getbydate", {
+        params: { customerId: custId, date: dateStr },
       });
-      setEntries(res.data.entries);
-      setPage(res.data.page);
-      setTotalPages(res.data.totalPages);
+
+      console.log("Raw response from backend:", res.data);
+
+      const normalized = res.data.map((entry, idx) => ({
+        transactionNumber: entry["No"] || `TX-${idx + 1}`,
+        dateOfSale: entry["Date"],
+        item: { itemName: entry["Item"] },
+        supplier: { supplierName: entry["Supplier"] },
+        quantityKg: entry["Qty (KG)"] === "-" ? 0 : entry["Qty (KG)"],
+        quantityBox: entry["Qty (Box)"] === "-" ? 0 : entry["Qty (Box)"],
+        unitPrice: entry["Price"],
+        totalCost: entry["Total"],
+      }));
+
+      setEntries(normalized);
     } catch (err) {
       console.error("Failed to load individual sales:", err);
       setEntries([]);
-      setTotalPages(1);
     }
   };
 
   // When customerId or page changes, reload sales
   useEffect(() => {
-    fetchSales(customerId, page);
-  }, [customerId, page]);
+    if (customerId && date) {
+      fetchSalesByDate(customerId, date);
+    } else {
+      setEntries([]);
+    }
+  }, [customerId, date]);
 
   // Handler for selecting suggestion
   const selectCustomer = (c) => {
     setCustomerName(c.name);
     setCustomerId(c.id);
     setShowSuggestions(false);
-    setPage(1);
+    console.log("Selected customerId:", c.id);
   };
 
-  // Flatten entries → table rows
-// Instead of flatMap on entry.items, just map entries directly:
-const tableRows = (entries || []).map((row, idx) => ({
-  key: `${row.transactionNumber}-${idx}`,
-  code: row.transactionNumber,
-  supplier: row.supplier.supplierName,
-  date: new Date(row.dateOfSale).toLocaleDateString("en-GB"),
-  qty: row.quantity,
-  price: row.unitPrice,
-  total: row.totalCost    // or row.quantity * row.unitPrice
-}));
+  const grandTotal = entries.reduce(
+    (sum, row) => sum + Number(row.totalCost || 0),
+    0
+  );
 
+  const tableRows = (entries || []).map((row, idx) => ({
+    key: `${row.transactionNumber}-${idx}`,
+    code: row.transactionNumber,
+    date: new Date(row.dateOfSale).toLocaleDateString("en-GB"),
+    item: row.item?.itemName || "-",
+    supplier: row.supplier?.supplierName || "-",
+    qtyKg: row.quantityKg,
+    qtyBox: row.quantityBox,
+    price: row.unitPrice,
+    total: row.totalCost,
+  }));
+
+  console.log("tabledata", tableRows);
   return (
     <div className="p-6 bg-[#F9FAFB] min-h-screen font-[Urbanist]">
       <div className="bg-[#FFFFFF] rounded-2xl p-12 shadow-md relative">
-
         {/* Breadcrumb */}
         <div className="text-sm text-gray-500 flex gap-3 mb-4">
-          <span className="text-gray-500">Print</span> &gt; <span>Individual Sales</span>
+          <span className="text-gray-500">Print </span> &gt;{" "}
+          <span>Individual Sales</span>
         </div>
 
         {/* Header */}
@@ -117,9 +141,9 @@ const tableRows = (entries || []).map((row, idx) => ({
                 type="text"
                 className="w-[300px] rounded-md px-4 py-2 bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
                 value={customerName}
-                onChange={e => {
+                onChange={(e) => {
                   setCustomerName(e.target.value);
-                  setCustomerId("");  // clear previous selection
+                  setCustomerId(""); // clear previous selection
                 }}
                 placeholder="Enter customer name"
               />
@@ -139,9 +163,13 @@ const tableRows = (entries || []).map((row, idx) => ({
             </div>
           </div>
           <div className="flex flex-col items-end gap-4">
-            <button className="bg-[#F9FAFB] hover:bg-gray-200 text-sm font-medium rounded-[12px] px-8 py-4 flex items-center gap-3 mt-2">
+            <button
+              className="bg-[#F9FAFB] hover:bg-gray-200 text-sm font-medium rounded-[12px] px-8 py-4 flex items-center gap-3 mt-2"
+              onClick={() => IndividualsalesReport(entries, customerName, date)}
+            >
               <PrinterIcon className="w-4 h-4" /> Print All
             </button>
+
             <div className="flex items-center gap-4 text-sm text-gray-500">
               <label className="text-sm text-gray-500">Date</label>
               <div className="flex items-center bg-gray-50 rounded-md px-4 py-2 text-sm text-gray-700 w-[200px]">
@@ -149,7 +177,7 @@ const tableRows = (entries || []).map((row, idx) => ({
                   type="date"
                   className="bg-transparent outline-none w-full"
                   value={date}
-                  onChange={e => setDate(e.target.value)}
+                  onChange={(e) => setDate(e.target.value)}
                 />
               </div>
             </div>
@@ -166,8 +194,19 @@ const tableRows = (entries || []).map((row, idx) => ({
 
         {/* Table Header */}
         <div className="bg-[#F9FAFB] px-12 py-2 flex items-center border-b border-gray-200">
-          {['No.','Date', 'Supplier', 'Qty (KG)', 'Price ($/KG)', 'Total'].map((h,i) => (
-            <div key={i} className="text-black font-semibold text-[20px] min-w-[152px] flex items-center">
+          {[
+            "No.",
+            "Item",
+            "Supplier",
+            "Qty (KG)",
+            "Qty (Box)",
+            "unitPrice",
+            "Price",
+          ].map((h, i) => (
+            <div
+              key={i}
+              className="text-black font-semibold text-[20px] min-w-[152px] flex items-center"
+            >
               {h}
             </div>
           ))}
@@ -176,52 +215,41 @@ const tableRows = (entries || []).map((row, idx) => ({
 
         {/* Table Body */}
         <div className="bg-[#FFFFFF] px-12">
-          {tableRows.map(row => (
+          {tableRows.map((row) => (
             <div
               key={row.key}
               className="flex items-center text-sm py-3 border-b last:border-none border-gray-200"
             >
               <div className="min-w-[152px]">{row.code}</div>
-              <div className="min-w-[152px]">{row.date}</div>
+
+              <div className="min-w-[152px]">{row.item}</div>
               <div className="min-w-[152px]">{row.supplier}</div>
-              <div className="min-w-[152px]">{row.qty}</div>
+              <div className="min-w-[152px]">{row.qtyKg}</div>
+              <div className="min-w-[152px]">{row.qtyBox}</div>
               <div className="min-w-[152px]">{row.price.toFixed(2)}</div>
               <div className="min-w-[152px] font-semibold">
                 ${row.total.toFixed(2)}
               </div>
-              <div className="w-6 flex items-center justify-center">
-                <LuPencilLine className="text-[#6A5AE0] w-4 h-4 cursor-pointer" />
-              </div>
             </div>
           ))}
+          {/* Grand Total Row */}
+          {tableRows.length > 0 && (
+            <div className="flex items-center text-sm py-3 border-t border-gray-300 font-semibold">
+              <div className="min-w-[152px]"></div>
+              <div className="min-w-[152px]"></div>
+              <div className="min-w-[152px]"></div>
+              <div className="min-w-[152px] text-black">Grand Total</div>
+              <div className="min-w-[152px] text-black">
+                ${grandTotal.toFixed(2)}
+              </div>
+            </div>
+          )}
           {tableRows.length === 0 && (
             <div className="py-6 text-center text-gray-500">
               {customerId ? "No sales found." : "Please select a customer."}
             </div>
           )}
         </div>
-
-        {/* Pagination */}
-        <div className="flex justify-center items-center gap-4 py-4">
-          <button
-            onClick={() => page > 1 && setPage(p => p - 1)}
-            disabled={page === 1}
-            className="px-4 py-2 bg-indigo-600 text-white rounded disabled:opacity-50"
-          >
-            Prev
-          </button>
-          <span className="text-sm text-gray-700">
-            Page {page} of {totalPages}
-          </span>
-          <button
-            onClick={() => page < totalPages && setPage(p => p + 1)}
-            disabled={page === totalPages}
-            className="px-4 py-2 bg-indigo-600 text-white rounded disabled:opacity-50"
-          >
-            Next
-          </button>
-        </div>
-
       </div>
     </div>
   );

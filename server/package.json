@@ -18,6 +18,7 @@
     "jsonwebtoken": "^9.0.2",
     "market": "file:",
     "mongoose": "^8.12.1",
+    "multer": "^1.4.5-lts.2",
     "nodemailer": "^6.10.0",
     "otp-generator": "^4.0.1",
     "validator": "^13.12.0"

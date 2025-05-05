@@ -199,7 +199,7 @@ const getSupplierList = async (req, res) => {
         }
       : {};
     const suppliers = await Supplier.find(query).select(
-      "supplierName supplierCode commission marketFee address"
+      "supplierName supplierCode commission marketFee address whatsapp"
     );
     return res.status(200).json(suppliers);
   } catch (error) {

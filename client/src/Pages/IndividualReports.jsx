@@ -388,8 +388,8 @@ console.log("reportsData=",reportsData)
                 {/* Table */}
                 <table className="w-fit left-0 top-[288px] absolute inline-flex flex-col justify-start items-start">
                     <thead className="self-stretch bg-gray-50 border-b border-gray-200">
-                        <tr className="p-2 py-3 bg-gray-50 border-b border-gray-200 inline-flex justify-start items-center gap-12 w-full">
-                            <th className="min-w-4 text-indigo-950 text-xl font-bold font-['Urbanist'] tracking-wide">
+                        <tr className="p[-2 py-3 bg-gray-50 border-b border-gray-200 inline-flex justify-start items-center gap-12 w-full">
+                            <th className="min-w-4 text-indigo-950 text-xl font-bold font-['Urbanist'] tracking-wide p-1">
                                 No.
                             </th>
                             <th className="min-w-32 text-indigo-950 text-xl font-bold font-['Urbanist'] tracking-wide">
@@ -419,28 +419,31 @@ console.log("reportsData=",reportsData)
 
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody className="">
                         {loading ? (
                             <tr>
-                                <td colSpan="9" className="text-center py-10">
+                                <td colSpan="9" className="fixed inset-0 flex items-center justify-center bg-white/50 z-50">
                                     <OvalSpinner />
-                                    {/* You can replace this span with a spinner component if available */}
+                              
                                 </td>
                             </tr>
                         ) : reportsData.length === 0 ? (
                             <tr>
-                                <td colSpan="9" className="text-center py-10">
-                                    <span className="text-gray-500 text-xl font-bold pl-50">
-                                        No more reports available for the selected date range.
-                                    </span>
-                                </td>
+                                <td colSpan="9" className="py-10">
+ 
+    <span className="text-gray-500 text-xl font-bold pl-98">
+      No more reports available for the selected date range.
+    </span>
+  
+</td>
+
                             </tr>
                         ) : (
 
                             reportsData.map((entry, index) => (
                                 <tr key={entry._id} className="self-stretch bg-white border-b border-gray-200 inline-flex justify-start items-center gap-12 px-10 py-2">
-                                    <td className="min-w-4 text-slate-900 bg-red-500 text-xl">{index + 1}</td>
-                                    <td className="min-w-32 text-slate-900 bg-green-500 text-xl">
+                                    <td className="min-w-4 text-slate-900 text-xl">{index + 1}</td>
+                                    <td className="min-w-32 text-slate-900 text-xl">
                                         {new Date(entry.dateOfPurchase).toLocaleDateString("en-GB")}
                                     </td>
 

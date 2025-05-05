@@ -1,26 +1,28 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { XCircleIcon, PlusCircleIcon } from '@heroicons/react/24/outline';
+import useAxiosPrivate from "../hooks/useAxiosPrivate";
+import Swal from "sweetalert2";
 
-export default function AddExpenseForm() {
-  const [transactionType, setTransactionType] = useState("Credit");
-  const [description, setDescription] = useState("");
+const AddExpenseForm=({setPopup})=> {
+
+  const [expense, setExpense] = useState("");
   const [amount, setAmount] = useState("");
 
   const navigate = useNavigate(); // For navigation
-
+  const axiosInstance = useAxiosPrivate();
   const handleCancel = () => {
     // Clear all form values
-    setTransactionType("Credit");
-    setDescription("");
+ 
+    setExpense("");
     setAmount("");
-
+setPopup("");
     // Navigate to another page
-    navigate("/route-expense"); // Replace with your target path
+    navigate("/expenses"); // Replace with your target path
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75">
       <div
         className="bg-white shadow-lg"
         style={{
@@ -45,13 +47,13 @@ export default function AddExpenseForm() {
           {/* Description */}
           <div className="flex items-center gap-4">
             <label className="min-w-[120px] sm:min-w-[150px] text-[#737791] text-xl font-normal">
-              Description <span className="text-red-500">*</span>
+              Expense type <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
               placeholder="Enter here"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              value={expense}
+              onChange={(e) => setExpense(e.target.value)}
               className="w-full sm:w-[350px] h-[56px] rounded-[12px] pt-4 pr-6 pb-4 pl-6 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
@@ -59,36 +61,28 @@ export default function AddExpenseForm() {
           {/* Transaction Type */}
           <div className="flex items-center gap-4">
             <label className="min-w-[120px] sm:min-w-[150px] text-[#737791] text-xl font-normal">
-              Transaction Type <span className="text-red-500">*</span>
+             Amount<span className="text-red-500">*</span>
             </label>
-            <div className="flex gap-2 mt-1">
-              <button
-                className={`px-4 py-2 rounded-md border ${transactionType === "Credit" ? "bg-blue-500 text-white" : "border-gray-300"}`}
-                onClick={() => setTransactionType("Credit")}
-              >
-                Credit
-              </button>
-              <button
-                className={`px-4 py-2 rounded-md border ${transactionType === "Debit" ? "bg-blue-500 text-white" : "border-gray-300"}`}
-                onClick={() => setTransactionType("Debit")}
-              >
-                Debit
-              </button>
-            </div>
+            <input
+              type="number"
+              placeholder="Enter here"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              className="w-full sm:w-[350px] h-[56px] rounded-[12px] pt-4 pr-6 pb-4 pl-6 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
           </div>
 
           {/* Amount */}
           <div className="flex items-center gap-4">
             <label className="min-w-[120px] sm:min-w-[150px] text-[#737791] text-xl font-normal">
-              Amount <span className="text-red-500">*</span>
+           Date
             </label>
             <div className="relative w-full sm:w-[350px]">
               <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
               <input
-                type="number"
+                type="date"
                 placeholder="Enter here"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
+                
                 className="w-full h-[56px] rounded-[12px] pt-4 pr-6 pb-4 pl-10 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
@@ -122,3 +116,4 @@ export default function AddExpenseForm() {
     </div>
   );
 }
+ export default AddExpenseForm;

@@ -27,6 +27,8 @@ app.use("/admin/customer",require("./routes/admin/customer/adminCustomerRoutes")
 app.use("/admin/sales",require("./routes/admin/sales/salesRoutes"));
 app.use("/admin/company",require("./routes/admin/company/adminCompanyRoutes"));
 app.use("/admin/payment",require("./routes/admin/payment/paymentRoutes"))
+app.use("/admin/cashbook",require("./routes/admin/cashbook/cashbookRouter"))
+
 connectDb()
   .then(() =>
     app.listen(PORT, () => {

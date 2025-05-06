@@ -1,26 +1,58 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { XCircleIcon, PlusCircleIcon } from '@heroicons/react/24/outline';
+import useAxiosPrivate from "../hooks/useAxiosPrivate";
+import Swal from "sweetalert2";
 
-export default function AddExpenseForm() {
-  const [transactionType, setTransactionType] = useState("Credit");
-  const [description, setDescription] = useState("");
+const AddExpenseForm = ({ setPopup,refreshExpenses }) => {
+  const [expense, setExpense] = useState("");
   const [amount, setAmount] = useState("");
+  const [date, setDate] = useState("");
 
-  const navigate = useNavigate(); // For navigation
+  const axiosInstance = useAxiosPrivate();
 
   const handleCancel = () => {
-    // Clear all form values
-    setTransactionType("Credit");
-    setDescription("");
+    // Reset form
+    setExpense("");
     setAmount("");
+    setDate("");
+    setPopup(false); // Close popup
+  };
 
-    // Navigate to another page
-    navigate("/route-expense"); // Replace with your target path
+  const handleSave = async () => {
+    // Validation
+    if (expense.trim().length < 3) {
+      Swal.fire("Validation Error", "Expense type must be at least 5 characters.", "warning");
+      return;
+    }
+    if (!amount || Number(amount) <= 0) {
+      Swal.fire("Validation Error", "Amount must be greater than 0.", "warning");
+      return;
+    }
+    const selectedDate = new Date(date);
+    const today = new Date();
+    if (!date || selectedDate > today) {
+      Swal.fire("Validation Error", "Date cannot be in the future.", "warning");
+      return;
+    }
+
+    try {
+      // Simulate save call
+      await axiosInstance.post("/admin/expense/add", {
+        expense,
+        amount,
+        date
+      });
+
+      Swal.fire("Success", "Expense saved successfully.", "success");
+      refreshExpenses()
+      setPopup(false);
+    } catch (error) {
+      Swal.fire("Error", "Failed to save expense.", "error");
+    }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75">
       <div
         className="bg-white shadow-lg"
         style={{
@@ -36,45 +68,24 @@ export default function AddExpenseForm() {
         <hr className="my-3 border-gray-300" />
 
         <div className="grid gap-[44px] grid-cols-1 sm:grid-cols-2 lg:grid-cols-2">
-          {/* No. Field */}
+          {/* No. Field (Static for now) */}
           <div className="flex items-center gap-4">
             <label className="min-w-[120px] sm:min-w-[172px] text-[#737791] text-xl font-normal">No.</label>
             <div className="font-bold text-gray-800">001</div>
           </div>
 
-          {/* Description */}
+          {/* Expense Type */}
           <div className="flex items-center gap-4">
             <label className="min-w-[120px] sm:min-w-[150px] text-[#737791] text-xl font-normal">
-              Description <span className="text-red-500">*</span>
+              Expense type <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
               placeholder="Enter here"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              value={expense}
+              onChange={(e) => setExpense(e.target.value)}
               className="w-full sm:w-[350px] h-[56px] rounded-[12px] pt-4 pr-6 pb-4 pl-6 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
-          </div>
-
-          {/* Transaction Type */}
-          <div className="flex items-center gap-4">
-            <label className="min-w-[120px] sm:min-w-[150px] text-[#737791] text-xl font-normal">
-              Transaction Type <span className="text-red-500">*</span>
-            </label>
-            <div className="flex gap-2 mt-1">
-              <button
-                className={`px-4 py-2 rounded-md border ${transactionType === "Credit" ? "bg-blue-500 text-white" : "border-gray-300"}`}
-                onClick={() => setTransactionType("Credit")}
-              >
-                Credit
-              </button>
-              <button
-                className={`px-4 py-2 rounded-md border ${transactionType === "Debit" ? "bg-blue-500 text-white" : "border-gray-300"}`}
-                onClick={() => setTransactionType("Debit")}
-              >
-                Debit
-              </button>
-            </div>
           </div>
 
           {/* Amount */}
@@ -82,24 +93,34 @@ export default function AddExpenseForm() {
             <label className="min-w-[120px] sm:min-w-[150px] text-[#737791] text-xl font-normal">
               Amount <span className="text-red-500">*</span>
             </label>
-            <div className="relative w-full sm:w-[350px]">
-              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
-              <input
-                type="number"
-                placeholder="Enter here"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                className="w-full h-[56px] rounded-[12px] pt-4 pr-6 pb-4 pl-10 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
+            <input
+              type="number"
+              placeholder="Enter here"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              className="w-full sm:w-[350px] h-[56px] rounded-[12px] pt-4 pr-6 pb-4 pl-6 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          {/* Date */}
+          <div className="flex items-center gap-4">
+            <label className="min-w-[120px] sm:min-w-[150px] text-[#737791] text-xl font-normal">
+              Date <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              className="w-full sm:w-[350px] h-[56px] rounded-[12px] pt-4 pr-6 pb-4 pl-6 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
           </div>
         </div>
 
-        {/* Action buttons */}
+        {/* Buttons */}
         <div className="w-full h-full p-4 md:p-8 lg:p-12 bg-white rounded-3xl flex flex-col justify-start items-start gap-12 overflow-hidden">
           <div className="self-stretch flex justify-end items-center gap-4 mt-8 md:mr-25">
             <div className="flex gap-4">
-              {/* Cancel Button */}
+              {/* Cancel */}
               <button
                 onClick={handleCancel}
                 className="flex items-center gap-2 border border-red-500 text-red-500 px-4 py-2 rounded-lg hover:bg-red-100 transition"
@@ -108,8 +129,9 @@ export default function AddExpenseForm() {
                 Cancel
               </button>
 
-              {/* Save Button */}
+              {/* Save */}
               <button
+                onClick={handleSave}
                 className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
               >
                 <PlusCircleIcon className="w-5 h-5" />
@@ -121,4 +143,6 @@ export default function AddExpenseForm() {
       </div>
     </div>
   );
-}
+};
+
+export default AddExpenseForm;

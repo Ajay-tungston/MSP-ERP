@@ -31,6 +31,8 @@ app.use("/admin/sales",require("./routes/admin/sales/salesRoutes"));
 app.use("/admin/company",require("./routes/admin/company/adminCompanyRoutes"));
 app.use("/admin/payment",require("./routes/admin/payment/paymentRoutes"))
 app.use("/admin/file",require("./routes/admin/fileUploadRoutes"))
+app.use("/admin/cashbook",require("./routes/admin/cashbook/cashbookRouter"))
+app.use("/admin/expense",require("./routes/admin/expense/expenseRoutes"))
 
 connectDb()
   .then(() =>

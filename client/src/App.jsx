@@ -21,7 +21,7 @@ import Purchasetransaction from "./Pages/Purchasetransaction";
 import Company from "./Pages/Company";
 import Commission from "./Pages/Commission";
 import Item from "./Pages/Item";
-import RouteExpense from "./Pages/RouteExpense";
+import Expenses from "./Pages/Expenses";
 import IndividualReports from "./Pages/IndividualReports";
 import SalesTransaction from "./Pages/SalesTransaction";
 import Sales from "./Pages/Sales";
@@ -39,6 +39,8 @@ import Payment from "./Pages/Payment/Payment";
 import AddPayment from "./Pages/Payment/AddPayment";
 import IndividualSales from "./Pages/IndividualSales";
 import EditPurchaseTransaction from "./Pages/purchase/EditPurchaseTransaction";
+
+import Sample from "./Pages/Sample"
 
 function App() {
   return (
@@ -59,7 +61,7 @@ function App() {
               <Route path="/supplier" element={<Supplier />} />
               <Route path="/employee" element={<Employee />} />
               <Route path="/item" element={<Item />} />
-              <Route path="/route-expense" element={<RouteExpense />} />
+              <Route path="/expenses" element={<Expenses />} />
 
 
               <Route path="/commission" element={<Commission />} />
@@ -81,7 +83,7 @@ function App() {
 
               <Route path='/whatsapp' element={<Whatsapp />} />
 
-
+<Route path="/sample" element={<Sample/>}/>
               <Route path="/updatecustomer/:id" element={<EditCustomerModal />} />
             </Route>
           </Route>

@@ -11,11 +11,14 @@ import {
   FiSettings,
 } from "react-icons/fi";
 import { PiSignOutFill } from "react-icons/pi";
+import useLogout from "../hooks/useLogout";
 
 export default function Sidebar() {
   const [isMasterOpen, setIsMasterOpen] = useState(true);
   const [selectedItem, setSelectedItem] = useState();
   const [selectedMainItem, setSelectedMainItem] = useState("Master");
+
+  const logOut=useLogout()
 
   const masterItemRoutes = {
     "Customer": "/mastercustomer",
@@ -60,7 +63,7 @@ export default function Sidebar() {
     { label: "WhatsApp", icon: <FiGrid />, path: "/whatsapp" },
     {
       label: (
-        <span className="text-red-600">
+        <span className="text-red-600" onClick={logOut}>
           Sign Out
         </span>
       ),

@@ -127,16 +127,17 @@ function Purchasetransaction() {
       debouncedFetchItem.cancel();
     };
   }, [itemSearch, debouncedFetchItem]);
-
+  const fetchPurchaseCount = async () => {
+    try {
+      const response = await axiosInstance(`/admin/purchase/count`);
+      setPurchaseCount((Number(response?.data?.count) || 0) + 1);
+      console.log(response?.data?.count)
+    } catch (error) {
+      console.log(error);
+    }
+  };
   useEffect(() => {
-    const fetchPurchaseCount = async () => {
-      try {
-        const response = await axiosInstance(`/admin/purchase/count`);
-        setPurchaseCount((Number(response?.data?.count) || 0) + 1);
-      } catch (error) {
-        console.log(error);
-      }
-    };
+   
     fetchPurchaseCount();
   }, []);
 
@@ -271,6 +272,7 @@ function Purchasetransaction() {
       setSelectedSupplier("");
       setItemSearch("");
       setItemList([]);
+      fetchPurchaseCount()
     } catch (error) {
       Swal.fire({
         title: "Something went wrong!",

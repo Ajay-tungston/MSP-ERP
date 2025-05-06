@@ -159,6 +159,19 @@ const refresh=async(req,res)=>{
     }
 }
 
+const logOut = async (req, res) => {
+  const cookies = req.cookies;
+  if (!cookies?.jwt) {
+    return res.sendStatus(204);
+  }
+  res.clearCookie("jwt", {
+    httpOnly: true,
+    secure: false,
+    sameSite: "lax",
+  });
+  res.json({ message: "cookie cleared and logOut" });
+};
+
 //for password reset
 
 const checkResetToken=async(req,res)=>{
@@ -206,4 +219,4 @@ const resetPassword = async (req, res) => {
   }
 };
 
-module.exports = { login, signUp,refresh,checkResetToken,resetPassword };
+module.exports = { login, signUp,refresh,checkResetToken,resetPassword,logOut };

@@ -1,16 +1,14 @@
 import React from "react";
 
 const TransactionTable = ({ transactions, pagination, page, setPage, limit }) => {
-  const openingBalance = 5000;
+  const openingBalance = transactions?.openingBalance || 0;
   let runningBalance = openingBalance;
-  let totalDebit = 0;
-  let totalCredit = 0;
 
-  // Normalize and label all transactions with clear descriptions
+  // Normalize all transactions
   const allTransactions = [
     ...(transactions?.sales || []).map((item) => ({
       date: item.dateOfSale,
-      description: `Sale bill`,
+      description: "Sale bill",
       debit: 0,
       credit: item.grandTotal,
     })),
@@ -53,25 +51,48 @@ const TransactionTable = ({ transactions, pagination, page, setPage, limit }) =>
   // Sort by date
   allTransactions.sort((a, b) => new Date(a.date) - new Date(b.date));
 
-  // Calculate total pages based on the limit and number of transactions
-  const totalPages = Math.ceil(allTransactions.length / limit);
+  // Pagination setup
+  const totalPages = Math.ceil((allTransactions.length + 1) / limit); // +1 for opening balance row
+  const startIdx = (page - 1) * limit;
+  const endIdx = page * limit;
 
-  // Paginate the rows based on the current page
-  const paginatedRows = allTransactions.slice((page - 1) * limit, page * limit);
+  // Add running balances and prepare rows
+  const formattedRows = [];
 
-  // Format rows with running balance
-  const formattedRows = paginatedRows.map((item) => {
-    runningBalance += item.credit - item.debit;
-    totalDebit += item.debit;
-    totalCredit += item.credit;
+  // Include the opening balance row if it's in current page range
+  if (startIdx === 0) {
+    formattedRows.push({
+      date: "",
+      description: "Opening Balance",
+      debit: "",
+      credit: "",
+      balance: `$${openingBalance.toFixed(2)}`,
+      isOpening: true,
+    });
+  }
 
-    return {
+  let totalDebit = 0;
+  let totalCredit = 0;
+
+  allTransactions.forEach((item, index) => {
+    if (index + 1 < startIdx || index + 1 >= endIdx) return;
+
+    // Adjust balance
+    if (item.debit) {
+      runningBalance -= item.debit;
+      totalDebit += item.debit;
+    } else if (item.credit) {
+      runningBalance += item.credit;
+      totalCredit += item.credit;
+    }
+
+    formattedRows.push({
       ...item,
       date: new Date(item.date).toLocaleDateString("en-GB"),
       debit: item.debit ? `$${item.debit.toFixed(2)}` : "",
       credit: item.credit ? `$${item.credit.toFixed(2)}` : "",
       balance: `$${runningBalance.toFixed(2)}`,
-    };
+    });
   });
 
   return (
@@ -90,12 +111,14 @@ const TransactionTable = ({ transactions, pagination, page, setPage, limit }) =>
           </thead>
           <tbody className="bg-white divide-y divide-gray-100">
             {formattedRows.map((item, index) => (
-              <tr key={index}>
+              <tr key={index} className={item.isOpening ? "bg-blue-50 font-medium" : ""}>
                 <td className="p-4">
-                  <input
-                    type="checkbox"
-                    className="w-5 h-5 text-blue-500 border-blue-500 rounded-sm focus:ring-blue-500"
-                  />
+                  {!item.isOpening && (
+                    <input
+                      type="checkbox"
+                      className="w-5 h-5 text-blue-500 border-blue-500 rounded-sm focus:ring-blue-500"
+                    />
+                  )}
                 </td>
                 <td className="p-4">{item.date}</td>
                 <td className="p-4">{item.description}</td>
@@ -105,9 +128,7 @@ const TransactionTable = ({ transactions, pagination, page, setPage, limit }) =>
               </tr>
             ))}
             <tr className="bg-green-50 font-semibold text-gray-700">
-              <td className="p-4" colSpan="3">
-                Total
-              </td>
+              <td className="p-4" colSpan="3">Total</td>
               <td className="p-4 text-right">${totalDebit.toFixed(2)}</td>
               <td className="p-4 text-right">${totalCredit.toFixed(2)}</td>
               <td className="p-4 text-right">${runningBalance.toFixed(2)}</td>

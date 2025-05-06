@@ -9,13 +9,27 @@ const getCashbookData = async (req, res) => {
     if (!startDate || !endDate) {
       return res.status(400).json({ error: "startDate and endDate are required" });
     }
-
+console.log(startDate)
     const fromDate = new Date(startDate);
     const toDate = new Date(endDate);
     toDate.setHours(23, 59, 59, 999);
-
+console.log(fromDate)
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const pageLimit = parseInt(limit);
+
+    // 🧮 Calculate opening balance
+    const pastPayments = await Payment.find({ date: { $lt: fromDate } }).lean();
+console.log(pastPayments)
+    const openingIn = pastPayments
+      .filter(p => p.paymentType === 'PaymentIn')
+      .reduce((acc, curr) => acc + (curr.amount || 0), 0);
+console.log("opning in=",openingIn)
+    const openingOut = pastPayments
+      .filter(p => p.paymentType === 'PaymentOut')
+      .reduce((acc, curr) => acc + (curr.amount || 0), 0);
+      console.log("opning out=",openingOut)
+
+    const openingBalance = openingIn - openingOut;
 
     const [sales, purchases, payments, totalCounts] = await Promise.all([
       Sale.find({ dateOfSale: { $gte: fromDate, $lte: toDate } })
@@ -52,6 +66,7 @@ const getCashbookData = async (req, res) => {
     const paymentOuts = payments.filter(p => p.paymentType === 'PaymentOut');
 
     res.status(200).json({
+      openingBalance, // 🟢 Return the calculated opening balance
       sales,
       purchases,
       paymentIns,

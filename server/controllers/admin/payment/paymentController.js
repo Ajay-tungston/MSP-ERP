@@ -23,7 +23,7 @@ const addPayment = async (req, res) => {
       date,
       note
     } = req.body;
-
+console.log(date)
     // Basic Validation
     if (!paymentType || !category || !amount) {
       return res.status(400).json({ message: "Payment type, category, and amount are required." });

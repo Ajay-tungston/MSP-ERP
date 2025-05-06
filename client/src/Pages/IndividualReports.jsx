@@ -14,6 +14,7 @@ import OvalSpinner from "../Components/spinners/OvalSpinner";
 import { useNavigate } from "react-router-dom";
 import { handlePurchasePrint } from "../utils/purchaseBill";
 import { generatePurchasePdfBlob } from "../utils/generatePurchasePdf";
+import Swal from "sweetalert2";
 
 const IndividualReports = () => {
   const axiosInstance = useAxiosPrivate();
@@ -316,6 +317,15 @@ const IndividualReports = () => {
   const [watsappLoading, setWatsappLoading] = useState(false);
   const handleSendViaWhatsApp = async (purchaseData, supplier, date) => {
     try {
+       if (!supplier?.whatsapp) {
+              Swal.fire({
+                title: "WhatsApp Not Available",
+                text: "This Supplier doesn't have a WhatsApp number linked. Please update their contact information.",
+                icon: "warning",
+                confirmButtonText: "OK",
+              });
+              return;
+            }
       setWatsappLoading(true);
       const pdfBlob = await generatePurchasePdfBlob(purchaseData);
       const formData = new FormData();
@@ -343,6 +353,17 @@ const IndividualReports = () => {
   };
 
   return (
+    <>
+    {watsappLoading && (
+      <div className="fixed inset-0 bg-white/60 backdrop-blur-sm z-50 flex items-center justify-center">
+        <div className="flex flex-col items-center">
+          <div className="w-10 h-10 border-4 border-green-500 border-t-transparent rounded-full animate-spin mb-3"></div>
+          <p className="text-gray-700 text-sm font-medium">
+            Sending via WhatsApp...
+          </p>
+        </div>
+      </div>
+    )}
     <div className="w-full px-4 md:px-8 lg:px-12">
       <div className="h-screen relative bg-white rounded-3xl overflow-hidden mt-10">
         <div className="left-[48px] top-[48px] absolute inline-flex justify-start items-center gap-3">
@@ -663,6 +684,7 @@ const IndividualReports = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

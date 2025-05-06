@@ -12,6 +12,7 @@ import Swal from "sweetalert2";
 function AddPayment({ setPopup, fetchData, type }) {
   const [category, setCategory] = useState("supplier");
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
+  console.log(date)
   const [name, setName] = useState("");
   const [name2, setName2] = useState("");
   const [amount, setAmount] = useState("");
@@ -84,6 +85,7 @@ function AddPayment({ setPopup, fetchData, type }) {
         const payload = {
           paymentType: type,
           category,
+          date,
           amount,
           paymentMode: "Cash",
           note,

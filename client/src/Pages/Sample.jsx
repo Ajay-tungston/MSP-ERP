@@ -1,103 +1,259 @@
-import React, { useState } from 'react';
-import { Printer } from 'lucide-react';
+import {
+  AreaChart, Area, CartesianGrid,
 
-
-const salesData = [
-  { id: '001', date: '01/12/2024', supplier: 'Farm Fresh', qtyKg: 100, qtyBox: 20, total: 510 },
-  { id: '002', date: '01/12/2024', supplier: 'Green Supply', qtyKg: 150, qtyBox: 30, total: 800 },
+} from "recharts";
+import React from "react";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  LabelList,
+} from "recharts";
+const kpiData = [
+  { day: "Mon", NetReceivables: 400, TotalCommission: 780 },
+  { day: "Tue", NetReceivables: 700, TotalCommission: 780 },
+  { day: "Wed", NetReceivables: 900, TotalCommission: 780 },
+  { day: "Thu", NetReceivables: 1100, TotalCommission: 780 },
+  { day: "Fri", NetReceivables: 1600, TotalCommission: 780 },
+  { day: "Sat", NetReceivables: 2000, TotalCommission: 780 },
 ];
 
-const LocalSalesReport = () => {
-  const [selectedRows, setSelectedRows] = useState([]);
-  const [selectAll, setSelectAll] = useState(false);
-  const [page, setPage] = useState(1);
+const salesData = [
+  { name: "Local", value: 1200 },
+  { name: "Route", value: 2400 },
+];
 
-  const toggleSelectAll = () => {
-    if (selectAll) {
-      setSelectedRows([]);
-    } else {
-      setSelectedRows(salesData.map(row => row.id));
-    }
-    setSelectAll(!selectAll);
-  };
+const purchaseData = [
+  { name: "Farm Fresh", value: 1250 },
+  { name: "Green Supply", value: 2000 },
+];
 
-  const toggleRow = (id) => {
-    setSelectedRows(prev =>
-      prev.includes(id) ? prev.filter(rowId => rowId !== id) : [...prev, id]
-    );
-  };
+const expenseData = [
+  { name: "Coolie/Logistics", value: 500, color: "#6366F1" },
+  { name: "Market Fees", value: 300, color: "#FACC15" },
+  { name: "Route Expenses", value: 250, color: "#22C55E" },
+];
 
-  const total = salesData.reduce((sum, row) => sum + row.total, 0);
+const totalExpense = expenseData.reduce((acc, curr) => acc + curr.value, 0);
 
+const recentTransactions = [
+  { date: "01/12/2024", module: "Sales", desc: "GreenMart - Apples", amount: 300 },
+  { date: "01/12/2024", module: "Purchase", desc: "Farm Fresh - Bananas", amount: 1250 },
+  { date: "02/12/2024", module: "Expense", desc: "Fuel for Route 1", amount: 120 },
+];
+
+const data = [
+  { name: 'Cash Balance', value: 4140 },
+  { name: 'Customer Receivables', value: 5000 },
+  { name: 'Supplier Receivables', value: 3000 },
+];
+
+const COLORS = ['#5B61EB', '#F3B700', '#3BB273']; // Purple, Yellow, Green
+
+const barData = [
+  { name: "Sales", value: 3600 },
+  { name: "Purchases", value: 2000 },
+  { name: "Expenses", value: 550 },
+];
+
+const totalProfit = 1050;
+
+const FinancialDashboard = () => {
   return (
-    <div className="p-6 bg-white rounded-md mt-10">
-      <div className="text-[20px] text-gray-500 mb-1">Reports &gt; <span className=" font-medium">Local Sales Report</span></div>
-      <h1 className="text-3xl font-bold text-[#0E0F3C] mb-4 mt-8 p-2">Local Sales Report</h1>
-
-      <div className="flex items-center justify-between mb-4 float-right -mt-[5%] mr-[5%]">
-      <button className="flex items-center gap-1 px-4 py-2  rounded-md bg-[#F9FAFB] ">
-          <Printer size={16} />
-          <span className="font-medium text-[#0E0F3C]">Print</span>
-        </button>
-</div>
-        <div className="flex items-center gap-2 text-sm text-gray-500 float-right ">
-          <span>Date Range</span>
-          <input
-            type="date"
-            placeholder="DD/MM/YYYY"
-            className="px-5 py-3  rounded-md text-sm text-gray-500  bg-[#F9FAFB]" 
-          />
-          <span>to</span>
-          <input
-            type="date"
-            placeholder="DD/MM/YYYY"
-            className="px-5 py-3 rounded-md text-sm text-gray-500  bg-[#F9FAFB]"
-          />
-        </div>
-        
-        
-      
-      <table className="w-full text-sm border rounded-md overflow-hidden mt-[7%]  ">
-        <thead className="bg-[#F9FAFB] text-[#0E0F3C] text-left ">
-        <tr >
-            <th className="p-2 py-3"></th>
-            <th className="p-2 py-3">No.</th>
-            <th className="p-2 py-3">Date</th>
-            <th className="p-2 py-3">Supplier</th>
-            <th className="p-2 py-3">Qty (KG)</th>
-            <th className="p-2 py-3">Qty (Box)</th>
-            <th className="p-2 py-3">Total</th>
-          </tr>
-        </thead>
-        <tbody>
-          {salesData.map(row => (
-         <tr key={row.id} className="border-t border-t-[#E8E8ED] ">
-
-             <td className="p-2 py-3"></td>
-             <td className="p-2 py-3">{row.id}</td>
-             <td className="p-2 py-3 ">{row.date}</td>
-             <td className="p-2 py-3">{row.supplier}</td>
-             <td className="p-2 py-3">{row.qtyKg}</td>
-             <td className="p-2 py-3">{row.qtyBox}</td>
-             <td className="p-2 py-3">${row.total.toFixed(2)}</td>
-           </tr>
+    <div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 ">
+  {/* Financial Overview */}
+  <div className="bg-white rounded-2xl shadow-md p-6 w-full">
+    <h2 className="text-lg font-semibold text-black mb-4">Financial Overview</h2>
+    <hr className="mb-4 border-gray-700" />
+    <div className="flex justify-center">
+      <PieChart width={600} height={300}>
+        <Pie
+          data={data}
+          cx="50%"
+          cy="50%"
+          innerRadius={0}
+          outerRadius={100}
+          paddingAngle={1}
+          dataKey="value"
+          label={({ name, value }) => `${name}\n$${value.toLocaleString()}`}
+        >
+          {data.map((entry, index) => (
+            <Cell key={`cell-${index}`} fill={COLORS[index]} stroke="white" strokeWidth={2} />
           ))}
-        </tbody>
-      </table>
+        </Pie>
+        <Tooltip formatter={(value) => `$${value.toLocaleString()}`} />
+      </PieChart>
+    </div>
+  </div>
 
-      <div className="flex items-center justify-between mt-4 text-sm">
-        <span className="text-[#0E0F3C]">Page 1 of 10</span>
-        <div className="space-x-4 mr-[7%]">
-          <button className="px-4 py-3 rounded border text-gray-400 cursor-not-allowed bg-gray-100">Previous</button>
-          <button className="px-4 py-3 rounded border text-[#4079ED] hover:bg-blue-100">Next</button>
+  {/* Net Profit */}
+  <div className="bg-white shadow-xl rounded-2xl p-4 w-full ">
+    <div className="flex justify-between items-center mb-4">
+      <h2 className="text-xl font-bold text-gray-800">Net Profit</h2>
+      <span className="text-green-600 font-bold text-lg">
+        ${totalProfit.toFixed(2)}
+      </span>
+    </div>
+    <ResponsiveContainer width="100%" height={250}>
+      <BarChart layout="vertical" data={barData}>
+        <XAxis type="number" />
+        <YAxis type="category" dataKey="name" />
+        <Tooltip />
+        <Bar dataKey="value" fill="#6366F1" barSize={20}>
+          <LabelList dataKey="value" position="right" />
+        </Bar>
+      </BarChart>
+    </ResponsiveContainer>
+  </div>
+</div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4">
+        {/* Expense Summary */}
+        <div className="bg-white shadow-xl rounded-2xl p-4">
+          <h2 className="text-xl font-bold text-gray-800 mb-4">Expense Summary</h2>
+          <ResponsiveContainer width="100%" height={220}>
+            <PieChart>
+              <Pie
+                data={expenseData}
+                innerRadius={60}
+                outerRadius={100}
+                paddingAngle={2}
+                dataKey="value"
+              >
+                {expenseData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} />
+                ))}
+              </Pie>
+            </PieChart>
+          </ResponsiveContainer>
+          <div className="text-3xl font-bold text-center -mt-28 mb-4 text-indigo-900">
+            ${totalExpense}
+          </div>
+          <div className="mt-4 space-y-2 text-sm">
+            {expenseData.map((item, idx) => (
+              <div key={idx} className="flex justify-between items-center">
+                <span className="flex items-center gap-2">
+                  <span
+                    className="w-3 h-3 rounded-full"
+                    style={{ backgroundColor: item.color }}
+                  />
+                  {item.name}
+                </span>
+                <span
+                  className={`font-semibold`}
+                  style={{ color: item.color }}
+                >
+                  ${item.value} ({((item.value / totalExpense) * 100).toFixed(2)}%)
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Recent Transactions */}
+        <div className="bg-white shadow-xl rounded-2xl p-4">
+          <h2 className="text-xl font-bold text-gray-800 mb-4">Recent Transactions</h2>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm text-left text-gray-700">
+              <thead className="text-xs text-gray-600 border-b">
+                <tr>
+                  <th className="py-2 px-4">Date</th>
+                  <th className="py-2 px-4">Module</th>
+                  <th className="py-2 px-4">Discount Freq.</th>
+                  <th className="py-2 px-4 text-right">Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                {recentTransactions.map((tx, idx) => (
+                  <tr key={idx} className="border-b">
+                    <td className="py-2 px-4">{tx.date}</td>
+                    <td className="py-2 px-4">{tx.module}</td>
+                    <td className="py-2 px-4">{tx.desc}</td>
+                    <td className="py-2 px-4 text-right font-semibold">${tx.amount.toFixed(2)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-4">
+        {/* KPI Chart */}
+        <div className="bg-white shadow-xl rounded-2xl p-4">
+          <h2 className="text-xl font-bold text-gray-800 mb-4">Key Performance Indicators</h2>
+          <ResponsiveContainer width="100%" height={200}>
+            <AreaChart data={kpiData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="day" />
+              <YAxis />
+              <Tooltip />
+              <Area
+                type="monotone"
+                dataKey="NetReceivables"
+                stroke="#4F46E5"
+                fill="#4F46E5"
+                fillOpacity={0.2}
+              />
+              <Area
+                type="monotone"
+                dataKey="TotalCommission"
+                stroke="#FACC15"
+                fill="#FACC15"
+                fillOpacity={0.1}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+          <div className="flex justify-around text-sm mt-2">
+            <div className="flex items-center gap-2 text-blue-600">
+              <span className="w-3 h-3 bg-blue-600 rounded-full" /> Net Receivables
+            </div>
+            <div className="flex items-center gap-2 text-yellow-400">
+              <span className="w-3 h-3 bg-yellow-400 rounded-full" /> Total Commission
+            </div>
+          </div>
+        </div>
 
-      <div className="mt-4 text-right bg-green-50 text-[#0E0F3C] px-6 py-3 rounded-md font-semibold text-lg">
-        Grand Total: ${total.toFixed(2)}
+        {/* Sales Summary */}
+        <div className="bg-white shadow-xl rounded-2xl p-4">
+          <h2 className="text-xl font-bold text-gray-800 mb-4">Sales Summary</h2>
+          <ResponsiveContainer width="100%" height={200}>
+            <BarChart data={salesData} barSize={50}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} />
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip />
+              <Bar dataKey="value" fill="#22C55E">
+                <LabelList dataKey="value" position="top" fill="#fff" />
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Purchase Summary */}
+        <div className="bg-white shadow-xl rounded-2xl p-4">
+          <h2 className="text-xl font-bold text-gray-800 mb-4">Purchase Summary</h2>
+          <ResponsiveContainer width="100%" height={200}>
+            <BarChart data={purchaseData} barSize={50}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} />
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip />
+              <Bar dataKey="value" fill="#6366F1">
+                <LabelList dataKey="value" position="top" fill="#fff" />
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
       </div>
     </div>
   );
 };
 
-export default LocalSalesReport;
+export default FinancialDashboard;

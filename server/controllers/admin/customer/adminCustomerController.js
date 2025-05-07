@@ -284,4 +284,9 @@ const getSingleCustomer = async (req, res) => {
 };
 
 
-module.exports = { addNewCustomer,getAllCustomers, deleteCustomer,getCustomerNames,updateCustomer,getSingleCustomer };
+module.exports = { addNewCustomer,
+  getAllCustomers, 
+  deleteCustomer,
+  getCustomerNames,
+  updateCustomer,
+  getSingleCustomer };

@@ -3,143 +3,93 @@ import Swal from "sweetalert2";
 import { XCircleIcon, PlusCircleIcon } from "@heroicons/react/24/solid";
 import useAxiosPrivate from "../hooks/useAxiosPrivate";
 
-const EditCustomerModal = ({ customerId, onClose, setPopup }) => {
+const EditCustomerModal = ({ onClose, setPopup, customerId }) => {
   const axiosInstance = useAxiosPrivate();
   const safeOnClose = typeof onClose === "function" ? onClose : () => {};
 
-  const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
     name: "",
     address: "",
     phone: "",
     whatsapp: "",
     discount: "",
-    discountType: "",
-    discountFrequency: "",
+    discountType: "Manual",
+    discountFrequency: "Weekly",
     balance: "",
-    route: "",
+    route: "No",
     routeName: "",
   });
 
-  // Helper to merge partial updates
-  const handleChange = (field, value) =>
-    setFormData((prev) => ({ ...prev, [field]: value }));
-
-  // Cancel/close
-  const handleCancel = () => {
-    safeOnClose();
-    setPopup(false);
-  };
-
-  // 1) Fetch existing customer on mount
   useEffect(() => {
-    const loadCustomer = async () => {
-      try {
-        const { data } = await axiosInstance.get(`/admin/customer/get/${customerId}`);
-        // assuming { customer: { customerName, address, ... } }
-        const c = data.customer;
-        setFormData({
-          name: c.customerName || "",
-          address: c.address || "",
-          phone: c.phone || "",
-          whatsapp: c.whatsapp || "",
-          discount: c.discount?.toString() || "",
-          discountType: c.discountType || "manual",
-          discountFrequency: c.discountApplied || "manual",
-          balance: c.openingBalance?.toString() || "",
-          route: c.routeCustomer ? "Yes" : "No",
-          routeName: c.routeAddress || "",
+    if (customerId) {
+      axiosInstance
+        .get(`/admin/supplier/singlesupplier/${customerId}`)
+        .then((res) => {
+          const data = res.data;
+          setFormData({
+            name: data.customerName || "",
+            address: data.address || "",
+            phone: data.phone || "",
+            whatsapp: data.whatsapp || "",
+            discount: data.discount || "",
+            discountType: data.discountType || "Manual",
+            discountFrequency: data.discountApplied || "Weekly",
+            balance: data.openingBalance || "",
+            route: data.routeCustomer ? "Yes" : "No",
+            routeName: data.routeAddress || "",
+          });
+        })
+        .catch((err) => {
+          console.error("Fetch customer failed:", err);
+          Swal.fire("Error", "Failed to load customer data", "error");
         });
-        console.log("customer",c);
-        
-      } catch (err) {
-        console.error("Error loading customer:", err);
-        Swal.fire({
-          icon: "error",
-          title: "Load Failed",
-          text: err.response?.data?.message || "Could not load customer.",
-        });
-        safeOnClose();
-        setPopup(false);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadCustomer();
-  }, [axiosInstance, customerId, safeOnClose, setPopup]);
-
-  // 2) Submit update
-  const handleSubmit = async () => {
-    if (!formData.name.trim() || !formData.phone.trim()) {
-      await Swal.fire({
-        icon: "error",
-        title: "Validation Error",
-        text: "Name and Phone are required.",
-        confirmButtonColor: "#2563EB",
-      });
-      return;
     }
+  }, [customerId]);
 
-    const payload = {
-      customerName: formData.name.trim(),
-      address: formData.address.trim(),
-      phone: formData.phone.trim(),
-      whatsapp: formData.whatsapp.trim(),
-      discount: parseFloat(formData.discount) || 0,
-      discountApplied: formData.discountFrequency.toLowerCase(),
-      discountType: formData.discountType.toLowerCase(),
-      openingBalance: parseFloat(formData.balance) || 0,
-      routeCustomer: formData.route === "Yes",
-      routeAddress: formData.routeName.trim(),
-    };
-
-    try {
-      await axiosInstance.put(
-        `/admin/customer/updatecustomer/${customerId}`,
-        payload
-      );
-      await Swal.fire({
-        icon: "success",
-        title: "Customer Updated!",
-        text: "Changes have been saved.",
-        confirmButtonColor: "#2563EB",
-      });
-      safeOnClose();
-      setPopup(false);
-    } catch (err) {
-      console.error("Error updating customer:", err.response || err);
-      const msg =
-        err.response?.data?.message ||
-        (Array.isArray(err.response?.data?.errors)
-          ? err.response.data.errors.join("\n")
-          : "Something went wrong.");
-      await Swal.fire({
-        icon: "error",
-        title: "Update Failed",
-        text: msg,
-        confirmButtonColor: "#DC2626",
-      });
-    }
+  const handleChange = (field, value) => {
+    setFormData((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
   };
 
-  if (loading) {
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-        <div className="p-6 bg-white rounded-lg shadow">
-          Loading customer…
-        </div>
-      </div>
-    );
-  }
+  const handleCancel = () => {
+    setPopup(false);
+    safeOnClose();
+  };
+
+  const handleSubmit = async () => {
+    try {
+      const payload = {
+        customerName: formData.name,
+        address: formData.address,
+        phone: formData.phone,
+        whatsapp: formData.whatsapp,
+        discount: formData.discount,
+        discountType: formData.discountType,
+        discountApplied: formData.discountFrequency,
+        openingBalance: formData.balance,
+        routeCustomer: formData.route === "Yes",
+        routeAddress: formData.route === "Yes" ? formData.routeName : "",
+      };
+
+      await axiosInstance.put(`/admin/supplier/update/${customerId}`, payload);
+
+      Swal.fire("Updated!", "Customer details have been updated.", "success");
+      setPopup(false);
+    } catch (error) {
+      console.error("Update failed:", error);
+      Swal.fire("Error", "Failed to update customer", "error");
+    }
+  };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 ">
       <div className="w-full sm:w-[640px] lg:w-[1000px] xl:w-[1200px] bg-white rounded-[24px] p-8 sm:p-10 shadow-xl relative">
         {/* Header */}
         <div className="flex justify-between items-center pb-4 border-b border-gray-300">
           <h2 className="text-2xl font-bold text-gray-900">
-            Edit Customer
+            Edit New Customer
           </h2>
           <button onClick={handleCancel}>
             <XCircleIcon className="w-6 h-6 text-gray-500 hover:text-red-500" />
@@ -148,13 +98,11 @@ const EditCustomerModal = ({ customerId, onClose, setPopup }) => {
 
         {/* Form */}
         <div className="grid grid-cols-2 gap-x-20 gap-y-6 mt-6 text-[#05004e] text-xl">
-          {/* No. */}
           <div className="flex items-center">
             <label className="w-[172px] text-[#737791]">No.</label>
             <span className="font-bold">Auto Generated</span>
           </div>
 
-          {/* Customer Name */}
           <div className="flex items-center">
             <label className="w-[172px] text-[#737791]">
               Customer Name <span className="text-red-500">*</span>
@@ -167,7 +115,6 @@ const EditCustomerModal = ({ customerId, onClose, setPopup }) => {
             />
           </div>
 
-          {/* Address */}
           <div className="flex items-center">
             <label className="w-[172px] text-[#737791]">Address</label>
             <input
@@ -178,7 +125,6 @@ const EditCustomerModal = ({ customerId, onClose, setPopup }) => {
             />
           </div>
 
-          {/* Phone */}
           <div className="flex items-center">
             <label className="w-[172px] text-[#737791]">
               Phone <span className="text-red-500">*</span>
@@ -191,7 +137,6 @@ const EditCustomerModal = ({ customerId, onClose, setPopup }) => {
             />
           </div>
 
-          {/* WhatsApp */}
           <div className="flex items-start">
             <label className="w-[172px] text-[#737791]">WhatsApp</label>
             <div className="flex flex-col gap-3">
@@ -204,7 +149,6 @@ const EditCustomerModal = ({ customerId, onClose, setPopup }) => {
               <div className="flex items-center gap-2">
                 <input
                   type="checkbox"
-                  checked={formData.whatsapp === formData.phone}
                   onChange={(e) =>
                     handleChange(
                       "whatsapp",
@@ -220,7 +164,6 @@ const EditCustomerModal = ({ customerId, onClose, setPopup }) => {
             </div>
           </div>
 
-          {/* Discount % */}
           <div className="flex items-center">
             <label className="w-[172px] text-[#737791]">Discount %</label>
             <input
@@ -231,7 +174,6 @@ const EditCustomerModal = ({ customerId, onClose, setPopup }) => {
             />
           </div>
 
-          {/* Discount Applied */}
           <div className="flex items-start">
             <label className="w-[172px] text-[#737791] mt-8">
               Discount Applied
@@ -241,9 +183,7 @@ const EditCustomerModal = ({ customerId, onClose, setPopup }) => {
                 {["Weekly", "Monthly", "Yearly"].map((freq, idx) => (
                   <button
                     key={freq}
-                    onClick={() =>
-                      handleChange("discountFrequency", freq)
-                    }
+                    onClick={() => handleChange("discountFrequency", freq)}
                     className={`px-6 py-3 ${
                       formData.discountFrequency === freq
                         ? "bg-blue-100 text-blue-700 border border-blue-500"
@@ -253,7 +193,7 @@ const EditCustomerModal = ({ customerId, onClose, setPopup }) => {
                         ? "rounded-l-2xl"
                         : idx === 2
                         ? "rounded-r-2xl"
-                        : ""
+                        : "rounded-none"
                     }`}
                   >
                     {freq}
@@ -264,9 +204,7 @@ const EditCustomerModal = ({ customerId, onClose, setPopup }) => {
                 {["Manual", "Auto"].map((method, idx) => (
                   <button
                     key={method}
-                    onClick={() =>
-                      handleChange("discountType", method)
-                    }
+                    onClick={() => handleChange("discountType", method)}
                     className={`px-6 py-3 ${
                       formData.discountType === method
                         ? "bg-blue-100 text-blue-700 border border-blue-500"
@@ -284,7 +222,6 @@ const EditCustomerModal = ({ customerId, onClose, setPopup }) => {
             </div>
           </div>
 
-          {/* Opening Balance */}
           <div className="flex items-center">
             <label className="w-[172px] text-[#737791]">
               Opening Balance

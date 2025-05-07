@@ -206,4 +206,5 @@ const resetPassword = async (req, res) => {
   }
 };
 
+
 module.exports = { login, signUp,refresh,checkResetToken,resetPassword };

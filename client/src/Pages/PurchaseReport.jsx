@@ -25,7 +25,7 @@ function PurchaseReport() {
   useEffect(() => {
     const fetchPurchases = async () => {
       setIsLoading(true);
-      setNoReports(false); 
+      setNoReports(false);
       try {
         const response = await axiosInstance.get(
           `admin/purchase?page=${currentPage}&limit=${limit}&startDate=${startDate}&endDate=${toDate}`
@@ -132,7 +132,10 @@ function PurchaseReport() {
               <OvalSpinner />
             ) : noReports ? (
               <tr>
-                <td colSpan="8" className="text-center text-xl font-bold text-red-500">
+                <td
+                  colSpan="8"
+                  className="text-center text-xl font-bold text-red-500"
+                >
                   No more reports available for the selected date range.
                 </td>
               </tr>
@@ -181,8 +184,8 @@ function PurchaseReport() {
           <div className="min-w-32 justify-center text-slate-900 text-xl font-bold font-['Urbanist'] tracking-wide">
             {totalStats?.netTotalAmount?.toFixed(2)}
           </div>
-          </div>
-         <div className="w-[1495px] px-12 py-2 left-0 top-[650px] absolute bg-white border-b border-gray-200 inline-flex justify-between items-center">
+        </div>
+        <div className="w-[1495px] px-12 py-2 left-0 top-[650px] absolute bg-white border-b border-gray-200 inline-flex justify-between items-center">
           <div className="flex justify-start items-center gap-5">
             <div className="justify-center text-slate-500/40 text-xl font-normal font-['Urbanist'] tracking-wide">
               Commission
@@ -306,6 +309,7 @@ function PurchaseReport() {
                 />
               </div>
             </div>
+            {purchaseData?.purchaseEntries?.length>0&&
             <button
               className="px-8 py-4 bg-gray-50 rounded-xl flex justify-start items-center gap-3 cursor-pointer"
               onClick={fetchPrintData}
@@ -317,7 +321,7 @@ function PurchaseReport() {
               <div className="w-10 justify-start text-indigo-950 text-xl font-bold font-['Urbanist']">
                 Print
               </div>
-            </button>
+            </button>}
           </div>
         </div>
       </div>

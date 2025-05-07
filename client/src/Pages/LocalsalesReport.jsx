@@ -1,157 +1,219 @@
-import React, { useState } from 'react';
-import { RiPrinterLine } from "react-icons/ri";
-import { FaChevronRight } from "react-icons/fa6";
+import React, { useEffect, useState } from "react";
+import { Printer } from "lucide-react";
+import useAxiosPrivate from "../hooks/useAxiosPrivate";
+import OvalSpinner from "../Components/spinners/OvalSpinner";
+import { openSalesRegisterPrintPage } from "../utils/totalSaleReport";
+import Swal from "sweetalert2";
 
 function LocalsalesReport() {
-    const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 7;
+  const [salesData, setSalesData] = useState([]);
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [loading, setLoading] = useState(false);
+  const limit = 10;
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [garndTotal, setGrandTotal] = useState(0);
+  const [printLoading, setPrintLoading] = useState(false);
+  const axiosInstance = useAxiosPrivate();
 
-    const data = [
-        { no: '001', date: '01/12/2024', supplier: 'Farm Fresh', customer: 'GreenMart', qty: '100', total: '$510.00' },
-        { no: '002', date: '01/12/2024', supplier: 'Green Supply', customer: 'LocalMart', qty: '150', total: '$800.00' },
-        { no: '003', date: '02/12/2024', supplier: 'EcoGrocer', customer: 'NatureFoods', qty: '200', total: '$1,200.00' },
-        { no: '004', date: '03/12/2024', supplier: 'AgroPlus', customer: 'MarketWay', qty: '80', total: '$400.00' },
-        { no: '005', date: '03/12/2024', supplier: 'GrowWell', customer: 'EcoMart', qty: '120', total: '$600.00' },
-        { no: '006', date: '04/12/2024', supplier: 'Organic Roots', customer: 'Farmers Co.', qty: '90', total: '$450.00' },
-        { no: '007', date: '04/12/2024', supplier: 'Harvest Point', customer: 'Fresh Basket', qty: '300', total: '$1,800.00' },
-        { no: '008', date: '05/12/2024', supplier: 'Daily Harvest', customer: 'Urban Store', qty: '50', total: '$250.00' },
-        { no: '009', date: '06/12/2024', supplier: 'FreshCo', customer: 'Green Basket', qty: '70', total: '$350.00' },
-    ];
-
-    const totalPages = Math.ceil(data.length / itemsPerPage);
-    const paginatedData = data.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
-
-    const [selectedRows, setSelectedRows] = useState([]);
-    const isAllSelected = paginatedData.length > 0 && paginatedData.every(item => selectedRows.includes(item.no));
-
-    const handleSelectAll = () => {
-        if (isAllSelected) {
-            setSelectedRows([]);
-        } else {
-            setSelectedRows(paginatedData.map(item => item.no));
-        }
-    };
-
-    const toggleCheckbox = (no) => {
-        setSelectedRows((prev) =>
-            prev.includes(no) ? prev.filter(id => id !== no) : [...prev, no]
+  useEffect(() => {
+    const fetchSalesData = async () => {
+      setLoading(true);
+      try {
+        const response = await axiosInstance.get(
+          `/admin/sales/getAllsaleByDate?startDate=${startDate}&endDate=${endDate}&limit=${limit}&page=${currentPage}&paginate=${true}`
         );
+        setSalesData(response?.data?.data);
+        setTotalPages(response?.data?.totalPages);
+      } catch (error) {
+        console.log(error);
+      } finally {
+        setLoading(false);
+      }
     };
 
-    return (
-        <div className=" bg-gray-50 outline-1 outline-offset-[-1px] outline-white overflow-hidden mt-10 bg">
-            <div className="w-[1511px] h-[1095px] fixed bg-white rounded-3xl overflow-hidden">
+    fetchSalesData();
+  }, [currentPage, startDate, endDate]);
 
-                {/* Table */}
-                <table className="w-full absolute left-0 top-[200px]">
-                    <thead>
-                        <tr className=" w-full px-12 py-3 bg-gray-50 border-b border-gray-200 inline-flex justify-start items-center gap-16">
-                            <th className="w-8 h-8 relative">
-                                <input
-                                    type="checkbox"
-                                    className="w-4 h-4 absolute left-[7px] top-[7px] accent-blue-500"
-                                    checked={isAllSelected}
-                                    onChange={handleSelectAll}
-                                />
-                            </th>
-                            <th className="w-full text-indigo-950 text-xl font-bold font-['Urbanist'] tracking-wide">No.</th>
-                            <th className="w-full  text-indigo-950 text-xl font-bold font-['Urbanist'] tracking-wide">Date</th>
-                            <th className="w-full  text-indigo-950 text-xl font-bold font-['Urbanist'] tracking-wide">Supplier</th>
-                            <th className="w-full  text-indigo-950 text-xl font-bold font-['Urbanist'] tracking-wide">Customer</th>
-                            <th className="w-full  text-indigo-950 text-xl font-bold font-['Urbanist'] tracking-wide">Qty</th>
-                            <th className="w-full  text-indigo-950 text-xl font-bold font-['Urbanist'] tracking-wide">Total</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {paginatedData.map((item) => (
-                            <tr key={item.no} className="w-full px-12 py-3 bg-white border-b border-gray-200 inline-flex justify-start items-center gap-16">
-                                <td className="w-8 h-8 relative">
-                                    <input
-                                        type="checkbox"
-                                        className="w-4 h-4 absolute left-[7px] top-[7px] accent-blue-500"
-                                        checked={selectedRows.includes(item.no)}
-                                        onChange={() => toggleCheckbox(item.no)}
-                                    />
-                                </td>
-                                <td className="min-w-16 text-slate-900 text-xl font-normal font-['Urbanist'] tracking-wide">{item.no}</td>
-                                <td className="min-w-32 text-slate-900 text-xl font-normal font-['Urbanist'] tracking-wide">{item.date}</td>
-                                <td className="min-w-32 text-slate-900 text-xl font-normal font-['Urbanist'] tracking-wide">{item.supplier}</td>
-                                <td className="min-w-32 text-slate-900 text-xl font-normal font-['Urbanist'] tracking-wide">{item.customer}</td>
-                                <td className="min-w-32 text-slate-900 text-xl font-normal font-['Urbanist'] tracking-wide">{item.qty}</td>
-                                <td className="min-w-32 text-slate-900 text-xl font-normal font-['Urbanist'] tracking-wide">{item.total}</td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
+  useEffect(() => {
+    const fetchSalesData = async () => {
+      setLoading(true);
+      try {
+        const response = await axiosInstance.get(
+          `/admin/sales/getAllsaleByDate?startDate=${startDate}&endDate=${endDate}&limit=${limit}&page=${currentPage}&paginate=${false}`
+        );
+        setGrandTotal(response?.data?.grandTotalAmount);
+      } catch (error) {
+        console.log(error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-                {/* Grand Total */}
-                <div className="w-[1511px] px-12 py-5 left-0 top-[735px] absolute bg-teal-50 border-b border-gray-200 inline-flex justify-start items-center gap-16">
-                    <div className="w-[960px] min-w-32 justify-center text-slate-500/40 text-xl font-normal font-['Urbanist'] tracking-wide">Grand Total</div>
-                    <div className="min-w-32 justify-center text-slate-900 text-xl font-bold font-['Urbanist'] tracking-wide">$1,310.00</div>
-                </div>
+    fetchSalesData();
+  }, [startDate, endDate]);
 
-                {/* Pagination */}
-                <div className="w-[1511px] px-12 py-2 left-0 top-[660px] absolute border-b border-gray-200 inline-flex justify-between items-center">
-                    <div className="flex justify-start items-center gap-4">
-                        <div className="text-center justify-center text-slate-900 text-xl font-normal font-['Urbanist'] tracking-wide">
-                            Page {currentPage} of {totalPages}
-                        </div>
-                    </div>
-                    <div className="flex justify-end items-center gap-6">
-                        <button
-                            className="w-40 px-6 py-4 bg-white rounded-2xl outline-1 outline-offset-[-1px] outline-gray-300/30 flex justify-center items-center gap-3"
-                            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                            disabled={currentPage === 1}
-                        >
-                            <div className={`justify-start text-xl font-bold font-['Urbanist'] ${currentPage === 1 ? 'text-gray-300/30' : 'text-blue-500'}`}>
-                                Previous
-                            </div>
-                        </button>
-                        <button
-                            className="w-40 px-6 py-4 bg-white rounded-2xl outline-1 outline-offset-[-1px] outline-gray-300/30 flex justify-center items-center gap-3"
-                            onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-                            disabled={currentPage === totalPages}
-                        >
-                            <div className={`justify-start text-xl font-bold font-['Urbanist'] ${currentPage === totalPages ? 'text-gray-300/30' : 'text-blue-500'}`}>
-                                Next
-                            </div>
-                        </button>
-                    </div>
-                </div>
+  const fetchPrintData = async () => {
+    setPrintLoading(true);
+    try {
+      const response = await axiosInstance.get(
+        `/admin/sales/getAllsaleByDate?startDate=${startDate}&endDate=${endDate}&limit=${limit}&page=${currentPage}&paginate=${false}`
+      );
+      openSalesRegisterPrintPage(
+        response?.data?.data,
+        response?.data?.grandTotalAmount,
+        startDate,
+        endDate
+      );
+    } catch (error) {
+      Swal.fire({
+        title: "Something went wrong!",
+        icon: "error",
+        draggable: true,
+      });
+      console.error("Error fetching print data", error);
+    } finally {
+      setPrintLoading(false);
+    }
+  };
+  const handlePrevious = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
 
-                {/* Header */}
-                <div className="left-[48px] top-[38px] absolute inline-flex justify-start items-center gap-3">
-                <div className="flex items-center text-slate-500 text-xl font-normal font-['Urbanist'] gap-2">
-  Reports <FaChevronRight /> Local Sales Report
-</div>
-                </div>
-                <div className="left-[48px] top-[60px] absolute justify-start text-indigo-950 text-4xl font-bold font-['Urbanist'] leading-[50.40px]">
-                    Local Sales Report
-                </div>
+  const handleNext = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
 
-                {/* Date Filters */}
-                <div className="left-[697px] top-[120px] absolute inline-flex justify-start items-center gap-12">
-                    <div className="justify-start text-slate-500/40 text-xl font-normal font-['Urbanist']">Date Range</div>
-                    <div className="w-64 px-6 py-4 bg-gray-50 rounded-tl-xl rounded-tr-xl flex justify-between items-center">
-                        <input type="date" className="bg-gray-50 text-zinc-700 text-xl font-normal font-['Urbanist'] w-full outline-none" />
-                    </div>
-                    <div className="justify-start text-slate-500/40 text-xl font-normal font-['Urbanist']">to</div>
-                    <div className="w-64 px-6 py-4 bg-gray-50 rounded-tl-xl rounded-tr-xl flex justify-between items-center">
-                        <input type="date" className="bg-gray-50 text-zinc-700 text-xl font-normal font-['Urbanist'] w-full outline-none" />
-                    </div>
-                </div>
-
-                {/* Print Icon */}
-                <button className="px-8 py-4 left-[1313px] top-[36px] absolute bg-gray-50 rounded-xl inline-flex justify-start items-center gap-3">
-    <div className="w-8 h-8 relative">
-        {/* Printer Icon */}
-        <RiPrinterLine className="w-8 h-8 left-0 top-0 absolute opacity-100 text-zinc-800" />
-    </div>
-    <div className="w-10 justify-start text-indigo-950 text-xl font-bold font-['Urbanist']">Print</div>
-</button> 
-            </div>
+  return (
+    <>
+      {printLoading && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/50 backdrop-blur-sm">
+          <OvalSpinner />
         </div>
-    );
+      )}
+      <div className="p-6 bg-white rounded-md mt-10">
+        <div className="text-[20px] text-gray-500 mb-1">
+          Reports &gt; <span className=" font-medium">Local Sales Report</span>
+        </div>
+        <h1 className="text-3xl font-bold text-[#0E0F3C] mb-4 mt-8 p-2">
+          Local Sales Report
+        </h1>
+        {salesData?.length > 0 &&
+        <div className="flex items-center justify-between mb-4 float-right -mt-[5%] mr-[5%]">
+          <button
+            className="flex items-center gap-1 px-4 py-2  rounded-md bg-[#F9FAFB] "
+            onClick={fetchPrintData}
+          >
+            <Printer size={16} />
+            <span className="font-medium text-[#0E0F3C]">Print</span>
+          </button>
+        </div>}
+        <div className="flex items-center gap-2 text-sm text-gray-500 float-right ">
+          <span>Date Range</span>
+          <input
+            type="date"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+            placeholder="DD/MM/YYYY"
+            className="px-5 py-3  rounded-md text-sm text-gray-500  bg-[#F9FAFB]"
+          />
+          <span>to</span>
+          <input
+            type="date"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+            placeholder="DD/MM/YYYY"
+            className="px-5 py-3 rounded-md text-sm text-gray-500  bg-[#F9FAFB]"
+          />
+        </div>
+
+        <table className="w-full text-sm border rounded-md overflow-hidden mt-[7%]  ">
+          <thead className="bg-[#F9FAFB] text-[#0E0F3C] text-left ">
+            <tr>
+              <th className="p-2 py-3">No.</th>
+              <th className="p-2 py-3">Customer</th>
+              <th className="p-2 py-3">Qty (KG)</th>
+              <th className="p-2 py-3">Qty (Box)</th>
+              <th className="p-2 py-3">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {loading ? (
+              <tr>
+                <td colSpan="8" className="text-center">
+                  <OvalSpinner />
+                </td>
+              </tr>
+            ) : salesData?.length === 0 ? (
+              <tr>
+                <td
+                  colSpan="8"
+                  className="text-center py-10 text-xl font-bold text-gray-400"
+                >
+                  No more reports available for the selected date range.
+                </td>
+              </tr>
+            ) : (
+              salesData?.map((i, index) => (
+                <tr key={i.id} className="border-t border-t-[#E8E8ED] ">
+                  <td className="p-2 py-3 ">
+                    {index + 1 + (currentPage - 1) * limit}
+                  </td>
+                  <td className="p-2 py-3">{i?.customerName}</td>
+                  <td className="p-2 py-3">{i?.totalKg}</td>
+                  <td className="p-2 py-3">{i?.totalBox}</td>
+                  <td className="p-2 py-3">{i?.totalAmount?.toFixed(2)}</td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+
+        {salesData?.length > 0 && (
+          <>
+            <div className="flex items-center justify-between mt-4 text-sm">
+              <span className="text-[#0E0F3C]">
+                Page {currentPage} of {totalPages}
+              </span>
+              <div className="space-x-4 mr-[7%]">
+                <button
+                  className={`${
+                    currentPage === 1
+                      ? "text-gray-400 cursor-not-allowed"
+                      : "text-[#4079ED]"
+                  } px-4 py-3 rounded border bg-gray-100`}
+                  onClick={handlePrevious}
+                  disabled={currentPage === 1}
+                >
+                  Previous
+                </button>
+                <button
+                  className={`${
+                    currentPage === totalPages
+                      ? "text-gray-400 cursor-not-allowed"
+                      : "text-[#4079ED]"
+                  } px-4 py-3 rounded border bg-gray-100`}
+                  onClick={handleNext}
+                  disabled={currentPage === totalPages}
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+
+            <div className="mt-4 text-right bg-green-50 text-[#0E0F3C] px-6 py-3 rounded-md font-semibold text-lg">
+              Grand Total: {garndTotal?.toFixed(2)}
+            </div>
+          </>
+        )}
+      </div>
+    </>
+  );
 }
 
 export default LocalsalesReport;

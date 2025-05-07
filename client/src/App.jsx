@@ -25,7 +25,6 @@ import Expenses from "./Pages/Expenses";
 import IndividualReports from "./Pages/IndividualReports";
 import SalesTransaction from "./Pages/SalesTransaction";
 import Sales from "./Pages/Sales";
-// import Sample from './Pages/Sample'
 import Cashbook from "./Pages/Cashbook";
 import PurchaseReport from "./Pages/PurchaseReport";
 import Dashboard from "./Pages/Dashboard";
@@ -40,7 +39,7 @@ import AddPayment from "./Pages/Payment/AddPayment";
 import IndividualSales from "./Pages/IndividualSales";
 import EditPurchaseTransaction from "./Pages/purchase/EditPurchaseTransaction";
 
-import Sample from "./Pages/Sample"
+// import Sample from "./Pages/Sample"
 
 function App() {
   return (
@@ -83,7 +82,6 @@ function App() {
 
               <Route path='/whatsapp' element={<Whatsapp />} />
 
-<Route path="/sample" element={<Sample/>}/>
               <Route path="/updatecustomer/:id" element={<EditCustomerModal />} />
             </Route>
           </Route>

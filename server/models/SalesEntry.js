@@ -92,7 +92,7 @@ const saleTransactionSchema = new mongoose.Schema({
   },
   purchase: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "Purchase",
+    ref: "PurchaseEntry",
     required: true,
   },
 }, { timestamps: true });

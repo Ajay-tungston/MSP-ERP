@@ -455,9 +455,174 @@ const getCustomerSalesByDate = async (req, res) => {
   }
 };
 
+// const getSalesEntriesByDate = async (req, res) => {
+//   try {
+//     const {
+//       page = 1,
+//       limit = 10,
+//       startDate,
+//       endDate
+//     } = req.query;
+
+//     if (!startDate || !endDate) {
+//       return res.status(400).json({ error: "Start date and end date are required" });
+//     }
+
+//     const start = new Date(startDate);
+//     const end = new Date(endDate);
+//     end.setHours(23, 59, 59, 999); // Include full end date
+
+//     const filter = {
+//       dateOfSale: { $gte: start, $lte: end }
+//     };
+
+//     const total = await SalesEntry.countDocuments(filter);
+//     const salesEntries = await SalesEntry.find(filter)
+//       .skip((page - 1) * limit)
+//       .limit(parseInt(limit))
+//       .sort({ dateOfSale: -1 }).populate({
+//         path: "purchase",
+//         select: "supplier",
+//         populate: {
+//           path: "supplier",
+//           select: "supplierName", 
+//         },
+//       });
+
+//     // Add totalKg and totalBox to each entry
+//     const enhancedEntries = salesEntries.map((entry) => {
+//       let totalKg = 0;
+//       let totalBox = 0;
+
+//       entry.customers.forEach((customer) => {
+//         customer.items.forEach((item) => {
+//           if (item.quantityType === "kg") {
+//             totalKg += item.quantity;
+//           } else if (item.quantityType === "box") {
+//             totalBox += item.quantity;
+//           }
+//         });
+//       });
+
+//       // Return entry as a plain object and attach the new fields
+//       return {
+//         ...entry.toObject(),
+//         totalKg,
+//         totalBox
+//       };
+//     });
+
+//     res.json({
+//       total,
+//       page: parseInt(page),
+//       limit: parseInt(limit),
+//       totalPages: Math.ceil(total / limit),
+//       data: enhancedEntries,
+//     });
+//   } catch (error) {
+//     console.error("Error fetching sales entries:", error);
+//     res.status(500).json({ error: "Server error" });
+//   }
+// };
+
+
+
+//for sales report
+const getSalesEntriesByDate = async (req, res) => {
+  try {
+    const { startDate, endDate, page = 1, limit = 10, paginate = "true" } = req.query;
+
+    if (!startDate || !endDate) {
+      return res.status(400).json({ error: "Start date and end date are required" });
+    }
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    end.setHours(23, 59, 59, 999); // Include full day
+
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const shouldPaginate = paginate === "true";
+
+    const basePipeline = [
+      { $match: { dateOfSale: { $gte: start, $lte: end } } },
+      { $unwind: "$customers" },
+      { $unwind: "$customers.items" },
+      {
+        $lookup: {
+          from: "customers",
+          localField: "customers.customer",
+          foreignField: "_id",
+          as: "customerInfo"
+        }
+      },
+      { $unwind: "$customerInfo" },
+      {
+        $group: {
+          _id: "$customers.customer",
+          customerName: { $first: "$customerInfo.customerName" },
+          totalKg: {
+            $sum: {
+              $cond: [{ $eq: ["$customers.items.quantityType", "kg"] }, "$customers.items.quantity", 0]
+            }
+          },
+          totalBox: {
+            $sum: {
+              $cond: [{ $eq: ["$customers.items.quantityType", "box"] }, "$customers.items.quantity", 0]
+            }
+          },
+          totalAmount: { $sum: "$customers.items.totalCost" }
+        }
+      },
+      { $sort: { customerName: 1 } }
+    ];
+
+    if (shouldPaginate) {
+      const paginatedPipeline = [
+        ...basePipeline,
+        {
+          $facet: {
+            metadata: [{ $count: "total" }],
+            data: [{ $skip: skip }, { $limit: parseInt(limit) }]
+          }
+        }
+      ];
+
+      const result = await SalesEntry.aggregate(paginatedPipeline);
+      const total = result[0]?.metadata[0]?.total || 0;
+      const data = result[0]?.data || [];
+
+      return res.json({
+        total,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        totalPages: Math.ceil(total / limit),
+        data
+      });
+    } else {
+      const data = await SalesEntry.aggregate(basePipeline);
+
+      const grandTotalKg = data.reduce((sum, entry) => sum + (entry.totalKg || 0), 0);
+      const grandTotalBox = data.reduce((sum, entry) => sum + (entry.totalBox || 0), 0);
+      const grandTotalAmount = data.reduce((sum, entry) => sum + (entry.totalAmount || 0), 0);
+
+      return res.json({
+        total: data.length,
+        grandTotalKg,
+        grandTotalBox,
+        grandTotalAmount,
+        data
+      });
+    }
+  } catch (error) {
+    console.error("Error in customer sales summary:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+};
+
 module.exports = {
   createSaleTransaction,
   getSalesEntries,
   getCustomerSalesReport,
   getCustomerSalesByDate,
+  getSalesEntriesByDate
 };

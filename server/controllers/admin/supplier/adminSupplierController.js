@@ -12,6 +12,7 @@ const addNewSupplier = async (req, res) => {
       advance,
       advanceDeducted,
       commission,
+      marketFee
     } = req.body;
 
     //required feilds
@@ -87,15 +88,22 @@ const addNewSupplier = async (req, res) => {
         message: "Advance deducted must be a valid non-negative number",
       });
     }
-    
+
     if (
-        commission &&
-        (!validator.isNumeric(commission.toString()) || commission < 0 || commission > 100)
-      ) {
-        return res.status(400).json({
-          message: "Commission must be a number between 0 and 100 (inclusive)",
-        });
-      }
+      commission &&
+      (!validator.isNumeric(commission.toString()) ||
+        commission < 0 ||
+        commission > 100)
+    ) {
+      return res.status(400).json({
+        message: "Commission must be a number between 0 and 100 (inclusive)",
+      });
+    }
+    if (marketFee && (!validator.isNumeric(marketFee.toString()) || marketFee < 0)) {
+      return res
+        .status(400)
+        .json({ message: "marketFee must be a valid non-negative number" });
+    }
 
     // const lastSupplier = await Supplier.findOne().sort({ no: -1 });
     // const nextNo = lastSupplier ? lastSupplier.no + 1 : 1;
@@ -110,6 +118,7 @@ const addNewSupplier = async (req, res) => {
       advance,
       advanceDeducted,
       commission,
+      marketFee
     });
     await newSupplier.save();
     return res
@@ -152,26 +161,96 @@ const getAllSuppliers = async (req, res) => {
   }
 };
 
-const deleteSuppliers=async(req,res)=>{
-    try {
-        const {supplierIds} = req.body;
+//need to add logic for check the supplier has any transcations
+const deleteSuppliers = async (req, res) => {
+  try {
+    const { supplierIds } = req.body;
 
-        if (!Array.isArray(supplierIds) || supplierIds.length === 0) {
-            return res.status(400).json({ message: "Please provide a valid list of supplier IDs." });
-          }
-          const result = await Supplier.deleteMany({ _id: { $in: supplierIds } });
-
-          if (result.deletedCount === 0) {
-            return res.status(404).json({ message: "Supplier not found" });
-          }
-      
-          return res.status(200).json({
-            message: `${result.deletedCount} suppliers deleted successfully`,
-          });
-    } catch (error) { 
-        console.log(error);
-        return res.status(500).json({ message: "Error deleting suppliers" });
+    if (!Array.isArray(supplierIds) || supplierIds.length === 0) {
+      return res
+        .status(400)
+        .json({ message: "Please provide a valid list of supplier IDs." });
     }
-}
+    const result = await Supplier.deleteMany({ _id: { $in: supplierIds } });
 
-module.exports = { addNewSupplier,getAllSuppliers,deleteSuppliers};
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ message: "Supplier not found" });
+    }
+
+    return res.status(200).json({
+      message: `${result.deletedCount} suppliers deleted successfully`,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: "Error deleting suppliers" });
+  }
+};
+
+//select supplier in purchase bill
+const getSupplierList = async (req, res) => {
+  try {
+    const search = req.query.search || "";
+    const query = search
+      ? {
+          $or: [
+            { supplierName: { $regex: search, $options: "i" } },
+            { supplierCode: { $regex: search, $options: "i" } },
+          ],
+        }
+      : {};
+    const suppliers = await Supplier.find(query).select(
+      "supplierName supplierCode commission marketFee address whatsapp"
+    );
+    return res.status(200).json(suppliers);
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: "Error getting suppliers" });
+  }
+};
+
+const updateSupplier = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const updatedSupplier = await Supplier.findByIdAndUpdate(
+      id,
+      {
+        $set: req.body, // only update fields that are provided in body
+      },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedSupplier) {
+      return res.status(404).json({ message: "Supplier not found" });
+    }
+
+    res.status(200).json(updatedSupplier);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+const getSingleSupplier = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const supplier = await Supplier.findById(id);
+
+    if (!supplier) {
+      return res.status(404).json({ message: "Supplier not found" });
+    }
+
+    res.status(200).json(supplier);
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+
+module.exports = {
+  addNewSupplier,
+  getAllSuppliers,
+  deleteSuppliers,
+  getSupplierList,
+  updateSupplier,
+  getSingleSupplier,
+};

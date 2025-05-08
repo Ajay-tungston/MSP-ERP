@@ -36,11 +36,7 @@ const axiosInstense = useAxiosPrivate()
     [currentPage]
   )
 
- // --- Pagination calculations ---
-//  const totalPages = Math.ceil(companies.length / companiesPerPage);
-//  const indexOfLast = currentPage * companiesPerPage;
-//  const indexOfFirst = indexOfLast - companiesPerPage;
-//  const currentCompanies = companies.slice(indexOfFirst, indexOfLast);
+
 
   // Pagination handlers
   const handlePrevious = () => {
@@ -52,7 +48,7 @@ const axiosInstense = useAxiosPrivate()
   const handleNext = () => {
     if (currentPage < totalPages) {
       setCurrentPage(currentPage + 1);
-    }
+    } 
   };
   return (
     <>

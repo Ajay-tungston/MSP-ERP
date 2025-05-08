@@ -58,18 +58,7 @@ const IndividualReports = () => {
     }
   }, [searchTerm]);
 
-  // useEffect(() => {
-  //     const fetchSuppliers = async () => {
-  //         try {
-  //             const res = await axiosInstance.get(`/admin/supplier/list?search=${searchTerm}`);
-  //             setSuppliers(res?.data);
-  //         } catch (error) {
-  //             console.error("Error fetching suppliers:", error);
-  //         }
-  //     };
-
-  //     fetchSuppliers();
-  // }, [searchTerm]);
+ 
 
   useEffect(() => {
     const fetchPurchases = async () => {

@@ -208,9 +208,49 @@ const getSupplierList = async (req, res) => {
   }
 };
 
+const updateSupplier = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const updatedSupplier = await Supplier.findByIdAndUpdate(
+      id,
+      {
+        $set: req.body, // only update fields that are provided in body
+      },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedSupplier) {
+      return res.status(404).json({ message: "Supplier not found" });
+    }
+
+    res.status(200).json(updatedSupplier);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+const getSingleSupplier = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const supplier = await Supplier.findById(id);
+
+    if (!supplier) {
+      return res.status(404).json({ message: "Supplier not found" });
+    }
+
+    res.status(200).json(supplier);
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+
 module.exports = {
   addNewSupplier,
   getAllSuppliers,
   deleteSuppliers,
   getSupplierList,
+  updateSupplier,
+  getSingleSupplier,
 };

@@ -135,4 +135,14 @@ const getItemList = async (req, res) => {
   }
 };
 
-module.exports={addItem,getAllItems,deleteItems,getItemList}
+
+
+module.exports={
+  addItem,
+  getAllItems,
+  deleteItems,
+  getItemList,
+  
+  
+}
+  

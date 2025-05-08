@@ -147,7 +147,10 @@ const getAllSuppliers = async (req, res) => {
       });
     }
 
-    const suppliers = await Supplier.find().skip(skip).limit(limit);
+    const suppliers = await Supplier.find()
+      .sort({ createdAt: -1 })  // 🔽 Sort by most recent
+      .skip(skip)
+      .limit(limit);
 
     return res.status(200).json({
       currentPage: page,

@@ -5,7 +5,7 @@ const itemNameRegex = /^[a-zA-Z0-9\s]+$/;
 
 const addItem = async (req, res) => {
   try {
-    const { itemCode, itemName,conversionRatio } = req.body;
+    const { itemCode, itemName } = req.body;
     if (!itemCode || !itemName) {
       return res.status(400).json({ message: "Please fill in all fields" });
     }
@@ -35,13 +35,8 @@ const addItem = async (req, res) => {
       });
     }
     
-    if (conversionRatio && (isNaN(conversionRatio) || conversionRatio <= 0)) {
-      return res.status(400).json({
-        message: "Conversion ratio must be a positive number",
-      });
-    }
-
-    const item = await Item.create({ itemCode, itemName, conversionRatio });
+  
+    const item = await Item.create({ itemCode, itemName });
     res.status(201).json({ item });
   } catch (error) {
     console.log(error);
@@ -54,15 +49,14 @@ const getAllItems = async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
-
     const search = req.query.search || "";
 
     const searchQuery = {
-        $or: [
-          { itemName: { $regex: search, $options: "i" } },
-          { itemCode: { $regex: search, $options: "i" } }
-        ]
-      };
+      $or: [
+        { itemName: { $regex: search, $options: "i" } },
+        { itemCode: { $regex: search, $options: "i" } }
+      ]
+    };
 
     const totalItems = await Item.countDocuments(searchQuery);
 
@@ -75,7 +69,10 @@ const getAllItems = async (req, res) => {
       });
     }
 
-    const items = await Item.find(searchQuery).skip(skip).limit(limit);
+    const items = await Item.find(searchQuery)
+      .sort({ createdAt: -1 }) // 🔽 Sort by creation date (latest first)
+      .skip(skip)
+      .limit(limit);
 
     return res.status(200).json({
       currentPage: page,
@@ -88,6 +85,8 @@ const getAllItems = async (req, res) => {
     return res.status(500).json({ message: "Error getting items" });
   }
 };
+
+
 
 const deleteItems = async (req, res) => {
   try {
@@ -135,6 +134,88 @@ const getItemList = async (req, res) => {
   }
 };
 
+const updateItem = async (req, res) => {
+  try {
+    const { itemId } = req.params;
+    const { itemCode, itemName } = req.body;
+
+    if (!itemId || !itemCode || !itemName) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
+    // Validate inputs
+    if (
+      !validator.isAlphanumeric(itemCode) ||
+      itemCode.length < 3 ||
+      itemCode.length > 10
+    ) {
+      return res.status(400).json({
+        message: "Item code must be alphanumeric and between 3 and 10 characters long",
+      });
+    }
+
+    if (!itemNameRegex.test(itemName)) {
+      return res.status(400).json({
+        message: "Item name must contain only letters, numbers, and spaces",
+      });
+    }
+
+    // Check for duplicate itemCode or itemName (excluding current item)
+    const existingItem = await Item.findOne({
+      $and: [
+        { _id: { $ne: itemId } },
+        {
+          $or: [
+            { itemCode: itemCode },
+            { itemName: itemName }
+          ]
+        }
+      ]
+    });
+
+    if (existingItem) {
+      return res.status(400).json({
+        message: "Another item with the same code or name already exists",
+      });
+    }
+
+    const updatedItem = await Item.findByIdAndUpdate(
+      itemId,
+      { itemCode, itemName },
+      { new: true }
+    );
+
+    if (!updatedItem) {
+      return res.status(404).json({ message: "Item not found" });
+    }
+
+    return res.status(200).json({ message: "Item updated successfully", item: updatedItem });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: "Error updating item" });
+  }
+};
+
+const getItemById = async (req, res) => {
+  try {
+    const { itemId } = req.params;
+
+    if (!itemId) {
+      return res.status(400).json({ message: "Item ID is required" });
+    }
+
+    const item = await Item.findById(itemId);
+
+    if (!item) {
+      return res.status(404).json({ message: "Item not found" });
+    }
+
+    return res.status(200).json(item);
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: "Error fetching item" });
+  }
+};
 
 
 module.exports={
@@ -142,7 +223,8 @@ module.exports={
   getAllItems,
   deleteItems,
   getItemList,
-  
+  updateItem,
+  getItemById,
   
 }
   

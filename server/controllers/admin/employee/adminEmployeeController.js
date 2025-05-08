@@ -109,8 +109,8 @@ const addNewEmployee = async (req, res) => {
 
 const getAllEmployees = async (req, res) => {
   try {
-    const page = parseInt(req.query.page,10) || 1;
-    const limit = parseInt(req.query.limit,10) || 10;
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 10;
     const skip = (page - 1) * limit;
 
     const search = req.query.search || "";
@@ -130,7 +130,10 @@ const getAllEmployees = async (req, res) => {
       });
     }
 
-    const employees = await Employee.find(searchQuery).skip(skip).limit(limit);
+    const employees = await Employee.find(searchQuery)
+      .sort({ joiningDate: -1 })  // ✅ Sort by joiningDate DESC
+      .skip(skip)
+      .limit(limit);
 
     return res.status(200).json({
       currentPage: page,
@@ -143,6 +146,7 @@ const getAllEmployees = async (req, res) => {
     return res.status(500).json({ message: "Error getting employees" });
   }
 };
+
 
 const getEmployeeList = async (req, res) => {
   try {
@@ -184,5 +188,136 @@ const deleteEmployees = async (req, res) => {
     return res.status(500).json({ message: "Error deleting employees" });
   }
 };
+// GET single employee by ID
+const getSingleEmployee = async (req, res) => {
+  try {
+    const { id } = req.params;
 
-module.exports = { addNewEmployee, getAllEmployees,deleteEmployees,getEmployeeList };
+    const employee = await Employee.findById(id);
+    if (!employee) {
+      return res.status(404).json({ message: "Employee not found." });
+    }
+
+    return res.status(200).json(employee);
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: "Error fetching employee." });
+  }
+};
+
+// PUT update employee by ID
+const updateEmployee = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      employeeName,
+      address,
+      phone,
+      whatsapp,
+      openingBalance,
+      joiningDate,
+      salary,
+      salaryType,
+    } = req.body;
+
+    // Validate inputs
+    if (!employeeName || !phone || !salary || !salaryType) {
+      return res.status(400).json({
+        message: "Employee name, phone, salary and salaryType are required.",
+      });
+    }
+
+    if (!["monthly", "daily"].includes(salaryType)) {
+      return res.status(400).json({ message: "Invalid salary type." });
+    }
+
+    if (
+      !validator.isAlphanumeric(employeeName, "en-US", { ignore: " " }) ||
+      employeeName.length < 3 ||
+      employeeName.length > 100
+    ) {
+      return res.status(400).json({
+        message:
+          "Employee name should be alphanumeric and between 3 to 100 characters long",
+      });
+    }
+
+    if (address && (address.length < 5 || address.length > 200)) {
+      return res.status(400).json({
+        message: "Address must be between 5 and 200 characters long",
+      });
+    }
+
+    if (
+      !validator.isMobilePhone(phone, "any", { strictMode: false }) ||
+      phone.length !== 10
+    ) {
+      return res.status(400).json({
+        message: "Invalid phone number format. It should be 10 digits.",
+      });
+    }
+
+    if (
+      whatsapp &&
+      (!validator.isMobilePhone(whatsapp, "any", { strictMode: false }) ||
+        whatsapp.length !== 10)
+    ) {
+      return res.status(400).json({
+        message: "Invalid WhatsApp number format. It must be 10 digits.",
+      });
+    }
+
+    if (!validator.isNumeric(salary.toString()) || salary <= 0) {
+      return res
+        .status(400)
+        .json({ message: "Salary must be a valid positive number." });
+    }
+
+    if (openingBalance && (isNaN(openingBalance) || openingBalance < 0)) {
+      return res.status(400).json({
+        message: "Opening balance must be a valid positive number.",
+      });
+    }
+
+    if (
+      joiningDate &&
+      (!validator.isISO8601(joiningDate) || new Date(joiningDate) > new Date())
+    ) {
+      return res.status(400).json({
+        message: "Joining date must be a valid date and not in the future.",
+      });
+    }
+
+    const employee = await Employee.findByIdAndUpdate(
+      id,
+      {
+        employeeName,
+        address,
+        phone,
+        whatsapp,
+        openingBalance,
+        joiningDate,
+        salary,
+        salaryType,
+      },
+      { new: true }
+    );
+
+    if (!employee) {
+      return res.status(404).json({ message: "Employee not found." });
+    }
+
+    return res.status(200).json({ message: "Employee updated successfully", employee });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+module.exports = 
+{ addNewEmployee, 
+  getAllEmployees,
+  deleteEmployees,
+  getEmployeeList , 
+   getSingleEmployee,  // NEW
+  updateEmployee   };

@@ -1,13 +1,16 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { CiCirclePlus, CiFilter } from "react-icons/ci";
-import { GoTrash } from "react-icons/go";
-import { FaCheckSquare, FaRegSquare } from "react-icons/fa";
 import { LuPencilLine } from "react-icons/lu"; // <--- Added here
 import useAxiosPrivate from "../hooks/useAxiosPrivate";
 import AddCustomerModal from "./AddCustomer";
 import EditCustomerModal from "./EditCustomer";
 import { FaTrashAlt } from "react-icons/fa";
+import { FaChevronRight } from "react-icons/fa6";
+import Swal from "sweetalert2";
+import { debounce } from "lodash";
+import OvalSpinner from "../Components/spinners/OvalSpinner";
+
 
 export default function CustomerHeader() {
   const [customers, setCustomers] = useState([]);
@@ -16,30 +19,45 @@ export default function CustomerHeader() {
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
   const axiosInstance = useAxiosPrivate();
+  const [search, setSearch] = useState("");
+
   const navigate = useNavigate();
+
   console.log(customers);
-  const fetchCustomers = async (page = 1) => {
+  const limit = 10;
+
+  const fetchCustomersDebounced = debounce((page, searchTerm) => {
     setLoading(true);
     try {
-      const limit = 10;
-      const response = await axiosInstance.get(
-        `/admin/customer/get?page=${page}&limit=${limit}`
-      );
-      const data = response.data;
-      setCustomers(data.customers);
-      setCurrentPage(data.currentPage);
-      setTotalPages(data.totalPages);
+      axiosInstance
+        .get(`/admin/customer/get?page=${page}&limit=${limit}&search=${searchTerm}`)
+        .then((response) => {
+          const data = response.data;
+          setCustomers(data.customers);
+          setCurrentPage(data.currentPage);
+          setTotalPages(data.totalPages);
+        })
+        .catch((error) => {
+          console.error("Error fetching customers:", error);
+        })
+        .finally(() => {
+          setLoading(false);
+        });
     } catch (error) {
       console.error("Error fetching customers:", error);
-    } finally {
       setLoading(false);
     }
-  };
+  }, 300); // 500ms debounce time
+  
 
   useEffect(() => {
-    fetchCustomers(currentPage);
-  }, [currentPage]);
+    fetchCustomersDebounced(currentPage, search);
 
+    // Cleanup the debounce function when component unmounts
+    return () => {
+      fetchCustomersDebounced.cancel();
+    };
+  }, [currentPage, search]);
   const toggleRowSelection = (id) => {
     setSelectedRows((prev) =>
       prev.includes(id) ? prev.filter((rowId) => rowId !== id) : [...prev, id]
@@ -69,38 +87,84 @@ export default function CustomerHeader() {
   };
 
   const [popup, setPopup] = useState(false);
+  const [editpopup, setEditPopup] = useState(false);
   const [selectedCustomerId, setSelectedCustomerId] = useState(null);
-
+  
+  const handleDeleteCustomer = async (id) => {
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: 'This will permanently delete the customer.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Yes, delete it!',
+    });
+  
+    if (result.isConfirmed) {
+      try {
+        const response = await axiosInstance.delete(`/admin/customer/delete/${id}`);
+  
+        // Remove from state
+        setCustomers((prev) => prev.filter((cust) => cust._id !== id));
+  
+        Swal.fire({
+          title: 'Deleted!',
+          text: response.data.message,
+          icon: 'success',
+          timer: 2000,
+          showConfirmButton: false,
+        });
+      } catch (error) {
+        Swal.fire({
+          title: 'Error!',
+          text: error?.response?.data?.message || 'Failed to delete customer.',
+          icon: 'error',
+          confirmButtonText: 'OK',
+        });
+      }
+    }
+  };
+  
+  
   return (
     <>
       <div className="p-4 rounded-lg shadow-sm h-[800px] bg-white mt-5">
         {/* Breadcrumb */}
-        <nav className="text-sm text-gray-500 mb-2 mt-10">
-          <span>Master</span> <span className="mx-1">›</span>{" "}
+        <nav className="flex items-center text-[20px] text-gray-500 gap-2 mb-2 mt-10">
+          <span>Master</span>
+          <FaChevronRight />
           <span className="text-gray-700">Customer</span>
         </nav>
 
-        <h1 className="text-2xl font-bold text-gray-800 mb-6">Customer</h1>
 
-{/* Search Input */}
-<div className="relative max-w-md">
-  <input
-    type="text"
-    placeholder="Search here..."
-    className=" px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-  />
- </div>
-          <div className="flex space-x-3 -mt-10 float-right">
-            <button
-              className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-2 rounded-lg flex items-center gap-2"
-              onClick={() => setPopup(true)}
-            >
-              <CiCirclePlus className="text-xl " /> Add New Customer
-            </button>
-          </div>
-        
+        <h1 className="text-3xl font-bold text-gray-800 mb-6">Customer</h1>
+
+        {/* Search Input */}
+        <div className="relative max-w-md">
+        <input
+  type="text"
+  placeholder="Search here..."
+  value={search}
+  onChange={(e) => {
+    const value = e.target.value;
+    setSearch(value);
+    fetchCustomers(1, value); // Always start from page 1 when searching
+  }}
+  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+/>
+        </div>
+        <div className="flex space-x-3 -mt-10 float-right">
+          <button
+            className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-2 rounded-lg flex items-center gap-2"
+            onClick={() => setPopup(true)}
+          >
+            <CiCirclePlus className="text-xl " /> Add New Customer
+          </button>
+        </div>
+
         {/* Dynamic Table */}
-        <div className="mt-20 bg-white ">
+        <div className="mt-10 bg-white ">
           <table className="w-full border-collapse text-gray-900 ">
             <thead>
               <tr className="text-left text-gray-900 font-bold border-b-2 border-gray-200 bg-[#F9FAFB] ">
@@ -124,17 +188,17 @@ export default function CustomerHeader() {
               {loading ? (
                 <tr>
                   <td colSpan="10" className="text-center p-5">
-                    Loading...
+             <OvalSpinner/>
                   </td>
                 </tr>
               ) : customers.length > 0 ? (
-                customers.map((customer) => (
+                customers.map((customer,index) => (
                   <tr
                     key={customer._id || customer.customerNumber}
                     className="border-b border-gray-200 hover:bg-gray-50 bg-white"
                   >
 
-                    <td className="p-2">{customer.customerNumber}</td>
+                    <td className="p-2">{index + 1 + (currentPage - 1) * limit}</td>
                     <td className="p-2">{customer.customerName}</td>
                     <td className="p-2">{customer.address}</td>
                     <td className="p-2">{customer.phone}</td>
@@ -152,11 +216,17 @@ export default function CustomerHeader() {
                         className="text-[#6A5AE0] w-4 h-4 cursor-pointer"
                         onClick={() => {
                           setSelectedCustomerId(customer._id);
-                          setPopup(true);
+                          setEditPopup(true);
                         }}
                       />
                     </td>
-                    <td className="p-2 text-red-500"> <FaTrashAlt /></td>
+                    <td className="p-2 text-red-500">
+  <FaTrashAlt
+    className="cursor-pointer hover:text-red-700"
+    onClick={() => handleDeleteCustomer(customer._id)}
+  />
+</td>
+
                   </tr>
                 ))
               ) : (
@@ -180,8 +250,8 @@ export default function CustomerHeader() {
               onClick={handlePrevious}
               disabled={currentPage === 1}
               className={`px-4 py-2 border border-gray-300 rounded-lg ${currentPage === 1
-                  ? "text-gray-400 cursor-not-allowed"
-                  : "hover:bg-gray-100"
+                ? "text-gray-400 cursor-not-allowed"
+                : "hover:bg-gray-100"
                 }`}
             >
               Previous
@@ -190,8 +260,8 @@ export default function CustomerHeader() {
               onClick={handleNext}
               disabled={currentPage === totalPages}
               className={`px-4 py-2 border border-gray-300 rounded-lg ${currentPage === totalPages
-                  ? "text-gray-400 cursor-not-allowed"
-                  : "hover:bg-gray-100"
+                ? "text-gray-400 cursor-not-allowed"
+                : "hover:bg-gray-100"
                 }`}
             >
               Next
@@ -200,10 +270,10 @@ export default function CustomerHeader() {
         </div>
       </div>
       {popup && <AddCustomerModal setPopup={setPopup} />}
-      {popup && selectedCustomerId && (
+      {editpopup && selectedCustomerId && (
         <EditCustomerModal
           customerId={selectedCustomerId}
-          setPopup={setPopup}
+          setEditPopup={setEditPopup}
         />
       )}
     </>

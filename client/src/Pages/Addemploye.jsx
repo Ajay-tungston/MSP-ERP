@@ -142,7 +142,7 @@ const AddEmployeeModal = ({ onClose ,setPopup}) => {
                 value={employeeName}
                 onChange={(e) => setEmployeeName(e.target.value)}
                 placeholder="Enter here"
-                className="w-[300px] px-4 py-3 bg-gray-50 rounded-xl outline-none text-[#a1a5b6]"
+                className="w-[300px] px-4 py-3 bg-gray-50 rounded-xl outline-none "
               />
             </div>
           </div>
@@ -156,7 +156,7 @@ const AddEmployeeModal = ({ onClose ,setPopup}) => {
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
                 placeholder="Enter here"
-                className="w-[300px] px-4 py-3 bg-gray-50 rounded-xl outline-none text-[#a1a5b6]"
+                className="w-[300px] px-4 py-3 bg-gray-50 rounded-xl outline-none "
               />
             </div>
           </div>
@@ -170,7 +170,7 @@ const AddEmployeeModal = ({ onClose ,setPopup}) => {
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="Enter here"
-                className="w-[300px] px-4 py-3 bg-gray-50 rounded-xl outline-none text-[#a1a5b6]"
+                className="w-[300px] px-4 py-3 bg-gray-50 rounded-xl outline-none "
               />
             </div>
           </div>
@@ -185,7 +185,7 @@ const AddEmployeeModal = ({ onClose ,setPopup}) => {
                   value={whatsapp}
                   onChange={(e) => setWhatsapp(e.target.value)}
                   placeholder="Enter here"
-                  className="w-[300px] px-4 py-3 bg-gray-50 rounded-xl outline-none text-[#a1a5b6]"
+                  className="w-[300px] px-4 py-3 bg-gray-50 rounded-xl outline-none "
                 />
                 <div className="flex items-center gap-2">
                   <input
@@ -194,7 +194,7 @@ const AddEmployeeModal = ({ onClose ,setPopup}) => {
                     onChange={handleSameAsPhoneChange}
                     className="checkbox w-4 h-4 rounded border-2 border-gray-300 focus:ring-0 checked:border-blue-500 checked:bg-blue-500"
                   />
-                  <label className="text-[#a1a5b6] text-base">Same as Phone</label>
+                  <label className=" text-base">Same as Phone</label>
                 </div>
               </div>
             </div>
@@ -209,7 +209,7 @@ const AddEmployeeModal = ({ onClose ,setPopup}) => {
                 value={openingBalance}
                 onChange={(e) => setOpeningBalance(e.target.value)}
                 placeholder="Enter here"
-                className="w-full bg-transparent outline-none text-[#a1a5b6]"
+                className="w-full bg-transparent outline-none "
               />
             </div>
           </div>
@@ -223,7 +223,7 @@ const AddEmployeeModal = ({ onClose ,setPopup}) => {
                 type="date"
                 value={joiningDate}
                 onChange={(e) => setJoiningDate(e.target.value)}
-                className="w-[300px] px-4 py-3 bg-gray-50 rounded-xl outline-none text-[#a1a5b6]"
+                className="w-[300px] px-4 py-3 bg-gray-50 rounded-xl outline-none "
               />
             </div>
           </div>
@@ -239,7 +239,7 @@ const AddEmployeeModal = ({ onClose ,setPopup}) => {
                   value={salary}
                   onChange={(e) => setSalary(e.target.value)}
                   placeholder="Enter here"
-                  className="w-full outline-none text-[#a1a5b6]"
+                  className="w-full outline-none "
                 />
               </div>
             </div>

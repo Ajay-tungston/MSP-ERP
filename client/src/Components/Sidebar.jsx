@@ -36,8 +36,7 @@ export default function Sidebar() {
     "Employee": "/employee",
     "Item": "/item",
     "Expenses": "/expenses",
-    "Company expenses": "/company-expenses",
-    "Other expenses": "/other-expenses",
+    "Lender":"/lender",
     "Commission": "/commission",
     "Company": "/company"
   };

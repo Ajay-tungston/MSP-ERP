@@ -31,20 +31,28 @@ import PurchaseReport from "./Pages/PurchaseReport";
 import Dashboard from "./Pages/Dashboard";
 import PersistLogin from "./Components/PersistLogin";
 import RequireAuth from "./Components/RequireAuth";
-import LocalsalesReport from "./Pages/LocalsalesReport";
-import EditCustomerModal from "./Pages/EditCustomer";
+import IndividualSales from "./Pages/IndividualSales";
+import { ToastContainer } from 'react-toastify';
 import TrialBalance from "./Pages/TrialBalance";
 import Whatsapp from "./Pages/Whatsapp";
 import Payment from "./Pages/Payment/Payment";
 import AddPayment from "./Pages/Payment/AddPayment";
-import IndividualSales from "./Pages/IndividualSales";
+import LocalsalesReport from "./Pages/LocalsalesReport";
 import EditPurchaseTransaction from "./Pages/purchase/EditPurchaseTransaction";
-
+import EditCustomerModal from "./Pages/EditCustomer";
 import Sample from "./Pages/Sample"
+import EditCustomer from "./Pages/EditCustomer";
+import EditCommission from "./Pages/EditCommission";
+import EditCompany from "./Pages/EditCompany";
+import EditEmployee from "./Pages/EditEmployee";
+import EditItem from "./Pages/EditItem";
+import EditSupplier from "./Pages/EditSupplier";
+
 
 function App() {
   return (
     <>
+    <ToastContainer />
       <Routes>
        <Route path="/login" element={<Login />} />
          <Route path="/otp" element={<Otp />} />
@@ -88,9 +96,27 @@ function App() {
             </Route>
           </Route>
         </Route>
-       
-    
-       
+        <Route path="/login" element={<Login />} />
+        <Route path="/add-item" element={<AddItem />} />
+        <Route path="/otp" element={<Otp />} />
+        <Route path="/forgot-password" element={<ForgetPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/add-commission" element={<AddCommission />} />
+        <Route path="/add-company" element={<AddCompany />} />
+        <Route path="/expense" element={<AddExpense />} />
+
+        <Route path="/add-employe" element={<Addemploye />} />
+        <Route path="/purchase-transaction" element={<Purchasetransaction />} />
+        <Route path="/add-customer" element={<AddCustomer />} />
+        <Route path="/add-supplier" element={<AddSupplier />} />
+        <Route path="/company" element={<Company />} />
+        <Route path="/edit-customer/:id" element={<EditCustomer />} />
+        <Route path="/edit-commission" element={<EditCommission />} />
+        <Route path="/edit-company" element={<EditCompany />} />
+        <Route path="/edit-employee" element={<EditEmployee />} />
+        <Route path="/edit-item" element={<EditItem />} />
+        <Route path="/edit-supplier" element={<EditSupplier />} />
+        
       </Routes>
     </>
   );

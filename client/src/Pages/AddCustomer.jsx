@@ -3,8 +3,7 @@ import Swal from "sweetalert2";
 import { XCircleIcon, PlusCircleIcon } from "@heroicons/react/24/solid";
 import useAxiosPrivate from "../hooks/useAxiosPrivate";
 
-const AddCustomerModal = ({ onClose ,setPopup}) => {
-  
+const AddCustomerModal = ({ onClose, setPopup }) => {
   const axiosInstance = useAxiosPrivate();
   const safeOnClose = typeof onClose === "function" ? onClose : () => {};
 
@@ -26,25 +25,20 @@ const AddCustomerModal = ({ onClose ,setPopup}) => {
 
   const handleCancel = () => {
     safeOnClose();
-    setPopup(false)
-    
+    setPopup(false);
   };
 
   const handleSubmit = async () => {
-    
-    // 1) Front‑end required validation
     if (!formData.name.trim() || !formData.phone.trim()) {
       await Swal.fire({
         icon: "error",
         title: "Validation Error",
         text: "Please provide both Customer Name and Mobile number.",
         confirmButtonColor: "#2563EB",
-       
       });
       return;
     }
 
-    // 2) Build payload
     const payload = {
       customerName: formData.name.trim(),
       address: formData.address.trim(),
@@ -61,7 +55,6 @@ const AddCustomerModal = ({ onClose ,setPopup}) => {
     try {
       await axiosInstance.post("/admin/customer/add", payload);
 
-      // 3) Success alert → close → navigate
       await Swal.fire({
         icon: "success",
         title: "Customer Added!",
@@ -70,11 +63,10 @@ const AddCustomerModal = ({ onClose ,setPopup}) => {
       });
 
       safeOnClose();
-      setPopup(false)
+      setPopup(false);
     } catch (err) {
       console.error("Error adding customer:", err.response || err);
 
-      // extract server‑side message(s)
       let message = "Something went wrong.";
       if (err.response?.data) {
         if (err.response.data.message) {
@@ -120,6 +112,7 @@ const AddCustomerModal = ({ onClose ,setPopup}) => {
               Customer Name <span className="text-red-500">*</span>
             </label>
             <input
+              type="text"
               value={formData.name}
               onChange={(e) => handleChange("name", e.target.value)}
               placeholder="Enter here"
@@ -131,6 +124,7 @@ const AddCustomerModal = ({ onClose ,setPopup}) => {
           <div className="flex items-center">
             <label className="w-[172px] text-[#737791]">Address</label>
             <input
+              type="text"
               value={formData.address}
               onChange={(e) => handleChange("address", e.target.value)}
               placeholder="Enter here"
@@ -140,22 +134,25 @@ const AddCustomerModal = ({ onClose ,setPopup}) => {
 
           {/* Phone */}
           <div className="flex items-center">
-            <label className="w-[172px] text-[#737791]">
-              Phone <span className="text-red-500">*</span>
-            </label>
-            <input
-              value={formData.phone}
-              onChange={(e) => handleChange("phone", e.target.value)}
-              placeholder="Enter here"
-              className="w-[300px] px-4 py-3 bg-gray-50 rounded-xl outline-none"
-            />
-          </div>
+  <label className="w-[172px] text-[#737791]">
+    Phone <span className="text-red-500">*</span>
+  </label>
+  <input
+    type="tel"
+    value={formData.phone}
+    onChange={(e) => handleChange("phone", e.target.value)}
+    placeholder="Enter here"
+    className="w-[300px] px-4 py-3 bg-gray-50 rounded-xl outline-none"
+  />
+</div>
+
 
           {/* WhatsApp */}
           <div className="flex items-start">
             <label className="w-[172px] text-[#737791]">WhatsApp</label>
             <div className="flex flex-col gap-3">
               <input
+                type="number"
                 value={formData.whatsapp}
                 onChange={(e) => handleChange("whatsapp", e.target.value)}
                 placeholder="Enter here"
@@ -183,60 +180,12 @@ const AddCustomerModal = ({ onClose ,setPopup}) => {
           <div className="flex items-center">
             <label className="w-[172px] text-[#737791]">Discount %</label>
             <input
+              type="number"
               value={formData.discount}
               onChange={(e) => handleChange("discount", e.target.value)}
               placeholder="Enter here"
               className="w-[300px] px-4 py-3 bg-gray-50 rounded-xl outline-none"
             />
-          </div>
-
-          {/* Discount Applied */}
-          <div className="flex items-start">
-            <label className="w-[172px] text-[#737791] mt-8">
-              Discount Applied
-            </label>
-            <div className="flex flex-col gap-3">
-              <div className="flex">
-                {["Weekly", "Monthly", "Yearly"].map((freq, idx) => (
-                  <button
-                    key={freq}
-                    onClick={() => handleChange("discountFrequency", freq)}
-                    className={`px-6 py-3 ${
-                      formData.discountFrequency === freq
-                        ? "bg-blue-100 text-blue-700 border border-blue-500"
-                        : "bg-gray-100 text-gray-500 border border-gray-300"
-                    } ${
-                      idx === 0
-                        ? "rounded-l-2xl"
-                        : idx === 2
-                        ? "rounded-r-2xl"
-                        : "rounded-none"
-                    }`}
-                  >
-                    {freq}
-                  </button>
-                ))}
-              </div>
-              <div className="flex">
-                {["Manual", "Auto"].map((method, idx) => (
-                  <button
-                    key={method}
-                    onClick={() => handleChange("discountType", method)}
-                    className={`px-6 py-3 ${
-                      formData.discountType === method
-                        ? "bg-blue-100 text-blue-700 border border-blue-500"
-                        : "bg-gray-100 text-gray-500 border border-gray-300"
-                    } ${
-                      idx === 0
-                        ? "rounded-l-xl border-r-0"
-                        : "rounded-r-xl border-l-0"
-                    }`}
-                  >
-                    {method}
-                  </button>
-                ))}
-              </div>
-            </div>
           </div>
 
           {/* Opening Balance */}
@@ -247,6 +196,7 @@ const AddCustomerModal = ({ onClose ,setPopup}) => {
             <div className="w-[300px] flex items-center px-4 py-3 bg-gray-50 rounded-xl">
               <span className="mr-2 font-bold">$</span>
               <input
+                type="number"
                 value={formData.balance}
                 onChange={(e) => handleChange("balance", e.target.value)}
                 placeholder="Enter here"

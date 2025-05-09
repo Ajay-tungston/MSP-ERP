@@ -138,7 +138,7 @@ const AddCustomerModal = ({ onClose, setPopup }) => {
     Phone <span className="text-red-500">*</span>
   </label>
   <input
-    type="tel"
+    type="number"
     value={formData.phone}
     onChange={(e) => handleChange("phone", e.target.value)}
     placeholder="Enter here"

@@ -39,7 +39,6 @@ import AddPayment from "./Pages/Payment/AddPayment";
 import LocalsalesReport from "./Pages/LocalsalesReport";
 import EditPurchaseTransaction from "./Pages/purchase/EditPurchaseTransaction";
 import EditCustomerModal from "./Pages/EditCustomer";
-// import Sample from "./Pages/Sample"
 import EditCustomer from "./Pages/EditCustomer";
 import EditCommission from "./Pages/EditCommission";
 import EditCompany from "./Pages/EditCompany";

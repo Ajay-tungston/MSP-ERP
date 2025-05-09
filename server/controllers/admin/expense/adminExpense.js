@@ -7,7 +7,7 @@ exports.getExpenses = async (req, res) => {
 
   try {
     const expenses = await Expense.find()
-      .sort({ createdAt: -1 })
+      .sort({ date: -1 }) // <-- Sort by the `date` field instead of `createdAt`
       .skip((page - 1) * limit)
       .limit(Number(limit));
 

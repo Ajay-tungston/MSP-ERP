@@ -1,268 +1,220 @@
 import React, { useState, useEffect } from "react";
-import Swal from "sweetalert2";
-import { XCircleIcon, PlusCircleIcon } from "@heroicons/react/24/solid";
+import { XCircleIcon, CheckCircleIcon } from "@heroicons/react/24/outline";
+import {  useNavigate } from "react-router-dom";
 import useAxiosPrivate from "../hooks/useAxiosPrivate";
+import Swal from "sweetalert2";
 
-const EditCustomerModal = ({ onClose, setPopup, customerId }) => {
-  const axiosInstance = useAxiosPrivate();
-  const safeOnClose = typeof onClose === "function" ? onClose : () => {};
+
+const EditSupplier=({ supplierId,setEditPopup }) => {
+  const axiosPrivate = useAxiosPrivate();
+  const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
-    name: "",
-    address: "",
+    supplierCode: "",
+    supplierName: "",
     phone: "",
+    address: "",
     whatsapp: "",
-    discount: "",
-    discountType: "Manual",
-    discountFrequency: "Weekly",
-    balance: "",
-    route: "No",
-    routeName: "",
+    advance: "",
+    advanceDeducted: "",
+    commission: "",
+    marketFee: "",
   });
 
-  useEffect(() => {
-    if (customerId) {
-      axiosInstance
-        .get(`/admin/supplier/singlesupplier/${customerId}`)
-        .then((res) => {
-          const data = res.data;
-          setFormData({
-            name: data.customerName || "",
-            address: data.address || "",
-            phone: data.phone || "",
-            whatsapp: data.whatsapp || "",
-            discount: data.discount || "",
-            discountType: data.discountType || "Manual",
-            discountFrequency: data.discountApplied || "Weekly",
-            balance: data.openingBalance || "",
-            route: data.routeCustomer ? "Yes" : "No",
-            routeName: data.routeAddress || "",
-          });
-        })
-        .catch((err) => {
-          console.error("Fetch customer failed:", err);
-          Swal.fire("Error", "Failed to load customer data", "error");
-        });
-    }
-  }, [customerId]);
+  const [sameAsPhone, setSameAsPhone] = useState(false);
+  const [responseError, setResponseError] = useState("");
 
-  const handleChange = (field, value) => {
+  useEffect(() => {
+    const fetchSupplier = async () => {
+      try {
+        const res = await axiosPrivate.get(`/admin/supplier/singlesupplier/${supplierId}`);
+        setFormData(res.data);
+        if (res.data.phone === res.data.whatsapp) setSameAsPhone(true);
+      } catch (error) {
+        console.error("Error fetching supplier:", error);
+        Swal.fire("Error", "Failed to load supplier data", "error");
+        navigate("/suppliers");
+      }
+    };
+
+    fetchSupplier();
+  }, [supplierId]);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSameAsPhoneChange = () => {
+    const isChecked = !sameAsPhone;
+    setSameAsPhone(isChecked);
     setFormData((prev) => ({
       ...prev,
-      [field]: value,
+      whatsapp: isChecked ? prev.phone : "",
     }));
   };
 
-  const handleCancel = () => {
-    setPopup(false);
-    safeOnClose();
-  };
-
-  const handleSubmit = async () => {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     try {
-      const payload = {
-        customerName: formData.name,
-        address: formData.address,
-        phone: formData.phone,
-        whatsapp: formData.whatsapp,
-        discount: formData.discount,
-        discountType: formData.discountType,
-        discountApplied: formData.discountFrequency,
-        openingBalance: formData.balance,
-        routeCustomer: formData.route === "Yes",
-        routeAddress: formData.route === "Yes" ? formData.routeName : "",
-      };
+      await axiosPrivate.put(`/admin/supplier/update/${supplierId}`, formData);
+      Swal.fire("Updated!", "Supplier updated successfully.", "success");
 
-      await axiosInstance.put(`/admin/supplier/update/${customerId}`, payload);
-
-      Swal.fire("Updated!", "Customer details have been updated.", "success");
-      setPopup(false);
     } catch (error) {
-      console.error("Update failed:", error);
-      Swal.fire("Error", "Failed to update customer", "error");
+      console.error("Update error:", error);
+      setResponseError("Failed to update supplier.");
+      Swal.fire("Error", "Update failed", "error");
     }
   };
 
+  const handleCancel = () => {
+    setFormData({
+      supplierCode: "",
+      supplierName: "",
+      phone: "",
+      address: "",
+      whatsapp: "",
+      advance: "",
+      advanceDeducted: "",
+      commission: "",
+      marketFee: "",
+    });
+    setSameAsPhone(false);
+    setResponseError("");
+    setEditPopup(false); // Close modal
+  };
+  
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 ">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75">
       <div className="w-full sm:w-[640px] lg:w-[1000px] xl:w-[1200px] bg-white rounded-[24px] p-8 sm:p-10 shadow-xl relative">
-        {/* Header */}
+
         <div className="flex justify-between items-center pb-4 border-b border-gray-300">
-          <h2 className="text-2xl font-bold text-gray-900">
-            Edit New Customer
-          </h2>
+          <h2 className="text-[28px] font-bold text-[#151d48]">Edit Supplier</h2>
           <button onClick={handleCancel}>
             <XCircleIcon className="w-6 h-6 text-gray-500 hover:text-red-500" />
           </button>
         </div>
 
-        {/* Form */}
-        <div className="grid grid-cols-2 gap-x-20 gap-y-6 mt-6 text-[#05004e] text-xl">
-          <div className="flex items-center">
-            <label className="w-[172px] text-[#737791]">No.</label>
-            <span className="font-bold">Auto Generated</span>
-          </div>
+        {responseError && <p className="text-red-500 mt-2">{responseError}</p>}
 
+        <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-x-20 gap-y-6 mt-6 text-[#05004e] text-xl font-['Urbanist']">
+          {/* Supplier Code (Disabled) */}
           <div className="flex items-center">
-            <label className="w-[172px] text-[#737791]">
-              Customer Name <span className="text-red-500">*</span>
-            </label>
+            <label className="w-[172px] text-[#737791]">Supplier Code</label>
             <input
-              value={formData.name}
-              onChange={(e) => handleChange("name", e.target.value)}
-              placeholder="Enter here"
-              className="w-[300px] px-4 py-3 bg-gray-50 rounded-xl outline-none"
+              name="supplierCode"
+              value={formData.supplierCode}
+              disabled
+              className="w-full sm:w-[350px] px-6 py-4 bg-gray-100 rounded-xl outline-none"
             />
           </div>
 
+          {/* Supplier Name */}
+          <div className="flex items-center">
+            <label className="w-[172px] text-[#737791]">Supplier Name</label>
+            <input
+              name="supplierName"
+              value={formData.supplierName}
+              onChange={handleChange}
+              className="w-full sm:w-[350px] px-6 py-4 bg-gray-50 rounded-xl outline-none"
+            />
+          </div>
+
+          {/* Phone */}
+          <div className="flex items-center">
+            <label className="w-[172px] text-[#737791]">Phone</label>
+            <input
+              name="phone"
+              value={formData.phone}
+              onChange={handleChange}
+              className="w-full sm:w-[350px] px-6 py-4 bg-gray-50 rounded-xl outline-none"
+            />
+          </div>
+
+          {/* WhatsApp */}
+          <div className="flex flex-col">
+            <div className="flex items-center">
+              <label className="w-[172px] text-[#737791]">WhatsApp</label>
+              <input
+                name="whatsapp"
+                value={formData.whatsapp}
+                onChange={handleChange}
+                className="w-full sm:w-[350px] px-6 py-4 bg-gray-50 rounded-xl outline-none"
+              />
+            </div>
+            <div className="flex items-center gap-2 mt-2">
+              <input
+                type="checkbox"
+                checked={sameAsPhone}
+                onChange={handleSameAsPhoneChange}
+                className="w-4 h-4 rounded border-2 border-gray-300"
+              />
+              <label className="text-[#a1a5b6]">Same as Phone</label>
+            </div>
+          </div>
+
+          {/* Address */}
           <div className="flex items-center">
             <label className="w-[172px] text-[#737791]">Address</label>
             <input
+              name="address"
               value={formData.address}
-              onChange={(e) => handleChange("address", e.target.value)}
-              placeholder="Enter here"
-              className="w-[300px] px-4 py-3 bg-gray-50 rounded-xl outline-none"
+              onChange={handleChange}
+              className="w-full sm:w-[350px] px-6 py-4 bg-gray-50 rounded-xl outline-none"
             />
           </div>
 
+          {/* Advance */}
           <div className="flex items-center">
-            <label className="w-[172px] text-[#737791]">
-              Phone <span className="text-red-500">*</span>
-            </label>
+            <label className="w-[172px] text-[#737791]">Advance</label>
             <input
-              value={formData.phone}
-              onChange={(e) => handleChange("phone", e.target.value)}
-              placeholder="Enter here"
-              className="w-[300px] px-4 py-3 bg-gray-50 rounded-xl outline-none"
+              type="number"
+              name="advance"
+              value={formData.advance}
+              onChange={handleChange}
+              className="w-full sm:w-[350px] px-6 py-4 bg-gray-50 rounded-xl outline-none"
             />
           </div>
 
-          <div className="flex items-start">
-            <label className="w-[172px] text-[#737791]">WhatsApp</label>
-            <div className="flex flex-col gap-3">
-              <input
-                value={formData.whatsapp}
-                onChange={(e) => handleChange("whatsapp", e.target.value)}
-                placeholder="Enter here"
-                className="w-[300px] px-4 py-3 bg-gray-50 rounded-xl outline-none"
-              />
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  onChange={(e) =>
-                    handleChange(
-                      "whatsapp",
-                      e.target.checked ? formData.phone : ""
-                    )
-                  }
-                  className="checkbox w-4 h-4 rounded border-2 border-gray-300 focus:ring-0 checked:border-blue-500 checked:bg-blue-500"
-                />
-                <label className="text-[#a1a5b6] text-base">
-                  Same as Phone
-                </label>
-              </div>
-            </div>
-          </div>
-
+          {/* Advance Deducted */}
           <div className="flex items-center">
-            <label className="w-[172px] text-[#737791]">Discount %</label>
+            <label className="w-[172px] text-[#737791]">Advance Deducted</label>
             <input
-              value={formData.discount}
-              onChange={(e) => handleChange("discount", e.target.value)}
-              placeholder="Enter here"
-              className="w-[300px] px-4 py-3 bg-gray-50 rounded-xl outline-none"
+              type="number"
+              name="advanceDeducted"
+              value={formData.advanceDeducted}
+              onChange={handleChange}
+              className="w-full sm:w-[350px] px-6 py-4 bg-gray-50 rounded-xl outline-none"
             />
           </div>
 
-          <div className="flex items-start">
-            <label className="w-[172px] text-[#737791] mt-8">
-              Discount Applied
-            </label>
-            <div className="flex flex-col gap-3">
-              <div className="flex">
-                {["Weekly", "Monthly", "Yearly"].map((freq, idx) => (
-                  <button
-                    key={freq}
-                    onClick={() => handleChange("discountFrequency", freq)}
-                    className={`px-6 py-3 ${
-                      formData.discountFrequency === freq
-                        ? "bg-blue-100 text-blue-700 border border-blue-500"
-                        : "bg-gray-100 text-gray-500 border border-gray-300"
-                    } ${
-                      idx === 0
-                        ? "rounded-l-2xl"
-                        : idx === 2
-                        ? "rounded-r-2xl"
-                        : "rounded-none"
-                    }`}
-                  >
-                    {freq}
-                  </button>
-                ))}
-              </div>
-              <div className="flex">
-                {["Manual", "Auto"].map((method, idx) => (
-                  <button
-                    key={method}
-                    onClick={() => handleChange("discountType", method)}
-                    className={`px-6 py-3 ${
-                      formData.discountType === method
-                        ? "bg-blue-100 text-blue-700 border border-blue-500"
-                        : "bg-gray-100 text-gray-500 border border-gray-300"
-                    } ${
-                      idx === 0
-                        ? "rounded-l-xl border-r-0"
-                        : "rounded-r-xl border-l-0"
-                    }`}
-                  >
-                    {method}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-
+          {/* Commission */}
           <div className="flex items-center">
-            <label className="w-[172px] text-[#737791]">
-              Opening Balance
-            </label>
-            <div className="w-[300px] flex items-center px-4 py-3 bg-gray-50 rounded-xl">
-              <span className="mr-2 font-bold">$</span>
-              <input
-                value={formData.balance}
-                onChange={(e) => handleChange("balance", e.target.value)}
-                placeholder="Enter here"
-                className="w-full bg-transparent outline-none"
-              />
-            </div>
+            <label className="w-[172px] text-[#737791]">Commission</label>
+            <input
+              type="text"
+              name="commission"
+              value={formData.commission}
+              onChange={handleChange}
+              className="w-full sm:w-[350px] px-6 py-4 bg-gray-50 rounded-xl outline-none"
+            />
           </div>
-        </div>
 
-        {/* Route Yes/No */}
-        <div className="flex items-center col-span-2 mt-6">
-          <label className="w-[172px] text-[#737791]">Route</label>
-          <div className="flex">
-            {["Yes", "No"].map((val, idx) => (
-              <button
-                key={val}
-                onClick={() => handleChange("route", val)}
-                className={`px-6 py-3 ${
-                  formData.route === val
-                    ? "bg-blue-100 text-blue-700 border border-blue-500"
-                    : "bg-gray-100 text-gray-500 border border-gray-300"
-                } ${
-                  idx === 0
-                    ? "rounded-l-xl border-r-0"
-                    : "rounded-r-xl border-l-0"
-                }`}
-              >
-                {val}
-              </button>
-            ))}
+          {/* Market Fee */}
+          <div className="flex items-center">
+            <label className="w-[172px] text-[#737791]">Market Fee</label>
+            <input
+              type="number"
+              name="marketFee"
+              value={formData.marketFee}
+              onChange={handleChange}
+              className="w-full sm:w-[350px] px-6 py-4 bg-gray-50 rounded-xl outline-none"
+            />
           </div>
-        </div>
+        </form>
 
-        {/* Footer Buttons */}
+        {/* Footer */}
         <div className="mt-10 flex justify-end gap-4">
           <button
             onClick={handleCancel}
@@ -275,13 +227,13 @@ const EditCustomerModal = ({ onClose, setPopup, customerId }) => {
             onClick={handleSubmit}
             className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
           >
-            <PlusCircleIcon className="w-5 h-5" />
-            Save
+            <CheckCircleIcon className="w-5 h-5" />
+            Update
           </button>
         </div>
       </div>
     </div>
   );
-};
+}
 
-export default EditCustomerModal;
+export default EditSupplier;

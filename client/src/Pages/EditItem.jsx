@@ -4,33 +4,33 @@ import { XCircleIcon, PlusCircleIcon } from "@heroicons/react/24/outline";
 import useAxiosPrivate from "../hooks/useAxiosPrivate";
 import Swal from "sweetalert2";
 
-const EditItem = () => {
+const EditItem = ({itemId,setEditPopup}) => {
   const [itemCode, setItemCode] = useState("");
   const [itemName, setItemName] = useState("");
-  const [conversionRatio, setConversionRatio] = useState(30);
   const [itemCodeError, setItemCodeError] = useState("");
   const [itemNameError, setItemNameError] = useState("");
-  const [conversionRatioError, setConversionRatioError] = useState("");
+
   const navigate = useNavigate();
   const axiosInstance = useAxiosPrivate();
-  const { id } = useParams();
+
 
   const itemNameRegex = /^[a-zA-Z0-9\s]+$/;
 
   useEffect(() => {
     const fetchItem = async () => {
       try {
-        const res = await axiosInstance.get(`/admin/item/get/${id}`);
-        const { itemCode, itemName, conversionRatio } = res.data;
+        const res = await axiosInstance.get(`/admin/item/get/${itemId}`);
+        const { itemCode, itemName, } = res.data;
+        console.log(res.data)
         setItemCode(itemCode);
         setItemName(itemName);
-        setConversionRatio(conversionRatio);
+
       } catch (error) {
         console.log(error);
       }
     };
     fetchItem();
-  }, [axiosInstance, id]);
+  }, [itemId]);
 
   const validateItemCode = () => {
     if (!itemCode) {
@@ -60,29 +60,20 @@ const EditItem = () => {
     return true;
   };
 
-  const validateConversionRatio = () => {
-    if (!conversionRatio || isNaN(conversionRatio) || conversionRatio <= 0) {
-      setConversionRatioError("Conversion ratio must be a positive number.");
-      return false;
-    }
-    setConversionRatioError("");
-    return true;
-  };
-
+ 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (
       !validateItemCode() ||
-      !validateItemName() ||
-      !validateConversionRatio()
+      !validateItemName() 
     )
       return;
 
     try {
-      const response = await axiosInstance.put(`/admin/item/update/${id}`, {
+      const response = await axiosInstance.put(`/admin/item/update/${itemId}`, {
         itemCode,
         itemName,
-        conversionRatio,
+
       });
 
       Swal.fire({
@@ -114,13 +105,13 @@ const EditItem = () => {
     setItemName("");
     setItemCodeError("");
     setItemNameError("");
-    setConversionRatio(30);
-    setConversionRatioError("");
+    setEditPopup(false);
+
     navigate("/item");
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75">
       <div className="w-full sm:w-[480px] md:w-[640px] lg:w-[800px] xl:w-[1280px] h-auto bg-white rounded-[24px] p-[24px] sm:p-[32px] md:p-[48px] shadow-lg gap-12 absolute top-[170px] left-1/2 transform -translate-x-1/2">
         <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-gray-900">
           Edit New Item
@@ -167,30 +158,7 @@ const EditItem = () => {
           </div>
         </div>
 
-        {/* Conversion Ratio */}
-        <div className="flex flex-col pr-32 pt-6 items-end">
-          {conversionRatioError && (
-            <p className="text-red-500 text-sm mb-2 text-right w-[350px]">
-              {conversionRatioError}
-            </p>
-          )}
-          <div className="flex items-center gap-4">
-            <label className="text-gray-600">
-              Conversion Ratio<span className="text-red-500">*</span>
-            </label>
-            <span className="text-gray-600">1 Box =</span>
-            <input
-              type="number"
-              placeholder="Enter here"
-              value={conversionRatio}
-              onChange={(e) => setConversionRatio(e.target.value)}
-              onBlur={validateConversionRatio}
-              className="w-[150px] h-[56px] gap-2 rounded-[12px] pt-4 pr-6 pb-4 pl-6 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <span className="text-gray-600">kg</span>
-          </div>
-        </div>
-
+    
         {/* Buttons */}
         <div className="w-full h-full p-4 md:p-8 lg:p-12 bg-white rounded-3xl flex flex-col justify-start items-start gap-12 overflow-hidden">
           <div className="self-stretch flex justify-end items-center gap-4 mt-8 md:mr-25">

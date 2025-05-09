@@ -1,6 +1,8 @@
 const validator = require("validator");
 const Customer = require("../../../models/Customer"); // Import your Customer model
 const getNextCounterNumber = require("../../../utils/counter");
+const Payment = require("../../../models/Payment")
+const SalesEntry= require("../../../models/SalesEntry")
 const addNewCustomer = async (req, res) => {
   try {
     const {
@@ -137,34 +139,34 @@ const addNewCustomer = async (req, res) => {
 };
 const getAllCustomers = async (req, res) => {
   try {
-    // Parse query parameters for pagination; default to page=1 and limit=10 if not provided.
-    let { page, limit } = req.query;
+    let { page, limit, search } = req.query;
     page = parseInt(page, 10) || 1;
     limit = parseInt(limit, 10) || 10;
+    search = search?.trim() || "";
 
-    // Calculate the number of documents to skip for pagination
     const skip = (page - 1) * limit;
 
-    // Create a query to retrieve customers with pagination settings
-    const customersPromise = Customer.find({})
+    // 🔍 Search by customer name only
+    const searchQuery = search
+      ? { customerName: { $regex: search, $options: "i" } }
+      : {};
+
+    const customersPromise = Customer.find(searchQuery)
+      .sort({ createdAt: -1 }) // 🔽 sort by most recent
       .skip(skip)
       .limit(limit);
 
-    // Count the total number of customers in the database
-    const totalPromise = Customer.countDocuments({});
+    const totalPromise = Customer.countDocuments(searchQuery);
 
-    // Execute both queries in parallel
     const [customers, total] = await Promise.all([customersPromise, totalPromise]);
 
-    // Calculate total pages
     const totalPages = Math.ceil(total / limit);
 
-    // Return the paginated response
     return res.status(200).json({
       customers,
       total,
       totalPages,
-      currentPage: page
+      currentPage: page,
     });
   } catch (error) {
     console.error("Error fetching customers:", error);
@@ -172,24 +174,43 @@ const getAllCustomers = async (req, res) => {
   }
 };
 
+
+
  // Make sure to export all controllers as needed
 
-const deleteCustomer = async (req, res) => {
+
+ const deleteCustomer = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Check if the customer exists
+    // Check if customer exists
     const customer = await Customer.findById(id);
     if (!customer) {
       return res.status(404).json({ message: "Customer not found" });
     }
 
-    // Delete the customer
-    await Customer.findByIdAndDelete(id);
+    // Check if customer is referenced in any sales
+    const hasSales = await SalesEntry.exists({ "customers.customer": id });
+    if (hasSales) {
+      return res.status(400).json({
+        message: "Cannot delete customer with existing sales records.",
+      });
+    }
 
-    return res.status(200).json({ message: "Customer deleted successfully" });
+    // Check if customer is referenced in any payments
+    const hasPayments = await Payment.exists({ customer: id });
+    if (hasPayments) {
+      return res.status(400).json({
+        message: "Cannot delete customer with existing payment records.",
+      });
+    }
+
+    // No references found, safe to delete
+    await Customer.findByIdAndDelete(id);
+    return res.status(200).json({ message: "Customer deleted successfully." });
+
   } catch (error) {
-    console.log(error);
+    console.error("Error deleting customer:", error);
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };

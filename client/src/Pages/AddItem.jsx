@@ -7,10 +7,10 @@ import Swal from "sweetalert2";
 const AddItem = ({setPopup}) => {
   const [itemCode, setItemCode] = useState("");
   const [itemName, setItemName] = useState("");
-  const [conversionRatio, setConversionRatio] = useState(30);
+
   const [itemCodeError, setItemCodeError] = useState("");
   const [itemNameError, setItemNameError] = useState("");
-  const [conversionRatioError, setConversionRatioError] = useState("");
+
   const navigate = useNavigate(); // <-- initialize navigation
   const axiosInstance = useAxiosPrivate();
 
@@ -44,21 +44,14 @@ const AddItem = ({setPopup}) => {
     return true;
   };
 
-  const validateConversionRatio = () => {
-    if (!conversionRatio || isNaN(conversionRatio) || conversionRatio <= 0) {
-      setConversionRatioError("Conversion ratio must be a positive number.");
-      return false;
-    }
-    setConversionRatioError("");
-    return true;
-  };
+ 
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (
       !validateItemCode() ||
-      !validateItemName() ||
-      !validateConversionRatio()
+      !validateItemName() 
+     
     )
       return;
 
@@ -66,7 +59,7 @@ const AddItem = ({setPopup}) => {
       const response = await axiosInstance.post("/admin/item/add", {
         itemCode,
         itemName,
-        conversionRatio,
+     
       });
       Swal.fire({
         title: "New Item Added Successfully!",
@@ -101,8 +94,7 @@ const AddItem = ({setPopup}) => {
     setItemName("");
     setItemCodeError("");
     setItemNameError("");
-    setConversionRatio(30);
-    setConversionRatioError("");
+
     navigate("/item"); // <-- change route to your desired page
   };
 
@@ -153,31 +145,7 @@ const AddItem = ({setPopup}) => {
             </div>
           </div>
         </div>
-        <div className="flex flex-col pr-32 pt-6 items-end">
-          {/* Error message */}
-          {conversionRatioError && (
-            <p className="text-red-500 text-sm mb-2 text-right w-[350px]">
-              {conversionRatioError}
-            </p>
-          )}
-
-          {/* Label + Input */}
-          <div className="flex items-center gap-4">
-            <label className="text-gray-600">
-              Conversion Ratio<span className="text-red-500">*</span>
-            </label>
-            <span className="text-gray-600">1 Box =</span>
-            <input
-              type="number"
-              placeholder="Enter here"
-              value={conversionRatio}
-              onChange={(e) => setConversionRatio(e.target.value)}
-              onBlur={validateConversionRatio}
-              className="w-[150px] h-[56px] gap-2 rounded-[12px] pt-4 pr-6 pb-4 pl-6 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <span className="text-gray-600">kg</span>
-          </div>
-        </div>
+        
 
         {/* Buttons */}
         <div className="w-full h-full p-4 md:p-8 lg:p-12 bg-white rounded-3xl flex flex-col justify-start items-start gap-12 overflow-hidden">

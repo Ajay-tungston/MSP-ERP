@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { XCircleIcon, PlusCircleIcon } from "@heroicons/react/24/solid";
 import useAxiosPrivate from "../hooks/useAxiosPrivate";
 
-const EditEmployeeModal = ({ employeeId, setEditPopup }) => {
+const EditEmployeeModal = ({ employeeId, setEditPopup,fetchEmployee }) => {
   const navigate = useNavigate();
   const axiosPrivate = useAxiosPrivate();
 
@@ -116,14 +116,14 @@ const EditEmployeeModal = ({ employeeId, setEditPopup }) => {
         openingBalance,
         salaryType,
       });
-
+      fetchEmployee()
+      handleCancel();
       await Swal.fire({
         title: "Employee Updated Successfully!",
         icon: "success",
         confirmButtonColor: "#2563EB",
       });
-
-      handleCancel();
+      
     } catch (error) {
       if (error?.response?.status === 400) {
         setResponseError(error.response.data.message);

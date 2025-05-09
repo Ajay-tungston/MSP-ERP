@@ -1,16 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
 import { XCircleIcon, PlusCircleIcon } from "@heroicons/react/24/outline";
 import useAxiosPrivate from "../hooks/useAxiosPrivate";
 import Swal from "sweetalert2";
 
-const EditItem = ({itemId,setEditPopup}) => {
+const EditItem = ({itemId,setEditPopup,fetchItemData}) => {
   const [itemCode, setItemCode] = useState("");
   const [itemName, setItemName] = useState("");
   const [itemCodeError, setItemCodeError] = useState("");
   const [itemNameError, setItemNameError] = useState("");
 
-  const navigate = useNavigate();
   const axiosInstance = useAxiosPrivate();
 
 
@@ -81,8 +79,9 @@ const EditItem = ({itemId,setEditPopup}) => {
         icon: "success",
         draggable: true,
       });
-
-      navigate("/item");
+      handleCancel()
+      fetchItemData()
+      // navigate("/item");
     } catch (error) {
       if (error?.response?.status === 400) {
         Swal.fire({
@@ -107,7 +106,7 @@ const EditItem = ({itemId,setEditPopup}) => {
     setItemNameError("");
     setEditPopup(false);
 
-    navigate("/item");
+    // navigate("/item");
   };
 
   return (

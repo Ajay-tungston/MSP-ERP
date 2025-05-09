@@ -5,7 +5,7 @@ import { XCircleIcon, PlusCircleIcon } from "@heroicons/react/24/solid";
 import useAxiosPrivate from "../hooks/useAxiosPrivate";
 
 
-const AddEmployeeModal = ({ onClose ,setPopup}) => {
+const AddEmployeeModal = ({ onClose ,setPopup,fetchEmployee}) => {
   const navigate = useNavigate();
   const axiosPrivate = useAxiosPrivate();
   const safeOnClose = typeof onClose === "function" ? onClose : () => {};
@@ -98,6 +98,7 @@ const AddEmployeeModal = ({ onClose ,setPopup}) => {
         icon: "success",
         confirmButtonColor: "#2563EB",
       });
+      fetchEmployee()
       handleCancel();
     } catch (error) {
       if (error?.response?.status === 400) {

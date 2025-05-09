@@ -4,7 +4,7 @@ import { XCircleIcon, PlusCircleIcon } from "@heroicons/react/24/outline";
 import useAxiosPrivate from "../hooks/useAxiosPrivate";
 import Swal from "sweetalert2";
 
-const AddItem = ({setPopup}) => {
+const AddItem = ({setPopup,fetchItemData}) => {
   const [itemCode, setItemCode] = useState("");
   const [itemName, setItemName] = useState("");
 
@@ -69,9 +69,11 @@ const AddItem = ({setPopup}) => {
       setItemCode("");
 
       setItemName("");
-      setConversionRatio(30);
+      // setConversionRatio(30);
+      fetchItemData()
       setPopup(false)
     } catch (error) {
+      console.log(error)
       if (error?.response?.status === 400) {
         Swal.fire({
           title: error?.response?.data?.message,

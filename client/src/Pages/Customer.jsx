@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { CiCirclePlus, CiFilter } from "react-icons/ci";
 import { LuPencilLine } from "react-icons/lu"; // <--- Added here
 import useAxiosPrivate from "../hooks/useAxiosPrivate";
@@ -14,16 +13,11 @@ import OvalSpinner from "../Components/spinners/OvalSpinner";
 
 export default function CustomerHeader() {
   const [customers, setCustomers] = useState([]);
-  const [selectedRows, setSelectedRows] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
   const axiosInstance = useAxiosPrivate();
   const [search, setSearch] = useState("");
-
-  const navigate = useNavigate();
-
-  console.log(customers);
   const limit = 10;
 
   const fetchCustomersDebounced = debounce((page, searchTerm) => {
@@ -58,21 +52,6 @@ export default function CustomerHeader() {
       fetchCustomersDebounced.cancel();
     };
   }, [currentPage, search]);
-  const toggleRowSelection = (id) => {
-    setSelectedRows((prev) =>
-      prev.includes(id) ? prev.filter((rowId) => rowId !== id) : [...prev, id]
-    );
-  };
-
-  const toggleAllRows = () => {
-    if (selectedRows.length === customers.length) {
-      setSelectedRows([]);
-    } else {
-      setSelectedRows(
-        customers.map((customer) => customer._id || customer.customerNumber)
-      );
-    }
-  };
 
   const handlePrevious = () => {
     if (currentPage > 1) {
@@ -149,7 +128,8 @@ export default function CustomerHeader() {
   onChange={(e) => {
     const value = e.target.value;
     setSearch(value);
-    fetchCustomers(1, value); // Always start from page 1 when searching
+    // fetchCustomers(1, value); // Always start from page 1 when searching
+    setCurrentPage(1)
   }}
   className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 />

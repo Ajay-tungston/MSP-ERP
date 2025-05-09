@@ -1,5 +1,6 @@
 const validator = require("validator");
 const Employee = require("../../../models/Employee");
+const Payment = require("../../../models/Payment");
 
 const addNewEmployee = async (req, res) => {
   try {
@@ -165,29 +166,38 @@ const getEmployeeList = async (req, res) => {
   }
 };
 
-const deleteEmployees = async (req, res) => {
+const deleteEmployee = async (req, res) => {
   try {
-    const { employeeId } = req.body;
+    const { id } = req.params;
 
-    if (!Array.isArray(employeeId) || employeeId.length === 0) {
-      return res
-        .status(400)
-        .json({ message: "Please provide a valid list of employee IDs." });
-    }
-    const result = await Employee.deleteMany({ _id: { $in: employeeId } });
-
-    if (result.deletedCount === 0) {
-      return res.status(404).json({ message: "employee not found" });
+    // Check if employee exists
+    const employee = await Employee.findById(id);
+    if (!employee) {
+      return res.status(404).json({ message: "Employee not found." });
     }
 
-    return res.status(200).json({
-      message: `${result.deletedCount} employees deleted successfully`,
+    // Check if the employee has any linked payments
+    const hasPayments = await Payment.exists({
+      category: "employee",
+      employee: id,
     });
+
+    if (hasPayments) {
+      return res.status(400).json({
+        message: "Cannot delete: This employee is linked with one or more payments.",
+      });
+    }
+
+    // Safe to delete
+    await Employee.findByIdAndDelete(id);
+
+    return res.status(200).json({ message: "Employee deleted successfully." });
   } catch (error) {
-    console.log(error);
-    return res.status(500).json({ message: "Error deleting employees" });
+    console.error("Error deleting employee:", error);
+    return res.status(500).json({ message: "Internal server error." });
   }
 };
+
 // GET single employee by ID
 const getSingleEmployee = async (req, res) => {
   try {
@@ -317,7 +327,7 @@ const updateEmployee = async (req, res) => {
 module.exports = 
 { addNewEmployee, 
   getAllEmployees,
-  deleteEmployees,
+  deleteEmployee,
   getEmployeeList , 
    getSingleEmployee,  // NEW
   updateEmployee   };

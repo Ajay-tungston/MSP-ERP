@@ -79,7 +79,8 @@ const EditCustomerPage = ({customerId,setEditPopup}) => {
       await axiosInstance.put(`/admin/customer/update/${customerId}`, payload);
 
       await Swal.fire("Success", "Customer updated successfully", "success");
-      navigate("/mastercustomer"); // Go back to customer list
+      // navigate("/mastercustomer"); // Go back to customer list
+      setEditPopup(false)
     } catch (err) {
       console.error(err);
       Swal.fire("Error", "Failed to update customer", "error");

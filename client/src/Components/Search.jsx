@@ -40,18 +40,7 @@ console.log(location.pathname)
       {/* Dynamic Page Title */}
       <h1 className="text-2xl font-bold text-gray-900">{pageTitle}</h1>
 
-      {/* Search */}
-      <div className="relative w-1/3">
-        <input
-          type="text"
-          placeholder="Search here..."
-          className="w-full px-4 py-2 pl-10 bg-gray-100 text-gray-700 rounded-full focus:outline-none focus:ring-2 focus:ring-gray-300"
-        />
-        <span className="absolute left-3 top-2.5 text-gray-500">
-          <Search className="w-5 h-5" />
-        </span>
-      </div>
-
+     
       {/* Notification + Profile */}
       <div className="flex items-center gap-6">
         <div className="relative">

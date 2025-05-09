@@ -1,8 +1,9 @@
-import {
-  AreaChart, Area, CartesianGrid,
+// import {
+//   AreaChart, Area, CartesianGrid,
 
-} from "recharts";
-import React from "react";
+// } from "recharts";
+import axios from "axios";
+import React, { useEffect, useState } from "react";
 import {
   PieChart,
   Pie,
@@ -15,6 +16,7 @@ import {
   Tooltip,
   LabelList,
 } from "recharts";
+import useAxiosPrivate from "../hooks/useAxiosPrivate";
 const kpiData = [
   { day: "Mon", NetReceivables: 400, TotalCommission: 780 },
   { day: "Tue", NetReceivables: 700, TotalCommission: 780 },
@@ -42,19 +44,13 @@ const expenseData = [
 
 const totalExpense = expenseData.reduce((acc, curr) => acc + curr.value, 0);
 
-const recentTransactions = [
-  { date: "01/12/2024", module: "Sales", desc: "GreenMart - Apples", amount: 300 },
-  { date: "01/12/2024", module: "Purchase", desc: "Farm Fresh - Bananas", amount: 1250 },
-  { date: "02/12/2024", module: "Expense", desc: "Fuel for Route 1", amount: 120 },
-];
-
 const data = [
-  { name: 'Cash Balance', value: 4140 },
-  { name: 'Customer Receivables', value: 5000 },
-  { name: 'Supplier Receivables', value: 3000 },
+  { name: "Cash Balance", value: 4140 },
+  { name: "Customer Receivables", value: 5000 },
+  { name: "Supplier Receivables", value: 3000 },
 ];
 
-const COLORS = ['#5B61EB', '#F3B700', '#3BB273']; // Purple, Yellow, Green
+const COLORS = ["#5B61EB", "#F3B700", "#3BB273"];
 
 const barData = [
   { name: "Sales", value: 3600 },
@@ -65,54 +61,100 @@ const barData = [
 const totalProfit = 1050;
 
 const FinancialDashboard = () => {
+  const [recentTransactions, setRecentTransactions] = useState([]);
+  const axiosInstance = useAxiosPrivate();
+
+  const [summary, setSummary] = useState({
+    sales: 0,
+    purchases: 0,
+    expenses: [],
+  });
+  
+  useEffect(() => {
+    const fetchSummary = async () => {
+      try {
+        const res = await axiosInstance.get("/admin/transaction/profit");
+        setSummary(res.data);
+        console.log(res)
+      } catch (err) {
+        console.error("Error fetching summary:", err);
+      }
+    };
+    fetchSummary();
+  }, [axiosInstance]);
+  
+  const totalProfit =
+    summary.sales - summary.purchases - summary.totalExpense;
+
+  const barData = [
+    { name: "Sales", value: summary.sales },
+    { name: "Purchases", value: summary.purchases },
+    { name: "Expenses", value: summary.expenses },
+  ];
+  useEffect(() => {
+    const fetchRecentTransactions = async () => {
+      try {
+        const resp = await axiosInstance.get("/admin/transaction/transactions");
+        setRecentTransactions(resp.data || []);
+        console.log(resp)
+      } catch (error) {
+        console.error("Failed to fetch recent transactions", error);
+      }
+    };
+    fetchRecentTransactions();
+  }, [axiosInstance]);
+
+
   return (
     <div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 ">
-  {/* Financial Overview */}
-  <div className="bg-white rounded-2xl shadow-md p-6 w-full">
-    <h2 className="text-lg font-semibold text-black mb-4">Financial Overview</h2>
-    <hr className="mb-4 border-gray-700" />
-    <div className="flex justify-center">
-      <PieChart width={600} height={300}>
-        <Pie
-          data={data}
-          cx="50%"
-          cy="50%"
-          innerRadius={0}
-          outerRadius={100}
-          paddingAngle={1}
-          dataKey="value"
-          label={({ name, value }) => `${name}\n$${value.toLocaleString()}`}
-        >
-          {data.map((entry, index) => (
-            <Cell key={`cell-${index}`} fill={COLORS[index]} stroke="white" strokeWidth={2} />
-          ))}
-        </Pie>
-        <Tooltip formatter={(value) => `$${value.toLocaleString()}`} />
-      </PieChart>
-    </div>
-  </div>
+        {/* Financial Overview */}
+        <div className="bg-white rounded-2xl shadow-md p-6 w-full">
+          <h2 className="text-lg font-semibold text-black mb-4">Financial Overview</h2>
+          <hr className="mb-4 border-gray-700" />
+          <div className="flex justify-center">
+            <PieChart width={700} height={300}>
+              <Pie
+                data={data}
+                cx="50%"
+                cy="50%"
+                innerRadius={0}
+                outerRadius={100}
+                paddingAngle={1}
+                dataKey="value"
+                label={({ name, value }) => `${name}\n$${value.toLocaleString()}`}
+              >
+                {data.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[index]} stroke="white" strokeWidth={2} />
+                ))}
+              </Pie>
+              <Tooltip formatter={(value) => `$${value.toLocaleString()}`} />
+            </PieChart>
+          </div>
+        </div>
 
-  {/* Net Profit */}
-  <div className="bg-white shadow-xl rounded-2xl p-4 w-full ">
-    <div className="flex justify-between items-center mb-4">
-      <h2 className="text-xl font-bold text-gray-800">Net Profit</h2>
-      <span className="text-green-600 font-bold text-lg">
-        ${totalProfit.toFixed(2)}
-      </span>
-    </div>
-    <ResponsiveContainer width="100%" height={250}>
-      <BarChart layout="vertical" data={barData}>
-        <XAxis type="number" />
-        <YAxis type="category" dataKey="name" />
-        <Tooltip />
-        <Bar dataKey="value" fill="#6366F1" barSize={20}>
-          <LabelList dataKey="value" position="right" />
-        </Bar>
-      </BarChart>
-    </ResponsiveContainer>
-  </div>
-</div>
+        {/* Net Profit */}
+        <div className="bg-white shadow-xl rounded-2xl p-4 w-full ">
+          <div className="flex justify-between items-center mb-4 w-full overflow-visible">
+            <h2 className="text-xl font-bold text-gray-800 ">Net Profit</h2>
+            {/* <span className="text-green-600 font-bold text-lg ">
+              ${totalProfit.toFixed(2)}
+            </span> */}
+          </div>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart layout="vertical" data={barData}
+              margin={{ top: 20, right: 30, left: 20, bottom: 40 }}
+            >
+              <XAxis type="number" />
+              <YAxis type="category" dataKey="name" />
+              <Tooltip />
+              <Bar dataKey="value" fill="#6366F1" barSize={20}>
+                <LabelList dataKey="value" position="right" />
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4">
         {/* Expense Summary */}
@@ -162,31 +204,32 @@ const FinancialDashboard = () => {
           <h2 className="text-xl font-bold text-gray-800 mb-4">Recent Transactions</h2>
           <div className="overflow-x-auto">
             <table className="w-full text-sm text-left text-gray-700">
-              <thead className="text-xs text-gray-600 border-b">
-                <tr>
-                  <th className="py-2 px-4">Date</th>
-                  <th className="py-2 px-4">Module</th>
-                  <th className="py-2 px-4">Discount Freq.</th>
-                  <th className="py-2 px-4 text-right">Amount</th>
-                </tr>
-              </thead>
-              <tbody>
-                {recentTransactions.map((tx, idx) => (
-                  <tr key={idx} className="border-b">
-                    <td className="py-2 px-4">{tx.date}</td>
-                    <td className="py-2 px-4">{tx.module}</td>
-                    <td className="py-2 px-4">{tx.desc}</td>
-                    <td className="py-2 px-4 text-right font-semibold">${tx.amount.toFixed(2)}</td>
-                  </tr>
-                ))}
-              </tbody>
+            <thead className="text-xs text-gray-600 border-b">
+  <tr>
+    <th className="py-2 px-4">Date</th>
+    <th className="py-2 px-4">Module</th>
+    <th className="py-2 px-4">Description</th>
+    <th className="py-2 px-4 text-right">Amount</th>
+  </tr>
+</thead>
+<tbody>
+  {recentTransactions.map((tx, idx) => (
+    <tr key={idx} className="border-b">
+      <td className="py-2 px-4">{new Date(tx.date).toLocaleDateString()}</td>
+      <td className="py-2 px-4">{tx.module}</td>
+      <td className="py-2 px-4">{tx.desc}</td>
+      <td className="py-2 px-4 text-right font-semibold">${tx.amount.toFixed(2)}</td>
+    </tr>
+  ))}
+</tbody>
+
             </table>
           </div>
         </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-4">
         {/* KPI Chart */}
-        <div className="bg-white shadow-xl rounded-2xl p-4">
+        {/* <div className="bg-white shadow-xl rounded-2xl p-4">
           <h2 className="text-xl font-bold text-gray-800 mb-4">Key Performance Indicators</h2>
           <ResponsiveContainer width="100%" height={200}>
             <AreaChart data={kpiData}>
@@ -218,10 +261,10 @@ const FinancialDashboard = () => {
               <span className="w-3 h-3 bg-yellow-400 rounded-full" /> Total Commission
             </div>
           </div>
-        </div>
+        </div> */}
 
         {/* Sales Summary */}
-        <div className="bg-white shadow-xl rounded-2xl p-4">
+        {/* <div className="bg-white shadow-xl rounded-2xl p-4">
           <h2 className="text-xl font-bold text-gray-800 mb-4">Sales Summary</h2>
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={salesData} barSize={50}>
@@ -234,10 +277,10 @@ const FinancialDashboard = () => {
               </Bar>
             </BarChart>
           </ResponsiveContainer>
-        </div>
+        </div> */}
 
         {/* Purchase Summary */}
-        <div className="bg-white shadow-xl rounded-2xl p-4">
+        {/* <div className="bg-white shadow-xl rounded-2xl p-4">
           <h2 className="text-xl font-bold text-gray-800 mb-4">Purchase Summary</h2>
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={purchaseData} barSize={50}>
@@ -250,7 +293,7 @@ const FinancialDashboard = () => {
               </Bar>
             </BarChart>
           </ResponsiveContainer>
-        </div>
+        </div> */}
       </div>
     </div>
   );

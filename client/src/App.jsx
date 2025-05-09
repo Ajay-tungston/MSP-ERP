@@ -9,6 +9,7 @@ import AddItem from "./Pages/AddItem";
 import AddCommission from "./Pages/AddCommission";
 import AddExpense from "./Pages/AddExpense";
 import AddCompany from "./Pages/AddCompany";
+import AddLender from "./Pages/AddLender";
 import Otp from "./Pages/Otp";
 import ForgetPassword from "./Pages/ForgetPassword";
 import ResetPassword from "./Pages/ResetPassword";
@@ -33,7 +34,7 @@ import RequireAuth from "./Components/RequireAuth";
 import IndividualSales from "./Pages/IndividualSales";
 import { ToastContainer } from 'react-toastify';
 import TrialBalance from "./Pages/TrialBalance";
-import Whatsapp from "./Pages/Whatsapp";
+// import Whatsapp from "./Pages/Whatsapp";
 import Payment from "./Pages/Payment/Payment";
 import AddPayment from "./Pages/Payment/AddPayment";
 import LocalsalesReport from "./Pages/LocalsalesReport";
@@ -46,6 +47,7 @@ import EditCompany from "./Pages/EditCompany";
 import EditEmployee from "./Pages/EditEmployee";
 import EditItem from "./Pages/EditItem";
 import EditSupplier from "./Pages/EditSupplier";
+import Lender from "./Pages/Lender";
 
 
 function App() {
@@ -69,7 +71,7 @@ function App() {
               <Route path="/employee" element={<Employee />} />
               <Route path="/item" element={<Item />} />
               <Route path="/expenses" element={<Expenses />} />
-
+              <Route path="/lender" element={<Lender />} />
 
               <Route path="/commission" element={<Commission />} />
               <Route path="/company" element={<Company />} />
@@ -88,7 +90,7 @@ function App() {
               <Route path="/individualsales" element={<IndividualSales/>}/>
 
 
-              <Route path='/whatsapp' element={<Whatsapp />} />
+              {/* <Route path='/whatsapp' element={<Whatsapp />} /> */}
 
               <Route path="/updatecustomer/:id" element={<EditCustomerModal />} />
             </Route>
@@ -114,7 +116,7 @@ function App() {
         <Route path="/edit-employee" element={<EditEmployee />} />
         <Route path="/edit-item" element={<EditItem />} />
         <Route path="/edit-supplier" element={<EditSupplier />} />
-        
+        <Route path ="/add-lender" element={<AddLender/>} />
       </Routes>
     </>
   );

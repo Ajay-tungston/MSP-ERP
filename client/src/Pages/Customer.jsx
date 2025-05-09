@@ -29,7 +29,7 @@ export default function CustomerHeader() {
   const fetchCustomersDebounced = debounce((page, searchTerm) => {
     setLoading(true);
     try {
-      axiosInstance
+   axiosInstance   
         .get(`/admin/customer/get?page=${page}&limit=${limit}&search=${searchTerm}`)
         .then((response) => {
           const data = response.data;

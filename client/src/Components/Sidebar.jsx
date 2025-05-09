@@ -11,7 +11,7 @@ import {
 
 } from "react-icons/fi";
 import { IoCube } from "react-icons/io5";
-import { FaWhatsapp } from "react-icons/fa";
+// import { FaWhatsapp } from "react-icons/fa";
 import { BiBarChartSquare } from "react-icons/bi";
 import { IoDocumentTextOutline } from "react-icons/io5";
 import { PiSignOutFill } from "react-icons/pi";
@@ -67,7 +67,7 @@ export default function Sidebar() {
 
   const navigate = useNavigate();
   const menuItems = [
-    { label: "WhatsApp", icon: <FaWhatsapp />, path: "/whatsapp" },
+    // { label: "WhatsApp", icon: <FaWhatsapp />, path: "/whatsapp" },
     {
       label: (
         <span className="text-red-600" onClick={logOut}>

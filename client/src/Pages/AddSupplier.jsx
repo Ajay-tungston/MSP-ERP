@@ -1,11 +1,10 @@
 import React, { useState } from "react";
 import { XCircleIcon, PlusCircleIcon } from "@heroicons/react/24/outline";
-import validator from "validator";
 import useAxiosPrivate from "../hooks/useAxiosPrivate";
 import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom";
 
-function AddSupplier({setPopup}) {
+function AddSupplier({setPopup,fetchSuppliers}) {
   const axiosPrivate = useAxiosPrivate();
   const navigate = useNavigate();
   // const safeOnClose = typeof onClose === "function" ? onClose : () => {};
@@ -106,6 +105,7 @@ function AddSupplier({setPopup}) {
           icon: "success",
           draggable: true,
         });
+        fetchSuppliers()
         setPopup(false); // Navigate after successful submission
       }
     } catch (error) {

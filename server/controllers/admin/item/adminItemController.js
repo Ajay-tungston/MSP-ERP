@@ -1,5 +1,7 @@
 const Item = require("../../../models/Item");
-const validator=require("validator")
+const validator=require("validator");
+const PurchaseEntry = require("../../../models/PurchaseEntry");
+const SalesEntry = require("../../../models/SalesEntry");
 
 const itemNameRegex = /^[a-zA-Z0-9\s]+$/;
 
@@ -88,27 +90,37 @@ const getAllItems = async (req, res) => {
 
 
 
-const deleteItems = async (req, res) => {
+const deleteItem = async (req, res) => {
   try {
-    const { itemId } = req.body;
+    const { id } = req.params;
 
-    if (!Array.isArray(itemId) || itemId.length === 0) {
-      return res
-        .status(400)
-        .json({ message: "Please provide a valid list of item IDs." });
-    }
-    const result = await Item.deleteMany({ _id: { $in: itemId } });
-
-    if (result.deletedCount === 0) {
-      return res.status(404).json({ message: "item not found" });
+    if (!id) {
+      return res.status(400).json({ message: "Item ID is required." });
     }
 
-    return res.status(200).json({
-      message: `${result.deletedCount} items deleted successfully`,
-    });
+    // Check in PurchaseEntry
+    const isUsedInPurchase = await PurchaseEntry.findOne({ 'items.item': id });
+    if (isUsedInPurchase) {
+      return res.status(400).json({ message: "Cannot delete: Item is used in a purchase." });
+    }
+
+    // Check in SalesEntry (nested inside customers -> items)
+    const isUsedInSale = await SalesEntry.findOne({ 'customers.items.item': id });
+    if (isUsedInSale) {
+      return res.status(400).json({ message: "Cannot delete: Item is used in a sale." });
+    }
+
+    // Proceed to delete
+    const deletedItem = await Item.findByIdAndDelete(id);
+    if (!deletedItem) {
+      return res.status(404).json({ message: "Item not found." });
+    }
+
+    return res.status(200).json({ message: "Item deleted successfully." });
+
   } catch (error) {
-    console.log(error);
-    return res.status(500).json({ message: "Error deleting items" });
+    console.error("Error deleting item:", error);
+    return res.status(500).json({ message: "Internal server error." });
   }
 };
 
@@ -221,7 +233,7 @@ const getItemById = async (req, res) => {
 module.exports={
   addItem,
   getAllItems,
-  deleteItems,
+  deleteItem,
   getItemList,
   updateItem,
   getItemById,

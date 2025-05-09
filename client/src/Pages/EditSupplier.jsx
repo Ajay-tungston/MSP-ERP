@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { XCircleIcon, CheckCircleIcon } from "@heroicons/react/24/outline";
-import {  useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import useAxiosPrivate from "../hooks/useAxiosPrivate";
 import Swal from "sweetalert2";
 
-
-const EditSupplier=({ supplierId,setEditPopup }) => {
+const EditSupplier = ({ supplierId, setEditPopup, fetchSuppliers }) => {
   const axiosPrivate = useAxiosPrivate();
   const navigate = useNavigate();
 
@@ -27,7 +26,9 @@ const EditSupplier=({ supplierId,setEditPopup }) => {
   useEffect(() => {
     const fetchSupplier = async () => {
       try {
-        const res = await axiosPrivate.get(`/admin/supplier/singlesupplier/${supplierId}`);
+        const res = await axiosPrivate.get(
+          `/admin/supplier/singlesupplier/${supplierId}`
+        );
         setFormData(res.data);
         if (res.data.phone === res.data.whatsapp) setSameAsPhone(true);
       } catch (error) {
@@ -59,7 +60,8 @@ const EditSupplier=({ supplierId,setEditPopup }) => {
     try {
       await axiosPrivate.put(`/admin/supplier/update/${supplierId}`, formData);
       Swal.fire("Updated!", "Supplier updated successfully.", "success");
-
+      fetchSuppliers();
+      handleCancel();
     } catch (error) {
       console.error("Update error:", error);
       setResponseError("Failed to update supplier.");
@@ -83,14 +85,14 @@ const EditSupplier=({ supplierId,setEditPopup }) => {
     setResponseError("");
     setEditPopup(false); // Close modal
   };
-  
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75">
       <div className="w-full sm:w-[640px] lg:w-[1000px] xl:w-[1200px] bg-white rounded-[24px] p-8 sm:p-10 shadow-xl relative">
-
         <div className="flex justify-between items-center pb-4 border-b border-gray-300">
-          <h2 className="text-[28px] font-bold text-[#151d48]">Edit Supplier</h2>
+          <h2 className="text-[28px] font-bold text-[#151d48]">
+            Edit Supplier
+          </h2>
           <button onClick={handleCancel}>
             <XCircleIcon className="w-6 h-6 text-gray-500 hover:text-red-500" />
           </button>
@@ -98,7 +100,10 @@ const EditSupplier=({ supplierId,setEditPopup }) => {
 
         {responseError && <p className="text-red-500 mt-2">{responseError}</p>}
 
-        <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-x-20 gap-y-6 mt-6 text-[#05004e] text-xl font-['Urbanist']">
+        <form
+          onSubmit={handleSubmit}
+          className="grid grid-cols-2 gap-x-20 gap-y-6 mt-6 text-[#05004e] text-xl font-['Urbanist']"
+        >
           {/* Supplier Code (Disabled) */}
           <div className="flex items-center">
             <label className="w-[172px] text-[#737791]">Supplier Code</label>
@@ -234,6 +239,6 @@ const EditSupplier=({ supplierId,setEditPopup }) => {
       </div>
     </div>
   );
-}
+};
 
 export default EditSupplier;

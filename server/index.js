@@ -34,6 +34,8 @@ app.use("/admin/file",require("./routes/admin/fileUploadRoutes"))
 app.use("/admin/cashbook",require("./routes/admin/cashbook/cashbookRouter"))
 app.use("/admin/expense",require("./routes/admin/expense/expenseRoutes"))
 app.use("/admin/lender",require("./routes/admin/lender/adminLenderRoutes"))
+app.use("/admin/trialBalance",require("./routes/admin/trialBalnce/trialBalanceRoute"))
+
 
 app.use("/admin/transaction",require("./routes/admin/transaction/transactionRoutes"))
 connectDb()

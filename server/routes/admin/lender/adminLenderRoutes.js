@@ -6,8 +6,8 @@ const {
   deleteLender
 } = require("../../../controllers/admin/lender/adminLender");
 
-router.get("/admin/lender", getLenders);
-router.post("/admin/lender/add", addLender);
-router.delete("/admin/lender/:id", deleteLender);
+router.get("/get", getLenders);
+router.post("/add", addLender);
+router.delete("/delete/:id", deleteLender);
 
 module.exports = router;

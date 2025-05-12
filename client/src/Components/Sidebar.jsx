@@ -24,14 +24,14 @@ export default function Sidebar() {
   const [isReportsOpen, setIsReportsOpen] = useState(false);
   const [isPrintOpen, setIsPrintOpen] = useState(false);
 
-  const [selectedItem, setSelectedItem] = useState();
+  const [selectedItem, setSelectedItem] = useState("");
   const [selectedMainItem, setSelectedMainItem] = useState("Dashboard");
 
   const logOut=useLogout()
 
   const masterItemRoutes = {
     "Customer": "/mastercustomer",
-    "Route Customer": "/route-customer",
+    // "Route Customer": "/route-customer",
     "Supplier": "/supplier",
     "Employee": "/employee",
     "Item": "/item",
@@ -46,7 +46,7 @@ export default function Sidebar() {
     "Sales": "/sales-transaction",
     "Payment In": "/payment/in",
     "Payment Out": "/payment/out",
-    "Route": "/transactions/returns",
+    // "Route": "/transactions/returns",
     "Cashbook": "/cashbook"
   };
 
@@ -55,15 +55,15 @@ export default function Sidebar() {
     "Ind.Purchase Report": "/individual-report",
     "Local Sales Report": "/localsales-report",
     "Individual Sales Report":"/individualsales",
-    "Route Sales Report": "/reports/expense",
+    // "Route Sales Report": "/reports/expense",
     "Trial Sales Report": "/trail"
   };
 
-  const printItemRoutes = {
-    "Individual Sales": "/print/invoice",
-    "Route Sales": "/print/daily-summary",
-    "Weekly Route Sales": "/print/customer-copy",
-  };
+  // const printItemRoutes = {
+  //   "Individual Sales": "/print/invoice",
+  //   "Route Sales": "/print/daily-summary",
+  //   "Weekly Route Sales": "/print/customer-copy",
+  // };
 
   const navigate = useNavigate();
   const menuItems = [
@@ -215,7 +215,7 @@ export default function Sidebar() {
           )}
 
           {/* Print */}
-          <div
+          {/* <div
             className={`rounded-lg p-3 flex items-center justify-between cursor-pointer transition ${selectedMainItem === "Print" ? "bg-indigo-500 text-white" : "text-gray-500 hover:bg-indigo-500 hover:text-white"}`}
             onClick={() => {
               setSelectedMainItem("Print");
@@ -246,7 +246,7 @@ export default function Sidebar() {
                 </div>
               ))}
             </div>
-          )}
+          )} */}
 
           {/* Bottom Items */}
           <div className="flex flex-col gap-3 text-gray-500">

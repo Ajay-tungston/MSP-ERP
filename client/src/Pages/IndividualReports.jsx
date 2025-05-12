@@ -136,14 +136,14 @@ const IndividualReports = () => {
       );
     } catch (error) {
       Swal.fire({
-              title: "Something went wrong!",
-              icon: "error",
-              draggable: true,
-            });
+        title: "Something went wrong!",
+        icon: "error",
+        draggable: true,
+      });
       console.error("Error fetching print data", error);
       console.error("Error details:", error.response?.data || error.message);
     }
-    finally{
+    finally {
       setPrintLoading(false)
     }
   };
@@ -199,8 +199,8 @@ const IndividualReports = () => {
       html += `
                 <tr>
                     <td>${new Date(entry.dateOfPurchase).toLocaleDateString(
-                      "en-GB"
-                    )}</td>
+        "en-GB"
+      )}</td>
                     <td>${entry.totalKg}</td>
                     <td>${entry.totalBox}</td>
                     <td>${entry.commissionPaid?.toFixed(2)}</td>
@@ -216,20 +216,16 @@ const IndividualReports = () => {
         </table>
     
         <div>
-            <strong>Total Net Amount:</strong> ${
-              totalStats?.netTotalAmount?.toFixed(2) || "0.00"
-            }<br>
-            <strong>Total Commission:</strong> ${
-              totalStats?.totalCommission?.toFixed(2) || "0.00"
-            }<br>
+            <strong>Total Net Amount:</strong> ${totalStats?.netTotalAmount?.toFixed(2) || "0.00"
+      }<br>
+            <strong>Total Commission:</strong> ${totalStats?.totalCommission?.toFixed(2) || "0.00"
+      }<br>
             <strong>Total Qty (KG):</strong> ${totalStats?.totalKg || 0}<br>
             <strong>Total Qty (Box):</strong> ${totalStats?.totalBox || 0}<br>
-            <strong>Total Gross Amount:</strong> ${
-              totalStats?.grossTotalAmount?.toFixed(2) || "0.00"
-            }<br>
-                   <strong>Total Expense:</strong> ${
-                     totalStats?.totalMarketFee?.toFixed(2) || "0.00"
-                   }<br>
+            <strong>Total Gross Amount:</strong> ${totalStats?.grossTotalAmount?.toFixed(2) || "0.00"
+      }<br>
+                   <strong>Total Expense:</strong> ${totalStats?.totalMarketFee?.toFixed(2) || "0.00"
+      }<br>
         </div>
     
         <script>
@@ -338,9 +334,8 @@ const IndividualReports = () => {
         }
       );
 
-      const whatsappUrl = `https://wa.me/${
-        supplier?.whatsapp
-      }?text=${encodeURIComponent(`Your purchase bill:\n${data.fileUrl}`)}`;
+      const whatsappUrl = `https://wa.me/${supplier?.whatsapp
+        }?text=${encodeURIComponent(`Your purchase bill:\n${data.fileUrl}`)}`;
       console.log(whatsappUrl);
       window.open(whatsappUrl, "_blank");
     } catch (err) {
@@ -379,17 +374,17 @@ const IndividualReports = () => {
           <div className="left-[48px] top-[80px] absolute justify-start text-indigo-950 text-4xl font-bold leading-[50.40px]">
             Individual Purchase Report
           </div>
-{reportsData?.length > 0&&
-          <button
-            onClick={fetchPrintData}
-            className="absolute top-[66px] right-10 px-8 py-4 bg-gray-50 rounded-xl inline-flex items-center gap-3 cursor-pointer"
-          >
-            <BsPrinter className="w-8 h-8 text-indigo-950" />
-            <div className="text-indigo-950 text-xl font-bold">Print</div>
-          </button>}
+          {reportsData?.length > 0 &&
+            <button
+              onClick={fetchPrintData}
+              className="absolute top-[66px] right-10 px-8 py-4 bg-gray-50 rounded-xl inline-flex items-center gap-3 cursor-pointer"
+            >
+              <BsPrinter className="w-8 h-8 text-indigo-950" />
+              <div className="text-indigo-950 text-xl font-bold">Print</div>
+            </button>}
 
           {/* Filters */}
-          <div className="left-[41px] top-[178px] absolute inline-flex justify-between items-center gap-8">
+          <div className=" pt-[15%] absolute inline-flex justify-between items-center gap-8 ml-6">
             <Combobox
               value={selectedSupplier}
               onChange={(value) => {
@@ -421,8 +416,7 @@ const IndividualReports = () => {
                         key={supplier._id}
                         value={supplier}
                         className={({ active }) =>
-                          `px-4 py-2 cursor-pointer text-slate-600 text-base ${
-                            active ? "bg-gray-100" : ""
+                          `px-4 py-2 cursor-pointer text-slate-600 text-base ${active ? "bg-gray-100" : ""
                           }`
                         }
                       >
@@ -433,38 +427,39 @@ const IndividualReports = () => {
                 )}
               </div>
             </Combobox>
+            <div className="items-center gap-8 inline-flex">
+              <div className="text-slate-500/40 text-xl ml-[50%]">From</div>
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => {
+                  setStartDate(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="w-64 px-6 py-4 bg-gray-50 rounded-xl text-zinc-700 text-xl outline-none"
+              />
 
-            <div className="text-slate-500/40 text-xl">From</div>
-            <input
-              type="date"
-              value={startDate}
-              onChange={(e) => {
-                setStartDate(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="w-64 px-6 py-4 bg-gray-50 rounded-xl text-zinc-700 text-xl outline-none"
-            />
-
-            <div className="text-slate-500/40 text-xl">To</div>
-            <input
-              type="date"
-              value={endDate}
-              onChange={(e) => {
-                setEndDate(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="w-64 px-6 py-4 bg-gray-50 rounded-xl text-zinc-700 text-xl outline-none"
-            />
+              <div className="text-slate-500/40 text-xl">To</div>
+              <input
+                type="date"
+                value={endDate}
+                onChange={(e) => {
+                  setEndDate(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="w-64 px-6 py-4 bg-gray-50 rounded-xl text-zinc-700 text-xl outline-none"
+              />
+            </div>
           </div>
 
           {/* Table */}
           <table className="w-fit left-0 top-[288px] absolute inline-flex flex-col justify-start items-start">
             <thead className="self-stretch bg-gray-50 border-b border-gray-200">
-              <tr className="p-2 py-3 bg-gray-50 border-b border-gray-200 inline-flex justify-start items-center gap-12 w-full">
-                <th className="min-w-4 text-indigo-950 text-xl font-bold font-['Urbanist'] tracking-wide">
+              <tr className="p-2 py-2 bg-gray-50 border-b border-gray-200 inline-flex justify-start items-center gap-12 w-full">
+                <th className="min-w-24 text-indigo-950 text-xl font-bold font-['Urbanist'] tracking-wide">
                   No.
                 </th>
-                <th className="min-w-32 text-indigo-950 text-xl font-bold font-['Urbanist'] tracking-wide">
+                <th className="min-w-2 text-indigo-950 text-xl font-bold font-['Urbanist'] tracking-wide">
                   Date
                 </th>
 
@@ -621,44 +616,42 @@ const IndividualReports = () => {
           </table>
 
           {/*pagination */}
-          <div className="px-12 py-6 left-0 top-[623px] absolute inline-flex justify-between items-center w-full">
+          <div className="px-12 py-6 left-0 bottom-0 mb-[16%] absolute inline-flex justify-between items-center w-full">
             <div className="text-slate-900 text-xl">
               Page {currentPage} of {totalPages}
             </div>
             <div className="flex gap-6">
-              <div
+              <button
                 onClick={goToPreviousPage}
-                className={`w-40 px-6 py-4 bg-white rounded-2xl  outline-1 outline-gray-300/30 flex justify-center items-center gap-3 cursor-pointer ${
-                  currentPage === 1 ? "pointer-events-none opacity-30" : ""
-                }`}
+                className={`w-40 px-6 py-4 bg-white rounded-2xl border  outline-1 outline-gray-300/30 flex justify-center items-center gap-3 cursor-pointer ${currentPage === 1 ? "pointer-events-none opacity-30" : ""
+                  }`}
               >
                 <span className="text-gray-400 text-xl font-bold">
                   Previous
                 </span>
-              </div>
-              <div
+              </button>
+              <button
                 onClick={goToNextPage}
-                className={`w-40 px-6 py-4 bg-white rounded-2xl  outline-1 outline-gray-300/30 flex justify-center items-center gap-3 cursor-pointer ${
-                  currentPage === totalPages
+                className={`w-40 px-6 py-4 bg-white  rounded-2xl border outline-1 outline-gray-300/30 flex justify-center items-center gap-3 cursor-pointer ${currentPage === totalPages
                     ? "pointer-events-none opacity-30"
                     : ""
-                }`}
+                  }`}
               >
-                <span className="text-blue-500 text-xl font-bold">Next</span>
-              </div>
+                <span className="text-blue-800 text-xl font-bold">Next</span>
+              </button>
             </div>
           </div>
           <hr className="absolute left-0 w-full border-t border-gray-300 top-[720px]" />
 
           {/* Stats Section */}
-          <div className="w-full px-12 py-4 left-0 top-[822px] absolute bg-teal-50 border-b border-gray-200 inline-flex justify-start items-center gap-16">
+          <div className="w-full px-12 py-4 left-0 bottom-0 mb-[8%] absolute bg-teal-50 border-b border-gray-200 inline-flex justify-start items-center gap-16">
             <div className="min-w-32 text-slate-500/40 text-xl">Total</div>
             <div className="min-w-32 text-slate-900 text-xl font-bold">
               {totalStats?.netTotalAmount?.toFixed(2) || "0.00"}
             </div>
           </div>
 
-          <div className=" py-2 left-0 top-[750px] absolute bg-white border-b border-gray-200 inline-flex justify-between items-center gap-28 p-4">
+          <div className=" py-2 left-0 bottom-0 mb-[12%] absolute bg-white border-b border-gray-200 inline-flex justify-between items-center  p-4 w-full">
             <div className="flex items-center gap-6">
               <span className="text-slate-500/40 text-xl">Commission</span>
               <span className="text-slate-900 text-xl font-bold">

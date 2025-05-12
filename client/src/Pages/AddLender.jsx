@@ -7,10 +7,7 @@ const AddLenderForm = ({ setPopup, refreshLenders }) => {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
-  const [whatsapp, setWhatsapp] = useState("");
-  const [discount, setDiscount] = useState("");
-  const [frequency, setFrequency] = useState("");
-  const [balance, setBalance] = useState("");
+  
 
   const axiosInstance = useAxiosPrivate();
 
@@ -18,10 +15,7 @@ const AddLenderForm = ({ setPopup, refreshLenders }) => {
     setName("");
     setPhone("");
     setAddress("");
-    setWhatsapp("");
-    setDiscount("");
-    setFrequency("");
-    setBalance("");
+   
     setPopup(false);
   };
 
@@ -40,10 +34,7 @@ const AddLenderForm = ({ setPopup, refreshLenders }) => {
         name,
         phone,
         address,
-        whatsapp,
-        discount,
-        frequency,
-        balance,
+        
       });
 
       Swal.fire("Success", "Lender added successfully.", "success");

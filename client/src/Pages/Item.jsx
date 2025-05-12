@@ -27,7 +27,7 @@ function Item() {
     try {
       setIsLoading(true);
       const response = await axiosInstance.get(
-        `/admin/item?page=${currentPage}&limit=${limit}&search=${search}`
+        `/admin/item/get?page=${currentPage}&limit=${limit}&search=${search}`
       );
       setItemData(response?.data);
       setTotalPages(response?.data?.totalPages);

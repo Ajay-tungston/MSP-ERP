@@ -1,8 +1,4 @@
-// import {
-//   AreaChart, Area, CartesianGrid,
 
-// } from "recharts";
-import axios from "axios";
 import React, { useEffect, useState } from "react";
 import {
   PieChart,
@@ -37,9 +33,8 @@ const purchaseData = [
 ];
 
 const expenseData = [
-  { name: "Coolie/Logistics", value: 500, color: "#6366F1" },
-  { name: "Market Fees", value: 300, color: "#FACC15" },
-  { name: "Route Expenses", value: 250, color: "#22C55E" },
+  { name: "Coolie/Market Fees", value: 500, color: "#6366F1" },
+  { name: " Expenses", value: 250, color: "#22C55E" },
 ];
 
 const totalExpense = expenseData.reduce((acc, curr) => acc + curr.value, 0);
@@ -69,7 +64,7 @@ const FinancialDashboard = () => {
     purchases: 0,
     expenses: [],
   });
-  
+
   useEffect(() => {
     const fetchSummary = async () => {
       try {
@@ -82,7 +77,7 @@ const FinancialDashboard = () => {
     };
     fetchSummary();
   }, [axiosInstance]);
-  
+
   const totalProfit =
     summary.sales - summary.purchases - summary.totalExpense;
 
@@ -204,24 +199,24 @@ const FinancialDashboard = () => {
           <h2 className="text-xl font-bold text-gray-800 mb-4">Recent Transactions</h2>
           <div className="overflow-x-auto">
             <table className="w-full text-sm text-left text-gray-700">
-            <thead className="text-xs text-gray-600 border-b">
-  <tr>
-    <th className="py-2 px-4">Date</th>
-    <th className="py-2 px-4">Module</th>
-    <th className="py-2 px-4">Description</th>
-    <th className="py-2 px-4 text-right">Amount</th>
-  </tr>
-</thead>
-<tbody>
-  {recentTransactions.map((tx, idx) => (
-    <tr key={idx} className="border-b">
-      <td className="py-2 px-4">{new Date(tx.date).toLocaleDateString()}</td>
-      <td className="py-2 px-4">{tx.module}</td>
-      <td className="py-2 px-4">{tx.desc}</td>
-      <td className="py-2 px-4 text-right font-semibold">${tx.amount.toFixed(2)}</td>
-    </tr>
-  ))}
-</tbody>
+              <thead className="text-xs text-gray-600 border-b">
+                <tr>
+                  <th className="py-2 px-4">Date</th>
+                  <th className="py-2 px-4">Module</th>
+                  <th className="py-2 px-4">Description</th>
+                  <th className="py-2 px-4 text-right">Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                {recentTransactions.map((tx, idx) => (
+                  <tr key={idx} className="border-b">
+                    <td className="py-2 px-4">{new Date(tx.date).toLocaleDateString()}</td>
+                    <td className="py-2 px-4">{tx.module}</td>
+                    <td className="py-2 px-4">{tx.desc}</td>
+                    <td className="py-2 px-4 text-right font-semibold">${tx.amount.toFixed(2)}</td>
+                  </tr>
+                ))}
+              </tbody>
 
             </table>
           </div>

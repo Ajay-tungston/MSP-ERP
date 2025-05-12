@@ -1,7 +1,7 @@
 const Sale = require("../../../models/SalesEntry");
 const Purchase = require("../../../models/PurchaseEntry");
 const Expense = require("../../../models/Expense");
-
+const supplier = require("../../../models/Supplier");
 // Unified recent transactions
 const getRecentTransactions = async (req, res) => {
   try {
@@ -59,4 +59,37 @@ const getNetProfit = async (req, res) => {
     res.status(500).json({ message: "Failed to fetch summary." });
   }
 };
-module.exports = {getRecentTransactions ,getNetProfit};
+
+// ✅ New: Expense Summary with Market Fee
+const getExpenseSummary = async (req, res) => {
+  try {
+    const suppliers = await Supplier.find({}, "marketFee");
+    const expenses = await Expense.aggregate([
+      { $group: { _id: "$category", total: { $sum: "$amount" } } },
+    ]);
+
+    const totalMarketFees = suppliers.reduce((sum, s) => sum + (s.marketFee || 0), 0);
+    const totalOtherExpenses = expenses.reduce((sum, e) => sum + e.total, 0);
+    const totalExpense = totalMarketFees + totalOtherExpenses;
+
+    const formattedExpenses = [
+      { name: "Market Fees", value: totalMarketFees, color: "#FACC15" },
+      ...expenses.map((e, i) => ({
+        name: e._id || "Other",
+        value: e.total,
+        color: ["#6366F1", "#22C55E", "#EF4444", "#06B6D4"][i % 4], // rotating color palette
+      })),
+    ];
+
+    res.json({
+      totalExpense,
+      totalMarketFees,
+      breakdown: formattedExpenses,
+    });
+  } catch (err) {
+    console.error("Expense summary error:", err);
+    res.status(500).json({ message: "Failed to fetch expense summary." });
+  }
+};
+
+  module.exports = {getRecentTransactions ,getNetProfit,getExpenseSummary};

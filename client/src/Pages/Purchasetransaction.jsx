@@ -137,7 +137,7 @@ function Purchasetransaction() {
     }
   };
   useEffect(() => {
-   
+
     fetchPurchaseCount();
   }, []);
 
@@ -149,20 +149,40 @@ function Purchasetransaction() {
   const handleKeyDown = (e, rowIndex, colIndex) => {
     if (e.key === "Enter") {
       e.preventDefault();
-      const nextRef = inputRefs.current?.[rowIndex]?.[colIndex + 1];
-      if (nextRef) nextRef.focus();
-      else if (inputRefs.current?.[rowIndex + 1]?.[0])
-        inputRefs.current[rowIndex + 1][0].focus();
+  
+      const row = inputRefs.current?.[rowIndex];
+      if (!row) return;
+  
+      // Try to find next enabled input in the same row
+      for (let nextCol = colIndex + 1; nextCol < row.length; nextCol++) {
+        const nextRef = row[nextCol];
+        if (nextRef && nextRef.disabled !== true && nextRef.readOnly !== true) {
+          nextRef.focus();
+          return;
+        }
+      }
+  
+      // No more inputs in this row, move to the first input of the next row
+      const nextRow = inputRefs.current?.[rowIndex + 1];
+      if (nextRow) {
+        for (let i = 0; i < nextRow.length; i++) {
+          const nextRef = nextRow[i];
+          if (nextRef && nextRef.disabled !== true && nextRef.readOnly !== true) {
+            nextRef.focus();
+            return;
+          }
+        }
+      }
     }
   };
-
+  
+  // useEffect for setting up refs after rendering
   useEffect(() => {
-    inputRefs.current = items.map((_, i) =>
-      Array(6)
-        .fill(null)
-        .map((_, j) => inputRefs.current?.[i]?.[j] || React.createRef())
+    inputRefs.current = items.map(() =>
+      [0, 1, 2, 3, 4, 5].map(() => React.createRef())
     );
-  }, [items]);
+  }, [items.length]);
+  
 
   const totalQuantityInKg = items.reduce((acc, item) => {
     const qty = parseFloat(item.kg);
@@ -238,7 +258,7 @@ function Purchasetransaction() {
         dateOfPurchase,
         marketFee,
       });
-      if(isPrint){
+      if (isPrint) {
         const transaction = {
           selectedSupplier,
           purchaseCount,
@@ -469,7 +489,7 @@ function Purchasetransaction() {
               {items.map((item, index) => (
                 <div
                   key={index}
-                  className="relative w-full grid grid-cols-12 gap-4  px-6 py-4 text-xl border-b hover:bg-gray-100 group"
+                  className="relative w-full grid grid-cols-12 gap-4  px-6 py-4 text-xl border-b  group"
                 >
                   {/* No. */}
                   <input
@@ -500,9 +520,12 @@ function Purchasetransaction() {
                         const updatedItems = [...items];
                         updatedItems[index].name = selectedItem.itemName;
                         setItems(updatedItems);
+                        setTimeout(() => {
+                          inputRefs.current?.[index]?.[2]?.focus();
+                        }, 0); // Delay to allow Combobox selection to complete
                       }}
                     >
-                      <div className="relative w-full">
+                     <div className="relative w-full">
                         <ComboboxInput
                           onChange={(e) => setItemSearch(e.target.value)}
                           displayValue={(item) => item}
@@ -511,7 +534,13 @@ function Purchasetransaction() {
                           onFocus={() => setItemInputFocused(index)}
                           onBlur={() => setItemInputFocused(false)}
                           className="bg-white border-none outline-none placeholder:text-gray-400 w-full h-full"
+                          // ⛔️ REMOVE handleKeyDown — let Combobox handle Enter key
+                          ref={(el) => {
+                            if (!inputRefs.current[index]) inputRefs.current[index] = [];
+                            inputRefs.current[index][1] = el;
+                          }}
                         />
+
                         {itemLoading ? (
                           itemInputFocused === index && (
                             <div className="absolute z-10 w-full border border-gray-200 rounded-xl bg-white max-h-60 overflow-y-auto shadow-lg px-6 py-3 text-gray-700">
@@ -563,7 +592,10 @@ function Purchasetransaction() {
                       setItems(updatedItems);
                     }}
                     onKeyDown={(e) => handleKeyDown(e, index, 2)}
-                    ref={(el) => (inputRefs.current[index][2] = el)}
+                    ref={(el) => {
+                      if (!inputRefs.current[index]) inputRefs.current[index] = [];
+                      inputRefs.current[index][2] = el;
+                    }}
                     className="col-span-2 bg-white border-none outline-none placeholder:text-gray-400 w-full"
                     placeholder="Qty(Kg)"
                   />
@@ -584,24 +616,14 @@ function Purchasetransaction() {
                       setItems(updatedItems);
                     }}
                     onKeyDown={(e) => handleKeyDown(e, index, 3)}
-                    ref={(el) => (inputRefs.current[index][3] = el)}
+                    ref={(el) => {
+                      if (!inputRefs.current[index]) inputRefs.current[index] = [];
+                      inputRefs.current[index][3] = el;
+                    }}
                     className="col-span-2 bg-white border-none outline-none placeholder:text-gray-400 w-full"
                     placeholder="Qty(Box)"
                   />
 
-                  {/* Unit Selector */}
-                  {/* <select
-                name="unit"
-                value={item.unit}
-                disabled={
-                  !itemList.some((option) => option.itemName === item.name)
-                }
-                onChange={(e) => handleInputChange(index, e)}
-                className="col-span-1 bg-gray-100 border border-gray-300 text-gray-700 px-2 rounded-md w-full"
-              >
-                <option value="box">Box</option>
-                <option value="kg">Kg</option>
-              </select> */}
 
                   {/* Price */}
                   <input
@@ -613,7 +635,10 @@ function Purchasetransaction() {
                     value={item.price}
                     onChange={(e) => handleInputChange(index, e)}
                     onKeyDown={(e) => handleKeyDown(e, index, 4)}
-                    ref={(el) => (inputRefs.current[index][4] = el)}
+                    ref={(el) => {
+                      if (!inputRefs.current[index]) inputRefs.current[index] = [];
+                      inputRefs.current[index][4] = el;
+                    }}
                     className="col-span-2 bg-white border-none outline-none placeholder:text-gray-400 w-full"
                     placeholder="Unit Price"
                   />
@@ -628,7 +653,10 @@ function Purchasetransaction() {
                     value={item.total}
                     readOnly
                     onKeyDown={(e) => handleKeyDown(e, index, 5)}
-                    ref={(el) => (inputRefs.current[index][5] = el)}
+                    ref={(el) => {
+                      if (!inputRefs.current[index]) inputRefs.current[index] = [];
+                      inputRefs.current[index][5] = el;
+                    }}
                     className="col-span-2 bg-white border-none outline-none placeholder:text-gray-400 w-full"
                     placeholder="Subtotal"
                   />
@@ -696,9 +724,8 @@ function Purchasetransaction() {
                   // { label: " ($/KG)", value: "0" },
                   {
                     label: "Total Deductions",
-                    value: `₹ ${
-                      totalDeduction ? totalDeduction.toFixed(2) : 0
-                    }`,
+                    value: `₹ ${totalDeduction ? totalDeduction.toFixed(2) : 0
+                      }`,
                   },
                 ].map((label, idx) => (
                   <div
@@ -744,11 +771,10 @@ function Purchasetransaction() {
                         </span>
                       )}
                       <span
-                        className={`text-xl ${
-                          item.label === "Net Payable"
+                        className={`text-xl ${item.label === "Net Payable"
                             ? "text-indigo-950 font-bold"
                             : "text-gray-400"
-                        }`}
+                          }`}
                       >
                         {item.value}
                       </span>
@@ -758,13 +784,13 @@ function Purchasetransaction() {
                 <div className="flex justify-end gap-4 mt-6">
                   <button
                     className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700"
-                    onClick={()=>handleSubmit(false)}
+                    onClick={() => handleSubmit(false)}
                   >
                     Save
                   </button>
                   <button
                     className="bg-purple-600 text-white px-6 py-2 rounded hover:bg-purple-700"
-                    onClick={()=>handleSubmit(true)}
+                    onClick={() => handleSubmit(true)}
                   >
                     Print
                   </button>

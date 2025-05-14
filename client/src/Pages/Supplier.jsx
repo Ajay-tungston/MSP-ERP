@@ -182,7 +182,7 @@ export default function CustomerHeader() {
         </div>
 
         {/* Pagination */}
-        <div className="flex justify-between items-center mt-[5%] text-gray-600 ml-10">
+        <div className="flex justify-between items-center  mt-6 text-gray-600 ml-10">
           <span>
             Page {supplier?.currentPage} of {supplier?.totalPages}
           </span>

@@ -5,9 +5,9 @@ const {
   addLender,
   deleteLender
 } = require("../../../controllers/admin/lender/adminLender");
-
-router.get("/get", getLenders);
-router.post("/add", addLender);
-router.delete("/delete/:id", deleteLender);
+const verifyJwt = require("../../../middleware/verifyJwt");
+router.get("/get",verifyJwt, getLenders);
+router.post("/add", verifyJwt, addLender);
+router.delete("/delete/:id",verifyJwt, deleteLender);
 
 module.exports = router;

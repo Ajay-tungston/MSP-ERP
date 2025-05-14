@@ -32,12 +32,12 @@ const purchaseData = [
   { name: "Green Supply", value: 2000 },
 ];
 
-const expenseData = [
-  { name: "Coolie/Market Fees", value: 500, color: "#6366F1" },
-  { name: " Expenses", value: 250, color: "#22C55E" },
-];
+// const expenseData = [
+//   { name: "Coolie/Market Fees", value: 500, color: "#6366F1" },
+//   { name: " Expenses", value: 250, color: "#22C55E" },
+// ];
 
-const totalExpense = expenseData.reduce((acc, curr) => acc + curr.value, 0);
+// const totalExpense = expenseData.reduce((acc, curr) => acc + curr.value, 0);
 
 const data = [
   { name: "Cash Balance", value: 4140 },
@@ -58,6 +58,8 @@ const totalProfit = 1050;
 const FinancialDashboard = () => {
   const [recentTransactions, setRecentTransactions] = useState([]);
   const axiosInstance = useAxiosPrivate();
+  const [totalExpense, setTotalExpense]=useState(0);
+  const [expenseData , setExpenseData] = useState([]);
 
   const [summary, setSummary] = useState({
     sales: 0,
@@ -70,14 +72,31 @@ const FinancialDashboard = () => {
       try {
         const res = await axiosInstance.get("/admin/transaction/profit");
         setSummary(res.data);
-        console.log(res)
       } catch (err) {
         console.error("Error fetching summary:", err);
       }
     };
     fetchSummary();
   }, [axiosInstance]);
+     
 
+  useEffect(() => {
+    const fetchExpenseSummary = async () => {
+      try {
+        const res = await axiosInstance.get("/admin/transaction/summary");
+        setExpenseData(res.data.breakdown);
+        setTotalExpense(res.data.totalExpense);
+ 
+      } catch (error) {
+        console.error("Failed to fetch expense summary", error);
+      }
+    };
+
+    fetchExpenseSummary();
+  }, []);
+
+
+  
   const totalProfit =
     summary.sales - summary.purchases - summary.totalExpense;
 
@@ -98,7 +117,6 @@ const FinancialDashboard = () => {
     };
     fetchRecentTransactions();
   }, [axiosInstance]);
-
 
   return (
     <div>
@@ -154,45 +172,42 @@ const FinancialDashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4">
         {/* Expense Summary */}
         <div className="bg-white shadow-xl rounded-2xl p-4">
-          <h2 className="text-xl font-bold text-gray-800 mb-4">Expense Summary</h2>
-          <ResponsiveContainer width="100%" height={220}>
-            <PieChart>
-              <Pie
-                data={expenseData}
-                innerRadius={60}
-                outerRadius={100}
-                paddingAngle={2}
-                dataKey="value"
-              >
-                {expenseData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
-                ))}
-              </Pie>
-            </PieChart>
-          </ResponsiveContainer>
-          <div className="text-3xl font-bold text-center -mt-28 mb-4 text-indigo-900">
-            ${totalExpense}
-          </div>
-          <div className="mt-4 space-y-2 text-sm">
-            {expenseData.map((item, idx) => (
-              <div key={idx} className="flex justify-between items-center">
-                <span className="flex items-center gap-2">
-                  <span
-                    className="w-3 h-3 rounded-full"
-                    style={{ backgroundColor: item.color }}
-                  />
-                  {item.name}
-                </span>
-                <span
-                  className={`font-semibold`}
-                  style={{ color: item.color }}
-                >
-                  ${item.value} ({((item.value / totalExpense) * 100).toFixed(2)}%)
-                </span>
-              </div>
+      <h2 className="text-xl font-bold text-gray-800 mb-4">Expense Summary</h2>
+      <ResponsiveContainer width="100%" height={220}>
+        <PieChart>
+          <Pie
+            data={expenseData}
+            innerRadius={60}
+            outerRadius={100}
+            paddingAngle={2}
+            dataKey="value"
+          >
+            {expenseData.map((entry, index) => (
+              <Cell key={`cell-${index}`} fill={entry.color} />
             ))}
+          </Pie>
+        </PieChart>
+      </ResponsiveContainer>
+      <div className="text-3xl font-bold text-center -mt-28 mb-4 text-indigo-900">
+        ${totalExpense}
+      </div>
+      <div className="mt-4 space-y-2 text-sm">
+        {expenseData.map((item, idx) => (
+          <div key={idx} className="flex justify-between items-center">
+            <span className="flex items-center gap-2">
+              <span
+                className="w-3 h-3 rounded-full"
+                style={{ backgroundColor: item.color }}
+              />
+              {item.name}
+            </span>
+            <span className="font-semibold" style={{ color: item.color }}>
+              ${item.value} ({((item.value / totalExpense) * 100).toFixed(2)}%)
+            </span>
           </div>
-        </div>
+        ))}
+      </div>
+    </div>
 
         {/* Recent Transactions */}
         <div className="bg-white shadow-xl rounded-2xl p-4">

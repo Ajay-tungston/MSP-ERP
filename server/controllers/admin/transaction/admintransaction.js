@@ -1,7 +1,7 @@
 const Sale = require("../../../models/SalesEntry");
 const Purchase = require("../../../models/PurchaseEntry");
 const Expense = require("../../../models/Expense");
-const supplier = require("../../../models/Supplier");
+const Supplier = require("../../../models/Supplier")
 // Unified recent transactions
 const getRecentTransactions = async (req, res) => {
   try {
@@ -75,7 +75,7 @@ const getExpenseSummary = async (req, res) => {
     const formattedExpenses = [
       { name: "Market Fees", value: totalMarketFees, color: "#FACC15" },
       ...expenses.map((e, i) => ({
-        name: e._id || "Other",
+        name: e._id || "Expenses",
         value: e.total,
         color: ["#6366F1", "#22C55E", "#EF4444", "#06B6D4"][i % 4], // rotating color palette
       })),

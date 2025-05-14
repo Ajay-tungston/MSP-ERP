@@ -362,7 +362,7 @@ const IndividualReports = () => {
           <OvalSpinner />
         </div>
       )}
-      <div className="w-full px-4 md:px-8 lg:px-12">
+      <div className="w-full  ">
         <div className="h-screen relative bg-white rounded-3xl overflow-hidden mt-10">
           <div className="left-[48px] top-[48px] absolute inline-flex justify-start items-center gap-3">
             <div className="flex items-center justify-start text-slate-500 text-xl font-normal">
@@ -427,7 +427,7 @@ const IndividualReports = () => {
                 )}
               </div>
             </Combobox>
-            <div className="items-center gap-8 inline-flex">
+            <div className="items-center gap-12 inline-flex ">
               <div className="text-slate-500/40 text-xl ml-[50%]">From</div>
               <input
                 type="date"

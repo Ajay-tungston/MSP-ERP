@@ -228,7 +228,7 @@ const getCustomerNames = async (req, res) => {
       };
     }
 
-    const customers = await Customer.find(filter, "customerName address whatsapp")
+    const customers = await Customer.find(filter, "customerName address whatsapp openingBalance")
       .sort({ customerName: 1 })
       .limit(100) // Prevent excessive results
       .lean() // Faster if just converting to objects
@@ -237,9 +237,9 @@ const getCustomerNames = async (req, res) => {
       id: c._id,
       name: c.customerName,
       address:c.address,
-      whatsapp:c?.whatsapp
+      whatsapp:c?.whatsapp,
+      openingBalance:c.openingBalance
     }));
-
     return res.status(200).json({ 
       success: true,
       count: customerList.length,

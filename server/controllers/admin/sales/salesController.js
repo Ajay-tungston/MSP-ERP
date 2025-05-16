@@ -6,6 +6,7 @@ const PurchaseEntry = require("../../../models/PurchaseEntry");
 const getNextCounterNumber = require("../../../utils/counter");
 
 const mongoose = require("mongoose");
+const Payment = require("../../../models/Payment");
 const createSaleTransaction = async (req, res) => {
   try {
     const sales = Array.isArray(req.body) ? req.body : [req.body];
@@ -21,7 +22,7 @@ const createSaleTransaction = async (req, res) => {
     // Build customer blocks
     const customersArray = [];
     let grandTotal = 0;
-let purchaseDta
+    let purchaseDta;
     for (const saleData of sales) {
       const { customer: customerId, discount = 0, items, purchase } = saleData;
       const purchaseEntry = await PurchaseEntry.findById(purchase);
@@ -29,8 +30,7 @@ let purchaseDta
       if (!purchaseEntry) {
         throw new Error("Purchase entry not found");
       }
-      purchaseDta=purchase
-    
+      purchaseDta = purchase;
 
       // Validate customer block
       if (!mongoose.isValidObjectId(customerId)) {
@@ -102,11 +102,8 @@ let purchaseDta
         }
         //for updating purchase schema
         const purchaseItem = purchaseEntry.items.find(
-          (i) =>
-            i.item.toString() === itemId &&
-          i.quantityType === quantityType
+          (i) => i.item.toString() === itemId && i.quantityType === quantityType
         );
-
 
         if (!purchaseItem) {
           throw new Error("Item not found in purchase entry");
@@ -114,7 +111,8 @@ let purchaseDta
 
         // Update sold and remaining quantities
         purchaseItem.soldQuantity += quantity;
-        purchaseItem.remainingQuantity = purchaseItem.quantity - purchaseItem.soldQuantity;
+        purchaseItem.remainingQuantity =
+          purchaseItem.quantity - purchaseItem.soldQuantity;
 
         // Ensure values are within valid bounds
         if (purchaseItem.remainingQuantity < 0) {
@@ -126,59 +124,6 @@ let purchaseDta
 
         // Save the changes
         await purchaseEntry.save();
-        // const updatedPurchase = await PurchaseEntry.findOneAndUpdate(
-        //   {
-        //     supplier: supplier._id,
-        //     "items.item": item._id,
-        //     "items.quantityType": quantityType,
-        //     "items.remainingQuantity": { $gte: quantity }
-        //   },
-        //   {
-        //     $inc: {
-        //       "items.$[elem].soldQuantity": quantity,
-        //       "items.$[elem].remainingQuantity": -quantity
-        //     }
-        //   },
-        //   {
-        //     arrayFilters: [
-        //       {
-        //         "elem.item": item._id,
-        //         "elem.quantityType": quantityType
-        //       }
-        //     ],
-        //     new: true
-        //   }
-        // );
-
-        // if (!updatedPurchase) {
-        //   return res.status(400).json({
-        //     message: `Insufficient ${quantityType} stock for item ${item._id}`
-        //   });
-        // }
-
-        // const sub = updatedPurchase.items.find(
-        //   pi => pi.item.equals(item._id) && pi.quantityType === quantityType
-        // );
-        // if (sub.remainingQuantity === 0 && !sub.isCompleted) {
-        //   await PurchaseEntry.updateOne(
-        //     {
-        //       _id: updatedPurchase._id,
-        //       "items._id": sub._id,
-        //       "items.quantityType": quantityType
-        //     },
-        //     { $set: { "items.$.isCompleted": true } }
-        //   );
-        // }
-
-        // const fresh = await PurchaseEntry.findById(updatedPurchase._id).select("items isCompleted");
-        // if (!fresh.isCompleted && fresh.items.every(i => i.isCompleted)) {
-        //   await PurchaseEntry.updateOne(
-        //     { _id: updatedPurchase._id },
-        //     { $set: { isCompleted: true } }
-        //   );
-        // }
-
-        
 
         const totalCost = quantity * unitPrice;
         customerTotal += totalCost;
@@ -192,6 +137,11 @@ let purchaseDta
           totalCost,
         });
       }
+
+      //update the balance of customer
+      customer.previousBalance = customer.openingBalance;
+      customer.openingBalance += (customerTotal - discount);
+      await customer.save();
 
       customersArray.push({
         customer: customer._id,
@@ -210,7 +160,7 @@ let purchaseDta
         : new Date(),
       totalAmount: grandTotal,
       status: "completed",
-      purchase:purchaseDta,
+      purchase: purchaseDta,
       customers: customersArray,
     });
 
@@ -303,13 +253,12 @@ const getCustomerSalesReport = async (req, res) => {
     const matchStage = {
       "customers.customer": custObjId,
     };
-    
+
     if (startDate || endDate) {
       matchStage.dateOfSale = {};
       if (startDate) matchStage.dateOfSale.$gte = new Date(startDate);
       if (endDate) matchStage.dateOfSale.$lte = new Date(endDate);
     }
-    
 
     const pipeline = [
       // 1) Match sales containing the customer and (optional) date range
@@ -349,35 +298,35 @@ const getCustomerSalesReport = async (req, res) => {
           dateOfSale: 1,
           customer: "$customers.customer",
           discount: "$customers.discount",
-      
+
           item: {
             _id: { $arrayElemAt: ["$itemInfo._id", 0] },
             itemName: { $arrayElemAt: ["$itemInfo.itemName", 0] },
           },
-      
+
           supplier: {
             _id: { $arrayElemAt: ["$supplierInfo._id", 0] },
             supplierName: { $arrayElemAt: ["$supplierInfo.supplierName", 0] },
           },
-      
+
           quantityKg: {
             $cond: [
               { $eq: ["$customers.items.quantityType", "kg"] },
               "$customers.items.quantity",
-              0
-            ]
+              0,
+            ],
           },
           quantityBox: {
             $cond: [
               { $eq: ["$customers.items.quantityType", "box"] },
               "$customers.items.quantity",
-              0
-            ]
+              0,
+            ],
           },
-          
+
           unitPrice: "$customers.items.unitPrice",
           totalCost: "$customers.items.totalCost",
-        }
+        },
       },
 
       // 7) Facet for pagination + total count
@@ -411,7 +360,9 @@ const getCustomerSalesByDate = async (req, res) => {
     const { customerId, date } = req.query;
 
     if (!customerId || !date) {
-      return res.status(400).json({ message: 'Customer ID and date are required' });
+      return res
+        .status(400)
+        .json({ message: "Customer ID and date are required" });
     }
 
     const startOfDay = new Date(date);
@@ -420,38 +371,50 @@ const getCustomerSalesByDate = async (req, res) => {
 
     // Find all transactions on the given date
     const transactions = await SalesEntry.find({
-      dateOfSale: { $gte: startOfDay, $lte: endOfDay }
+      dateOfSale: { $gte: startOfDay, $lte: endOfDay },
     })
-    .populate('customers.customer')
-    .populate('customers.items.item')
-    .populate('customers.items.supplier');
+      .populate("customers.customer")
+      .populate("customers.items.item")
+      .populate("customers.items.supplier");
 
     let report = [];
     let entryNo = 1;
 
-    transactions.forEach(transaction => {
-      transaction.customers.forEach(customerEntry => {
+    transactions.forEach((transaction) => {
+      transaction.customers.forEach((customerEntry) => {
         if (customerEntry.customer._id.toString() === customerId) {
-          customerEntry.items.forEach(item => {
+          customerEntry.items.forEach((item) => {
             report.push({
               No: entryNo++,
-              Date: transaction.dateOfSale.toISOString().split('T')[0],
-              Item: item.item.itemName || "N/A", 
-              Supplier: item.supplier.supplierName || "N/A", 
-              'Qty (KG)': item.quantityType === "kg" ? item.quantity : "-",
-              'Qty (Box)': item.quantityType === "box" ? item.quantity : "-",
+              Date: transaction.dateOfSale.toISOString().split("T")[0],
+              Item: item.item.itemName || "N/A",
+              Supplier: item.supplier.supplierName || "N/A",
+              "Qty (KG)": item.quantityType === "kg" ? item.quantity : "-",
+              "Qty (Box)": item.quantityType === "box" ? item.quantity : "-",
               Price: item.unitPrice,
-              Total: item.totalCost
+              Total: item.totalCost,
+              supplierCode: item.supplier.supplierCode,
             });
           });
         }
       });
     });
-
-    res.json(report);
+    const startOfDayForPayment = new Date(date);
+    startOfDayForPayment.setHours(0, 0, 0, 0);
+    const endOfDayForPayment = new Date(date);
+    endOfDayForPayment.setHours(23, 59, 59, 999);
+    
+    const lastPaymentIn = await Payment.findOne({
+      customer: new mongoose.Types.ObjectId(customerId),
+      paymentType: "PaymentIn",
+    })
+      .sort({ date: -1 }) // latest first
+      .exec();
+    console.log(lastPaymentIn)
+    res.json({report,lastPaymentIn:lastPaymentIn?.amount?lastPaymentIn.amount:0});
   } catch (error) {
-    console.error('Error fetching sales report:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error("Error fetching sales report:", error);
+    res.status(500).json({ message: "Server error" });
   }
 };
 
@@ -485,7 +448,7 @@ const getCustomerSalesByDate = async (req, res) => {
 //         select: "supplier",
 //         populate: {
 //           path: "supplier",
-//           select: "supplierName", 
+//           select: "supplierName",
 //         },
 //       });
 
@@ -525,15 +488,21 @@ const getCustomerSalesByDate = async (req, res) => {
 //   }
 // };
 
-
-
 //for sales report
 const getSalesEntriesByDate = async (req, res) => {
   try {
-    const { startDate, endDate, page = 1, limit = 10, paginate = "true" } = req.query;
+    const {
+      startDate,
+      endDate,
+      page = 1,
+      limit = 10,
+      paginate = "true",
+    } = req.query;
 
     if (!startDate || !endDate) {
-      return res.status(400).json({ error: "Start date and end date are required" });
+      return res
+        .status(400)
+        .json({ error: "Start date and end date are required" });
     }
 
     const start = new Date(startDate);
@@ -552,8 +521,8 @@ const getSalesEntriesByDate = async (req, res) => {
           from: "customers",
           localField: "customers.customer",
           foreignField: "_id",
-          as: "customerInfo"
-        }
+          as: "customerInfo",
+        },
       },
       { $unwind: "$customerInfo" },
       {
@@ -562,18 +531,26 @@ const getSalesEntriesByDate = async (req, res) => {
           customerName: { $first: "$customerInfo.customerName" },
           totalKg: {
             $sum: {
-              $cond: [{ $eq: ["$customers.items.quantityType", "kg"] }, "$customers.items.quantity", 0]
-            }
+              $cond: [
+                { $eq: ["$customers.items.quantityType", "kg"] },
+                "$customers.items.quantity",
+                0,
+              ],
+            },
           },
           totalBox: {
             $sum: {
-              $cond: [{ $eq: ["$customers.items.quantityType", "box"] }, "$customers.items.quantity", 0]
-            }
+              $cond: [
+                { $eq: ["$customers.items.quantityType", "box"] },
+                "$customers.items.quantity",
+                0,
+              ],
+            },
           },
-          totalAmount: { $sum: "$customers.items.totalCost" }
-        }
+          totalAmount: { $sum: "$customers.items.totalCost" },
+        },
       },
-      { $sort: { customerName: 1 } }
+      { $sort: { customerName: 1 } },
     ];
 
     if (shouldPaginate) {
@@ -582,9 +559,9 @@ const getSalesEntriesByDate = async (req, res) => {
         {
           $facet: {
             metadata: [{ $count: "total" }],
-            data: [{ $skip: skip }, { $limit: parseInt(limit) }]
-          }
-        }
+            data: [{ $skip: skip }, { $limit: parseInt(limit) }],
+          },
+        },
       ];
 
       const result = await SalesEntry.aggregate(paginatedPipeline);
@@ -596,21 +573,30 @@ const getSalesEntriesByDate = async (req, res) => {
         page: parseInt(page),
         limit: parseInt(limit),
         totalPages: Math.ceil(total / limit),
-        data
+        data,
       });
     } else {
       const data = await SalesEntry.aggregate(basePipeline);
 
-      const grandTotalKg = data.reduce((sum, entry) => sum + (entry.totalKg || 0), 0);
-      const grandTotalBox = data.reduce((sum, entry) => sum + (entry.totalBox || 0), 0);
-      const grandTotalAmount = data.reduce((sum, entry) => sum + (entry.totalAmount || 0), 0);
+      const grandTotalKg = data.reduce(
+        (sum, entry) => sum + (entry.totalKg || 0),
+        0
+      );
+      const grandTotalBox = data.reduce(
+        (sum, entry) => sum + (entry.totalBox || 0),
+        0
+      );
+      const grandTotalAmount = data.reduce(
+        (sum, entry) => sum + (entry.totalAmount || 0),
+        0
+      );
 
       return res.json({
         total: data.length,
         grandTotalKg,
         grandTotalBox,
         grandTotalAmount,
-        data
+        data,
       });
     }
   } catch (error) {
@@ -624,5 +610,5 @@ module.exports = {
   getSalesEntries,
   getCustomerSalesReport,
   getCustomerSalesByDate,
-  getSalesEntriesByDate
+  getSalesEntriesByDate,
 };

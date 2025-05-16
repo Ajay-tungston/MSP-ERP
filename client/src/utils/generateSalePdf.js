@@ -2,58 +2,103 @@ import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import { format } from "date-fns";
 
-
-export const generateSalesPdfBlob = async (entries, customerName, date) => {
+export const generateSalesPdfBlob = async (
+  entries,
+  customerName,
+  date,
+  previousBalance = 0,
+  dailyReceipts = 0
+) => {
   return new Promise(async (resolve, reject) => {
     const formattedDate = format(new Date(date), "dd/MM/yyyy");
-    const grandTotal = entries.reduce(
-      (sum, row) => sum + Number(row.totalCost || 0),
-      0
-    );
+
+    let totalBox = 0;
+    let totalKg = 0;
+    let totalAmount = 0;
+
+    entries.forEach((row) => {
+      totalBox += Number(row.quantityBox || 0);
+      totalKg += Number(row.quantityKg || 0);
+      totalAmount += Number(row.totalCost || 0);
+    });
+
+    const grossTotal = totalAmount + previousBalance - dailyReceipts;
 
     const html = `
-      <div style="font-family: Arial, sans-serif; margin: 20px;">
-        <h1 style="text-align:center;">Individual Sales Report</h1>
-        <h2 style="text-align:center;">Customer: ${customerName}</h2>
-        <h3 style="text-align:center;">Date: ${formattedDate}</h3>
+    <div style="font-family: Arial, sans-serif; margin: 40px;">
+      <table style="width: 100%;">
+       <tr>
+  <td colspan="5" style="padding: 8px; border: 1px solid black;">
+    <div style="display: flex; justify-content: space-between; font-size: 18px; font-weight: bold;">
+      <span>${customerName.toUpperCase()}</span>
+      <span>${formattedDate}</span>
+    </div>
+  </td>
+</tr>
 
-        <table style="width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 20px;">
-          <thead>
-            <tr>
-              <th style="border:1px solid #000; padding:8px;">Invoice No</th>
-              <th style="border:1px solid #000; padding:8px;">Item</th>
-              <th style="border:1px solid #000; padding:8px;">Supplier</th>
-              <th style="border:1px solid #000; padding:8px;">Qty (Kg)</th>
-              <th style="border:1px solid #000; padding:8px;">Qty (Box)</th>
-              <th style="border:1px solid #000; padding:8px;">Price</th>
-              <th style="border:1px solid #000; padding:8px;">Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${entries
-              .map(
-                (row) => `
-                <tr>
-                  <td style="border:1px solid #000; padding:8px;">${row.transactionNumber || ""}</td>
-                  <td style="border:1px solid #000; padding:8px;">${row.item?.itemName || "N/A"}</td>
-                  <td style="border:1px solid #000; padding:8px;">${row.supplier?.supplierName || "N/A"}</td>
-                  <td style="border:1px solid #000; padding:8px;">${row.quantityKg > 0 ? row.quantityKg : "0"}</td>
-                  <td style="border:1px solid #000; padding:8px;">${row.quantityBox > 0 ? row.quantityBox : "0"}</td>
-                  <td style="border:1px solid #000; padding:8px;">${row.unitPrice?.toFixed(2) || "0.00"}</td>
-                  <td style="border:1px solid #000; padding:8px;">${row.totalCost?.toFixed(2) || "0.00"}</td>
-                </tr>
-              `
-              )
-              .join("")}
-          </tbody>
-          <tfoot>
-            <tr>
-              <td colspan="6" style="border:1px solid #000; padding:8px; text-align:right; font-weight:bold;">Grand Total:</td>
-              <td style="border:1px solid #000; padding:8px;">$${grandTotal.toFixed(2)}</td>
-            </tr>
-          </tfoot>
-        </table>
-      </div>
+        <tr>
+          <th style="border: 1px solid black; padding: 8px;">Box Code</th>
+          <th style="border: 1px solid black; padding: 8px;">ItemName</th>
+          <th style="border: 1px solid black; padding: 8px;">Unit Price</th>
+          <th style="border: 1px solid black; padding: 8px;">Box/Kgs</th>
+          <th style="border: 1px solid black; padding: 8px;">Amount</th>
+        </tr>
+        ${entries
+          .map((row) => {
+            const qtyText =
+              row.quantityBox > 0
+                ? `${row.quantityBox} BOX`
+                : `${row.quantityKg} KG`;
+            return `
+              <tr>
+                <td style="border: 1px solid black; padding: 8px;">${
+                  row.supplier?.supplierCode || "N/A"
+                }</td>
+                <td style="border: 1px solid black; padding: 8px;">${
+                  row.item?.itemName || "N/A"
+                }</td>
+                <td style="border: 1px solid black; padding: 8px;">${row.unitPrice?.toFixed(
+                  2
+                )}</td>
+                <td style="border: 1px solid black; padding: 8px;">${qtyText}</td>
+                <td style="border: 1px solid black; padding: 8px;">${row.totalCost?.toFixed(
+                  2
+                )}</td>
+              </tr>`;
+          })
+          .join("")}
+        <tr>
+          <td colspan="3" style="font-weight:bold; border: 1px solid black; padding: 8px;">
+            <div style="display: flex; justify-content: space-around;">
+              <span>Total</span>
+              <span>${totalBox.toFixed(2)} Box</span>
+              <span>${totalKg.toFixed(2)} Kg</span>
+            </div>
+          </td>
+          <td colspan="2" style="font-weight:bold; text-align: right; border: 1px solid black; padding: 8px;">
+            ${totalAmount.toFixed(2)}
+          </td>
+        </tr>
+        <tr>
+          <td colspan="3" style="font-weight:bold; border: 1px solid black; padding: 8px;">Previous Balance</td>
+          <td colspan="2" style="text-align: right; border: 1px solid black; padding: 8px;">${previousBalance.toFixed(
+            2
+          )}</td>
+        </tr>
+        <tr>
+          <td colspan="3" style="font-weight:bold; border: 1px solid black; padding: 8px;">Daily Receipts</td>
+          <td colspan="2" style="text-align: right; border: 1px solid black; padding: 8px;">${dailyReceipts.toFixed(
+            2
+          )}</td>
+        </tr>
+        <tr>
+          <td colspan="3" style="font-weight:bold; border: 1px solid black; padding: 8px;">Gross Total</td>
+          <td colspan="2" style="text-align: right; border: 1px solid black; padding: 8px;">${grossTotal.toFixed(
+            2
+          )}</td>
+        </tr>
+      </table>
+    </div>
     `;
 
     const container = document.createElement("div");

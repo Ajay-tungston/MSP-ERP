@@ -1,99 +1,163 @@
 import { format } from "date-fns";
 
-export const IndividualsalesReport = (entries, customerName, date) => {
+export const IndividualsalesReport = (
+  entries,
+  customerName,
+  date,
+  previousBalance = 0,
+  dailyReceipts = 0
+) => {
   const newWindow = window.open("", "", "width=800,height=600");
   const formattedDate = format(new Date(date), "dd/MM/yyyy");
 
-  // 🔢 Calculate the grand total
-  const grandTotal = entries.reduce(
-    (sum, row) => sum + Number(row.totalCost || 0),
-    0
-  );
+  let totalBox = 0;
+  let totalKg = 0;
+  let totalAmount = 0;
+
+  entries.forEach((row) => {
+    totalBox += Number(row.quantityBox || 0);
+    totalKg += Number(row.quantityKg || 0);
+    totalAmount += Number(row.totalCost || 0);
+  });
+
+  const grossTotal = totalAmount + previousBalance - dailyReceipts;
 
   const printContent = `
-  <html>
-    <head>
-      <title>Sales Report - ${customerName}</title>
-      <style>
-        body {
-          font-family: Arial, sans-serif;
-          margin: 20px;
-        }
-        h1, h2, h3 {
-          text-align: center;
-        }
-        table {
-          width: 100%;
-          border-collapse: collapse;
-          font-size: 14px;
-          margin-top: 20px;
-        }
-        th, td {
-          border: 1px solid #000;
-          padding: 8px;
-          text-align: center;
-        }
-        th {
-          background-color: #f2f2f2;
-        }
-        tfoot td {
-          font-weight: bold;
-          background-color: #f9f9f9;
-        }
-      </style>
-    </head>
-    <body>
-      <h1>Individual Sales Report</h1>
-      <h2>Customer: ${customerName}</h2>
-      <h3>Date: ${formattedDate}</h3>
+    <html>
+      <head>
+        <title>Sales Report</title>
+        <style>
+          body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+          }
 
-      <table>
-        <thead>
-          <tr>
-          
-            <th>Invoice No</th>
-            <th>Item</th>
-            <th>Supplier</th>
-            <th>Qty (Kg)</th>
-            <th>Qty (Box)</th>
-            <th>Price</th>
-            <th>Total</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${entries
-            .map(
-              (row) => `
+          .top-section {
+            display: flex;
+            justify-content: space-between;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+          }
+
+          .highlight {
+            background-color: yellow;
+            padding: 2px 6px;
+          }
+
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 16px;
+            margin-top: 10px;
+          }
+
+          th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: center;
+          }
+
+          th {
+            background-color: white;
+            font-weight: bold;
+          }
+
+          .total-row td {
+            font-weight: bold;
+            background-color: #f2f2f2;
+          }
+
+          .yellow-bg {
+            background-color: yellow;
+            font-weight: bold;
+          }
+
+       
+        
+
+           .label {
+            text-align: left;
+            font-weight: bold;
+          }
+            .label-right {
+            text-align: right;
+            font-weight: bold;
+          }
+           .total-text {
+  display: flex;
+  justify-content: space-around;
+  width: 100%;
+}
+        </style>
+      </head>
+      <body>
+      
+
+        <table>
+          <thead>
+          <tr><td colspan="5"> <div class="top-section">
+          <div >${customerName.toUpperCase()}</div>
+          <div >${formattedDate}</div>
+        </div></td></tr>
             <tr>
-              
-              <td>${row.transactionNumber}</td>
-              <td>${row.item?.itemName || "N/A"}</td>
-              <td>${row.supplier?.supplierName || "N/A"}</td>
-              <td>${row.quantityKg > 0 ? row.quantityKg : "0"}</td>
-              <td>${row.quantityBox > 0 ? row.quantityBox : "0"}</td>
-              <td>${row.unitPrice.toFixed(2)}</td>
-              <td>${row.totalCost.toFixed(2)}</td>
+              <th>Box Code</th>
+              <th>ItemName</th>
+              <th>Unit Price</th>
+              <th>Box/Kgs</th>
+              <th>Amount</th>
             </tr>
-          `
-            )
-            .join("")}
-        </tbody>
-     <tfoot>
-  <tr>
-    <td colspan="6" style="text-align: right;">Grand Total:</td>
-    <td>$${grandTotal.toFixed(2)}</td>
-  </tr>
-</tfoot>
+          </thead>
+          <tbody>
+            ${entries
+              .map(
+                (row) => `
+              <tr>
+                <td>${row.supplier.supplierCode || "N/A"}</td>
+                <td>${row.item?.itemName || "N/A"}</td>
+                <td>${row.unitPrice?.toFixed(2)}</td>
+                <td>${
+                  row.quantityBox > 0
+                    ? `${row.quantityBox} BOX`
+                    : `${row.quantityKg} KG`
+                }</td>
+                <td>${row.totalCost?.toFixed(2)}</td>
+              </tr>
+            `
+              )
+              .join("")}
 
-      </table>
+            <tr class="total-row">
+              <td colspan="3" ><div class="total-text"><strong>Total</strong><span>${totalBox.toFixed(
+                2
+              )} Box </span> <span>${totalKg.toFixed(2)} Kg</span></div></td>
+              <td colspan="2" class="label-right" >${totalAmount.toFixed(2)}</td>
+            </tr>
+        
+          <tr>
+            <td class="label" colspan="3">Previous Balance</td>
+            <td colspan="2" class="label-right">${previousBalance.toFixed(2)}</td>
+          </tr>
+          <tr>
+            <td class="label" colspan="3">Daily receipts</td>
+            <td colspan="2" class="label-right">${dailyReceipts.toFixed(2)}</td>
+          </tr>
+          <tr>
+            <td class="label" colspan="3">Gross Total</td>
+            <td  colspan="2" class="label-right">${grossTotal.toFixed(2)}</td>
+          </tr>
+                    </tbody>
 
-      <script>
-        window.onload = function () {
-          window.print();
-        };
-      </script>
-    </body>
-  </html>`;
+        </table>
+
+        <script>
+          window.onload = function () {
+            window.print();
+          };
+        </script>
+      </body>
+    </html>
+  `;
 
   newWindow.document.write(printContent);
   newWindow.document.close();

@@ -134,6 +134,8 @@ function Payment() {
                       ? row?.employee?.employeeName
                       : row.category === "company"
                       ? row?.company?.companyName
+                      : row.category === "lender"
+                      ? row?.lender?.name
                       : "N/A"}
                   </div>
                   <div className="min-w-32 justify-center text-slate-900 text-xl font-normal font-['Urbanist'] tracking-wide">

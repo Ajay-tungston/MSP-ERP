@@ -6,7 +6,7 @@ const Customer = require("../../../models/Customer");
 const PurchaseEntry = require("../../../models/PurchaseEntry");
 const Supplier = require("../../../models/Supplier");
 const Employee = require("../../../models/Employee");
-
+const Lender = require ("../../../models/Lender");
 // ========== 1. Receivables from Customers ==========
 const getReceivablesFromCustomers = async (req, res) => {
   try {
@@ -147,6 +147,8 @@ const getReceivablesFromEmployees = async (req, res) => {
   }
 };
 
+// ========== 3. Receivables from market ==========
+
 const getMarketFeesFromSuppliers = async (req, res) => {
   try {
     // Fetch suppliers and their market fees
@@ -191,28 +193,145 @@ const getMarketFeesFromSuppliers = async (req, res) => {
 };
 
 
-const getCommissionsFromSuppliers = async (req, res) => {
+const getCashBalance = async (req, res) => {
   try {
-    const suppliers = await Supplier.find({commission:{$gt:0}}).lean();
+    // Fetch all cash-based payments (only those where paymentMode is 'Cash')
+    const payments = await Payment.find({ paymentMode: 'Cash' }).lean();
 
-    if (!suppliers.length) {
-      return res.json({ totalCommission: 0, breakdown: [] });
-    }
+    let totalPaymentsIn = 0;
+    let totalPaymentsOut = 0;
 
-    const breakdown = suppliers.map((supplier) => ({
-      supplierName: supplier.supplierName,
-      commission: supplier.commission || 0,
-    }));
+    // Loop through payments and sum by type
+    payments.forEach(payment => {
+      if (payment.paymentType === 'PaymentIn') {
+        totalPaymentsIn += payment.amount;
+      } else if (payment.paymentType === 'PaymentOut') {
+        totalPaymentsOut += payment.amount;
+      }
+    });
 
-    const totalCommission = breakdown.reduce((sum, s) => sum + s.commission, 0);
+    const cashBalance = totalPaymentsIn - totalPaymentsOut;
 
-    res.json({ totalCommission, breakdown });
-  } catch (err) {
-    console.error("Error fetching supplier commissions:", err);
-    res.status(500).json({ message: "Failed to fetch commissions from suppliers." });
+    console.log("Cash Balance: ", cashBalance);
+
+    res.json({ cashBalance });
+  } catch (error) {
+    console.error("Error calculating cash balance:", error);
+    res.status(500).json({ message: "Failed to calculate cash balance" });
   }
 };
 
+// ========== 3. Receivables from commission==========
+
+const getCommissionsFromSuppliers = async (req, res) => {
+  try {
+    // Aggregate commissionPaid by supplier
+    const commissions = await PurchaseEntry.aggregate([
+      {
+        $group: {
+          _id: "$supplier",
+          totalCommission: { $sum: "$commissionPaid" },
+        },
+      },
+      {
+        $match: {
+          totalCommission: { $gt: 0 },
+        },
+      },
+      {
+        $lookup: {
+          from: "suppliers", // collection name, not model name
+          localField: "_id",
+          foreignField: "_id",
+          as: "supplierDetails",
+        },
+      },
+      {
+        $unwind: "$supplierDetails",
+      },
+      {
+        $project: {
+          supplierName: "$supplierDetails.supplierName",
+          totalCommission: 1,
+        },
+      },
+    ]);
+
+    const totalCommission = commissions.reduce(
+      (sum, item) => sum + item.totalCommission,
+      0
+    );
+
+    res.json({
+      totalCommission,
+      breakdown: commissions.map((entry) => ({
+        supplierName: entry.supplierName,
+        commission: entry.totalCommission,
+      })),
+    });
+  } catch (err) {
+    console.error("Error fetching supplier commissions from purchases:", err);
+    res
+      .status(500)
+      .json({ message: "Failed to fetch commissions from purchase entries." });
+  }
+};
+
+// ========== 3. Receivables from coolie ==========
+
+
+const getCoolieFromSuppliers = async (req, res) => {
+  try {
+    const coolies = await PurchaseEntry.aggregate([
+      {
+        $group: {
+          _id: "$supplier",
+          totalCoolie: { $sum: "$marketFee" },
+        },
+      },
+      {
+        $match: {
+          totalCoolie: { $gt: 0 },
+        },
+      },
+      {
+        $lookup: {
+          from: "suppliers", // collection name in MongoDB
+          localField: "_id",
+          foreignField: "_id",
+          as: "supplierDetails",
+        },
+      },
+      {
+        $unwind: "$supplierDetails",
+      },
+      {
+        $project: {
+          supplierName: "$supplierDetails.supplierName",
+          totalCoolie: 1,
+        },
+      },
+    ]);
+
+    const totalCoolie = coolies.reduce(
+      (sum, item) => sum + item.totalCoolie,
+      0
+    );
+
+    res.json({
+      totalCoolie,
+      breakdown: coolies.map((entry) => ({
+        supplierName: entry.supplierName,
+        coolie: entry.totalCoolie,
+      })),
+    });
+  } catch (err) {
+    console.error("Error fetching coolie from purchases:", err);
+    res.status(500).json({ message: "Failed to fetch coolie data." });
+  }
+};
+
+// ========== 3. Receivables from payables ==========
 
 const getPayablesToSuppliers = async (req, res) => {
   try {
@@ -266,12 +385,56 @@ const getPayablesToSuppliers = async (req, res) => {
   }
 };
 
+const getLenderPayables = async (req, res) => {
+  try {
+    const lenders = await Lender.find({}).lean();  // Assuming you have a Lender model
+    const payments = await Payment.find({ category: 'lender' }).lean();
 
+    const lenderPayables = {};
+
+    lenders.forEach(lender => {
+      lenderPayables[lender._id.toString()] = {
+        lenderName: lender.name,  // Adjust to your Lender schema
+        payable: 0,
+      };
+    });
+
+    payments.forEach(payment => {
+      const lid = payment.lender?.toString();
+      if (!lid) return;
+
+      if (!lenderPayables[lid]) {
+        lenderPayables[lid] = {
+          lenderName: 'Unknown Lender',
+          payable: 0,
+        };
+      }
+
+      if (payment.paymentType === 'PaymentIn') {
+        lenderPayables[lid].payable += payment.amount;
+      } else if (payment.paymentType === 'PaymentOut') {
+        lenderPayables[lid].payable -= payment.amount;
+      }
+    });
+
+    const breakdown = Object.values(lenderPayables).filter(l => l.payable !== 0);
+    const totalPayables = breakdown.reduce((sum, l) => sum + l.payable, 0);
+
+    res.json({ totalPayables, breakdown });
+  } catch (err) {
+    console.error('Error calculating lender payables:', err);
+    res.status(500).json({ message: 'Failed to fetch lender payables.' });
+  }
+};
 module.exports = {
   getReceivablesFromCustomers,
   getSupplierPayables,
   getReceivablesFromEmployees,
   getMarketFeesFromSuppliers,
+  getCashBalance,
   getCommissionsFromSuppliers,
+  getCoolieFromSuppliers,
   getPayablesToSuppliers,
+  getLenderPayables
+
 };

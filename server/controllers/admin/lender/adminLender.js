@@ -64,3 +64,21 @@ exports.deleteLender = async (req, res) => {
     res.status(500).json({ message: "Failed to delete lender." });
   }
 };
+
+// GET /admin/lender/all
+exports.getAllLendersList = async (req, res) => {
+try {
+    const search = req.query.search || "";
+    const query = search
+  ? { name: { $regex: search, $options: "i" } }
+  : {};
+    const lender = await Lender.find(query)
+    // .select(
+    //   "supplierName supplierCode commission marketFee"
+    // );
+    return res.status(200).json(lender);
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: "Error getting lender" });
+  }
+};

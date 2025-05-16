@@ -33,6 +33,7 @@ function AddPayment({ setPopup, fetchData, type }) {
         category === "customer"
           ? setNameList(response?.data?.customers)
           : setNameList(response?.data);
+          console.log(response)
       } catch (error) {
         console.log(error);
       }
@@ -104,9 +105,9 @@ function AddPayment({ setPopup, fetchData, type }) {
           case "company":
             payload.company = sellectedData?._id;
             break;
-          // case "bank":
-          //   payload.bank = sellectedData?._id;
-          //   break;
+          case "lender":
+            payload.lender = sellectedData?._id;
+            break;
           case "Other":
             payload.otherPartyName = name2;
             break;
@@ -176,7 +177,7 @@ function AddPayment({ setPopup, fetchData, type }) {
                     <option value="customer">Customer</option>
                     <option value="supplier">Supplier</option>
                     <option value="company">Company</option>
-                    {/* <option value="Bank">Bank</option> */}
+                    <option value="lender">Lender</option>
                     <option value="Other">Others</option>
                   </select>
                 </div>
@@ -239,6 +240,7 @@ function AddPayment({ setPopup, fetchData, type }) {
                           if (category === "employee") return item.employeeName;
                           if (category === "company") return item.companyName;
                           if (category === "customer") return item.name;
+                          if (category === "lender") return item.name;
                           return "";
                         }}
                         onChange={(e) => setName(e.target.value)}
@@ -263,6 +265,8 @@ function AddPayment({ setPopup, fetchData, type }) {
                                 : category === "company"
                                 ? item?.companyName
                                 : category === "customer"
+                                ? item.name
+                                :category === "lender"
                                 ? item.name
                                 : ""}
                             </ComboboxOption>
@@ -300,7 +304,8 @@ function AddPayment({ setPopup, fetchData, type }) {
           <div>
             {(category === "supplier" ||
               category === "employee" ||
-              category === "customer") &&
+              category === "customer" ||
+            category === "Lender") && 
               sellectedData && (
                 <div className="mb-4">
                   <label className="text-slate-500 text-xl font-normal font-['Urbanist'] pl-6 ">

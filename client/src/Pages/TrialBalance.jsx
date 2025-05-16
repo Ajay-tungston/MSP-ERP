@@ -6,6 +6,7 @@ import { ChevronDown, ChevronUp, Printer } from 'lucide-react';
 
 
 export default function TrialBalance() {
+  
   // Date range state
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -34,15 +35,29 @@ export default function TrialBalance() {
     rows: [],
   });
 
-  const [openMarketFeeSection, setOpenMarketFeeSection] = useState(false);
-  const [marketFees, setMarketFees] = useState({
-    total: 0,
-    rows: [],
-  })
+  // const [openMarketFeeSection, setOpenMarketFeeSection] = useState(false);
+  // const [marketFees, setMarketFees] = useState({
+  //   total: 0,
+  //   rows: [],
+  // })
   // Axios instance from custom hook
   const axiosPrivate = useAxiosPrivate();
-  const [commissions, setCommissions] = useState({ total: 0, rows: [] });
+  const [commissions, setCommissions] = useState({
+    total: 0,
+    rows: [],
+  });
+
   const [openCommissionSection, setOpenCommissionSection] = useState(false);
+
+  const [cashBalance, setCashBalance] = useState({ total: 0 });
+  const [loadingCashBalance, setLoadingCashBalance] = useState(false);
+  const [errorCashBalance, setErrorCashBalance] = useState(null);
+  const [openCashBalanceSection, setOpenCashBalanceSection] = useState(false);
+  
+  const[openLenderPayables, setOpenLenderPayables]= useState(false);
+  const [lenderPayables, setLenderPayables] = useState({ total: 0, rows: [] });
+
+
 
   const [openCoolieSection, setOpenCoolieSection] = useState(false);
   const [coolieCharges, setCoolieCharges] = useState({ total: 0, rows: [] });
@@ -82,10 +97,13 @@ export default function TrialBalance() {
     fetchReceivables();
     fetchPayablesToSuppliers();
     fetchReceivablesFromEmployees();
-    fetchMarketFeesFromSuppliers();
+    // fetchMarketFeesFromSuppliers();
+    fetchCashBalance();
     fetchCommissionsFromSuppliers();
     fetchCoolieCharges();
     fetchPayablesToSupplier();
+  fetchLenderPayables ();
+
   }, [startDate, endDate]);
 
 
@@ -144,39 +162,58 @@ export default function TrialBalance() {
     }
   };
 
-  const fetchMarketFeesFromSuppliers = async () => {
-    setLoading(true); // Loading state for Market Fees
-    setError(null); // Reset any errors
+  // const fetchMarketFeesFromSuppliers = async () => {
+  //   setLoading(true); // Loading state for Market Fees
+  //   setError(null); // Reset any errors
 
+  //   try {
+  //     const response = await axiosPrivate.get(
+  //       '/admin/trialBalance/marketfee', // Endpoint to fetch market fees
+  //       { params: { startDate, endDate } } // Optional date filter if needed
+  //     );
+
+  //     const { totalMarketFees, breakdown } = response.data;
+
+  //     setMarketFees({
+  //       total: totalMarketFees,
+  //       rows: breakdown.map(item => ({
+  //         label: item.supplierName, // Supplier name
+  //         invoice: '-', // Placeholder (since no invoice is available)
+  //         amount: item.marketFee, // Market fee amount for the supplier
+  //       })),
+  //     });
+  //   } catch (err) {
+  //     console.error('Failed to load market fees from suppliers:', err);
+  //     setError('Could not fetch market fees from suppliers.');
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+
+  const fetchCashBalance = async () => {
+    setLoadingCashBalance(true);
+    setErrorCashBalance(null);
+  
     try {
-      const response = await axiosPrivate.get(
-        '/admin/trialBalance/marketfee', // Endpoint to fetch market fees
-        { params: { startDate, endDate } } // Optional date filter if needed
-      );
-
-      const { totalMarketFees, breakdown } = response.data;
-
-      setMarketFees({
-        total: totalMarketFees,
-        rows: breakdown.map(item => ({
-          label: item.supplierName, // Supplier name
-          invoice: '-', // Placeholder (since no invoice is available)
-          amount: item.marketFee, // Market fee amount for the supplier
-        })),
-      });
+      const response = await axiosPrivate.get('/admin/trialBalance/cashbalance');
+      const { cashBalance } = response.data;
+  
+      setCashBalance({ total: Number(cashBalance || 0) });
     } catch (err) {
-      console.error('Failed to load market fees from suppliers:', err);
-      setError('Could not fetch market fees from suppliers.');
+      console.error('Failed to load cash balance:', err);
+      setErrorCashBalance('Could not fetch cash balance.');
     } finally {
-      setLoading(false);
+      setLoadingCashBalance(false);
     }
   };
-
+  
   const fetchCommissionsFromSuppliers = async () => {
     setLoading(true);
     setError(null);
+
     try {
-      const response = await axiosPrivate.get('/admin/trialBalance/commission');
+      const response = await axiosPrivate.get('/admin/trialBalance/commission'); // Make sure this matches your backend route
       const { totalCommission, breakdown } = response.data;
 
       setCommissions({
@@ -186,7 +223,7 @@ export default function TrialBalance() {
           amount: item.commission,
         })),
       });
-      console.log(response)
+
     } catch (err) {
       console.error('Failed to load commissions:', err);
       setError('Could not fetch commissions.');
@@ -194,6 +231,7 @@ export default function TrialBalance() {
       setLoading(false);
     }
   };
+
 
   const fetchCoolieCharges = async () => {
     setLoadingCoolie(true);
@@ -217,21 +255,22 @@ export default function TrialBalance() {
     }
   };
 
+
   const fetchPayablesToSupplier = async () => {
     setLoadingSupplierPayables(true);
     setErrorSupplierPayables(null);
-  
+
     try {
       const response = await axiosPrivate.get('/admin/trialBalance/pay');
       const { totalPayables, breakdown } = response.data;
-  
+
       setSupplierPayables({
         total: Number(totalPayables || 0),
         rows: Array.isArray(breakdown)
           ? breakdown.map(item => ({
-              supplierName: item.supplierName || 'Unknown',
-              amount: Number(item.payable || 0),
-            }))
+            supplierName: item.supplierName || 'Unknown',
+            amount: Number(item.payable || 0),
+          }))
           : [],
       });
     } catch (err) {
@@ -241,7 +280,46 @@ export default function TrialBalance() {
       setLoadingSupplierPayables(false);
     }
   };
+
+
+  const fetchLenderPayables = async () => {
+    setLoading(true);
+    setError(null);
   
+    try {
+      // Adjust your API endpoint to get lender payables
+      const response = await axiosPrivate.get('/admin/trialBalance/lender');  // <-- Update endpoint
+      const { totalPayables, breakdown } = response.data;
+  
+      // Update state with lender payables data
+      setLenderPayables({
+        total: Number(totalPayables || 0),
+        rows: Array.isArray(breakdown)
+          ? breakdown.map(item => ({
+              lenderName: item.lenderName || 'Unknown',  // Lender name
+              amount: Number(item.payable || 0),  // Lender payable amount
+            }))
+          : [],
+      });
+      console.log(response)
+    } catch (err) {
+      console.error('Failed to load lender payables:', err);
+      setError('Could not fetch payables to lenders.');
+    } finally {
+      setLoading(false);
+    }
+  };
+  const totalReceivablesSum =
+  (receivables?.total || 0) +
+  (supplierReceivables?.total || 0) +
+  (employeeReceivables?.total || 0) +
+  (cashBalance?.total || 0);
+
+  const totalPayablesSum =
+  (commissions?.total || 0) +
+  (coolieCharges?.total || 0) +
+  (supplierPayables?.total || 0) +
+  (lenderPayables?.total || 0);
 
   return (
     <div className="p-4 bg-white min-h-screen mt-10 rounded-xl">
@@ -278,7 +356,9 @@ export default function TrialBalance() {
         <div className="flex-1">
           <div className="flex justify-between bg-[#F0FDFA] px-6 py-4">
             <span className="font-bold text-[#27AE60] uppercase text-[24px]">Receivables</span>
-            <span className="font-bold text-[#27AE60] text-[24px]">${receivables.total.toFixed(2)}</span>
+            <span className="font-bold text-[#2E7D32] text-lg">
+ ${totalReceivablesSum.toFixed(2)}
+  </span>
           </div>
           <div className="rounded-b-lg">
             <div
@@ -403,7 +483,7 @@ export default function TrialBalance() {
             )}
           </div>
           {/* Receivables Section (Market fee) */}
-          <div className="rounded-b-lg">
+          {/* <div className="rounded-b-lg">
             <div
               className="flex justify-between bg-[#F0F9FF] px-6 py-3 cursor-pointer"
               onClick={() => setOpenMarketFeeSection(prev => !prev)} // Toggle the market fee section
@@ -441,10 +521,10 @@ export default function TrialBalance() {
                 )}
               </>
             )}
-          </div>
+          </div> */}
 
           {/* Receivables Section (local sales) */}
-          <div className="rounded-b-lg">
+          {/* <div className="rounded-b-lg">
             <div
               className="flex justify-between bg-[#F0F9FF] px-6 py-3 cursor-pointer"
               onClick={() => setOpenMarketFeeSection(prev => !prev)} // Toggle the market fee section
@@ -482,54 +562,44 @@ export default function TrialBalance() {
                 )}
               </>
             )}
-          </div>
-          {/* Receivables Section (Cash Book) */}
+          </div> */}
+
+          {/* Receivables Section (Cash Balance) */}
           <div className="rounded-b-lg">
             <div
               className="flex justify-between bg-[#F0F9FF] px-6 py-3 cursor-pointer"
-              onClick={() => setOpenMarketFeeSection(prev => !prev)} // Toggle the market fee section
+              onClick={() => setOpenCashBalanceSection(prev => !prev)}
             >
               <div className="flex items-center gap-2">
-                {openMarketFeeSection ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-                <span className="font-semibold text-[#05004E]">Cash Book</span>
+                {openCashBalanceSection ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                <span className="font-semibold text-[#05004E]">Cash Balance</span>
               </div>
-              <span className="font-semibold text-[#05004E]">${marketFees.total.toFixed(2)}</span>
+              <span className="font-semibold text-[#05004E]">${cashBalance.total.toFixed(2)}</span>
             </div>
 
-            {openMarketFeeSection && (
+            {openCashBalanceSection && (
               <>
-                {loading && <p className="p-4">Loading...</p>}
-                {error && <p className="p-4 text-red-500">{error}</p>}
-                {!loading && !error && (
-                  <table className="w-full">
-                    <thead className="bg-[#F9FAFB] text-left text-sm text-[#05004E] uppercase border-b border-gray-200">
-                      <tr>
-                        <th className="px-6 py-2 w-5/12">Supplier</th>
-                        <th className="px-6 py-2 w-3/12">Invoice No.</th>
-                        <th className="px-6 py-2 w-3/12">Amount</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {marketFees.rows.map((row, idx) => (
-                        <tr key={idx} className="border-b border-gray-200 hover:bg-gray-50">
-                          <td className="px-6 py-2">{row.label}</td>
-                          <td className="px-6 py-2">{row.invoice}</td>
-                          <td className="px-6 py-2">${row.amount.toFixed(2)}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                {loadingCashBalance && <p className="p-4">Loading...</p>}
+                {errorCashBalance && <p className="p-4 text-red-500">{errorCashBalance}</p>}
+                {!loadingCashBalance && !errorCashBalance && (
+                  <div className="p-4 text-[#05004E] text-sm">
+                    This is your net cash balance based on Payment In - Payment Out.
+                  </div>
                 )}
               </>
             )}
           </div>
+
         </div>
         {/* Payables Section */}
         <div className="flex-1">
           <div className="flex justify-between bg-[#FEF2F2] px-6 py-4">
             <span className="font-bold text-[#EB5757] uppercase text-[24px]">Payables</span>
-            {/* <span className="font-bold text-[#EB5757] text-[24px]">${mockPayables.reduce((sum, s) => sum + s.total, 0).toFixed(2)}</span> */}
+            <span className="font-bold text-[#EB5757] text-[20px]">
+    Total: ${totalPayablesSum.toFixed(2)}
+  </span>
           </div>
+          {/* Receivables Section (commission) */}
           <div className="rounded-b-lg">
             <div
               className="flex justify-between bg-[#F0F9FF] px-6 py-3 cursor-pointer"
@@ -539,7 +609,9 @@ export default function TrialBalance() {
                 {openCommissionSection ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
                 <span className="font-semibold text-[#05004E]">Commissions</span>
               </div>
-              <span className="font-semibold text-[#05004E]">${commissions.total.toFixed(2)}</span>
+              <span className="font-semibold text-[#05004E]">
+                ${commissions.total.toFixed(2)}
+              </span>
             </div>
 
             {openCommissionSection && (
@@ -551,7 +623,6 @@ export default function TrialBalance() {
                     <thead className="bg-[#F9FAFB] text-left text-sm text-[#05004E] uppercase border-b border-gray-200">
                       <tr>
                         <th className="px-6 py-2 w-5/12">Supplier</th>
-
                         <th className="px-6 py-2 w-3/12">Amount</th>
                       </tr>
                     </thead>
@@ -559,7 +630,6 @@ export default function TrialBalance() {
                       {commissions.rows.map((row, idx) => (
                         <tr key={idx} className="border-b border-gray-200 hover:bg-gray-50">
                           <td className="px-6 py-2">{row.supplierName}</td>
-
                           <td className="px-6 py-2">${row.amount.toFixed(2)}</td>
                         </tr>
                       ))}
@@ -571,6 +641,7 @@ export default function TrialBalance() {
           </div>
 
 
+          {/* Receivables Section (coolie) */}
           <div className="rounded-b-lg">
             <div
               className="flex justify-between bg-[#F0F9FF] px-6 py-3 cursor-pointer"
@@ -609,37 +680,81 @@ export default function TrialBalance() {
             )}
           </div>
 
+          {/* Receivables Section (payable to supplier ) */}
           <div className="rounded-b-lg">
+            <div
+              className="flex justify-between bg-[#F0F9FF] px-6 py-3 cursor-pointer"
+              onClick={() => setOpenSupplierPayables(prev => !prev)}
+            >
+              <div className="flex items-center gap-2">
+                {openSupplierPayables ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                <span className="font-semibold text-[#05004E]">Payables to Suppliers</span>
+              </div>
+              <span className="font-semibold text-[#05004E]">
+                ${Number(supplierPayables?.total ?? 0).toFixed(2)}
+              </span>
+            </div>
+
+            {openSupplierPayables && (
+              <>
+                {loadingSupplierPayables && <p className="p-4">Loading...</p>}
+                {errorSupplierPayables && <p className="p-4 text-red-500">{errorSupplierPayables}</p>}
+
+                {!loadingSupplierPayables && !errorSupplierPayables && (
+                  <table className="w-full">
+                    <thead className="bg-[#F9FAFB] text-left text-sm text-[#05004E] uppercase border-b border-gray-200">
+                      <tr>
+                        <th className="px-6 py-2 w-6/12">Supplier</th>
+                        <th className="px-6 py-2 w-6/12">Amount</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {supplierPayables.rows.map((row, idx) => (
+                        <tr key={idx} className="border-b border-gray-200 hover:bg-gray-50">
+                          <td className="px-6 py-2">{row.supplierName}</td>
+                          <td className="px-6 py-2">${Number(row.amount).toFixed(2)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </>
+            )}
+          </div>
+
+
+   {/* Receivables Section (payable to lender ) */}
+   <div className="rounded-b-lg">
   <div
     className="flex justify-between bg-[#F0F9FF] px-6 py-3 cursor-pointer"
-    onClick={() => setOpenSupplierPayables(prev => !prev)}
+    onClick={() => setOpenLenderPayables(prev => !prev)}
   >
     <div className="flex items-center gap-2">
-      {openSupplierPayables ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-      <span className="font-semibold text-[#05004E]">Payables to Suppliers</span>
+      {openLenderPayables ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+      <span className="font-semibold text-[#05004E]">Payables to Lenders</span>
     </div>
     <span className="font-semibold text-[#05004E]">
-      ${Number(supplierPayables?.total ?? 0).toFixed(2)}
+      ${Number(lenderPayables?.total ?? 0).toFixed(2)}
     </span>
   </div>
 
-  {openSupplierPayables && (
+  {openLenderPayables && (
     <>
-      {loadingSupplierPayables && <p className="p-4">Loading...</p>}
-      {errorSupplierPayables && <p className="p-4 text-red-500">{errorSupplierPayables}</p>}
+      {loading && <p className="p-4">Loading...</p>}
+      {error && <p className="p-4 text-red-500">{error}</p>}
 
-      {!loadingSupplierPayables && !errorSupplierPayables && (
+      {!loading && !error&& (
         <table className="w-full">
           <thead className="bg-[#F9FAFB] text-left text-sm text-[#05004E] uppercase border-b border-gray-200">
             <tr>
-              <th className="px-6 py-2 w-6/12">Supplier</th>
+              <th className="px-6 py-2 w-6/12">Lender</th>
               <th className="px-6 py-2 w-6/12">Amount</th>
             </tr>
           </thead>
           <tbody>
-            {supplierPayables.rows.map((row, idx) => (
+            {lenderPayables.rows.map((row, idx) => (
               <tr key={idx} className="border-b border-gray-200 hover:bg-gray-50">
-                <td className="px-6 py-2">{row.supplierName}</td>
+                <td className="px-6 py-2">{row.lenderName}</td>
                 <td className="px-6 py-2">${Number(row.amount).toFixed(2)}</td>
               </tr>
             ))}
@@ -649,7 +764,6 @@ export default function TrialBalance() {
     </>
   )}
 </div>
-
         </div>
       </div>
     </div>

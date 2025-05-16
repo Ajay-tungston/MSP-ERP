@@ -47,6 +47,7 @@ const AddExpenseForm = ({ setPopup,refreshExpenses }) => {
       refreshExpenses()
       setPopup(false);
     } catch (error) {
+      console.log(error)
       Swal.fire("Error", "Failed to save expense.", "error");
     }
   };

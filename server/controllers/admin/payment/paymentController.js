@@ -5,6 +5,7 @@ const Customer = require("../../../models/Customer");
 const Employee = require("../../../models/Employee");
 const Company = require("../../../models/Company");  
 const Payment = require("../../../models/Payment");  
+const Lender = require("../../../models/Lender")
 
 const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
 
@@ -17,6 +18,7 @@ const addPayment = async (req, res) => {
       customer,
       employee,
       company, 
+      lender,
       otherPartyName,
       amount,
       paymentMode,
@@ -33,7 +35,7 @@ console.log(date)
       return res.status(400).json({ message: "Invalid payment type." });
     }
 
-    if (!['supplier', 'customer', 'Bank', 'employee', 'Other', 'company'].includes(category)) {
+    if (!['supplier', 'customer', 'Bank', 'employee', 'Other', 'company', 'lender'].includes(category)) {
       return res.status(400).json({ message: "Invalid category." });
     }
 
@@ -95,6 +97,16 @@ console.log(date)
       }
     }
 
+    if (category === 'lender') {
+      if (!lender || !isValidObjectId(req.body.lender)) {
+        return res.status(400).json({ message: "Valid lender ID is required." });
+      }
+      const existingLender = await Lender.findById(lender);
+      if (!existingLender) {
+        return res.status(404).json({ message: "Lender not found." });
+      }
+    }
+    
     // Validate Other category (Other Party Name is required)
     if (category === 'Other' && (!otherPartyName || validator.isEmpty(otherPartyName))) {
       return res.status(400).json({ message: "Other party name is required." });
@@ -111,6 +123,7 @@ console.log(date)
       customer: customer || null,
       employee: employee || null,
       company: company || null,
+      lender: lender || null,
       otherPartyName: otherPartyName || null,
       amount,
       paymentMode,
@@ -148,6 +161,7 @@ const getAllPayments = async (req, res) => {
       .populate({ path: 'customer', select: 'customerName' })
       .populate({ path: 'employee', select: 'employeeName' })
       .populate({ path: 'company', select: 'companyName' })
+      .populate({path: 'lender', select: 'name'})
       .lean();
 
     const total = await Payment.countDocuments(query);
@@ -173,6 +187,8 @@ const getPaymentById = async (req, res) => {
       .populate({ path: 'customer', select: 'customerName' })
       .populate({ path: 'employee', select: 'employeeName' })
       .populate({ path: 'company', select: 'companyName' })
+    .populate({path:'lender', select: 'lenderName'})
+
       .lean();
 
     if (!payment) {

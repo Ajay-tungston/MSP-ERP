@@ -18,7 +18,7 @@ function Expenses() {
     const [totalPages, setTotalPages] = useState(1);
     const [isLoading, setIsLoading] = useState(false);
     const [editPopup, setEditPopup] = useState(false);
-const [selectedExpense, setSelectedExpense] = useState(null);
+    const [selectedExpense, setSelectedExpense] = useState(null);
 
     const itemsPerPage = 8;
 
@@ -66,7 +66,7 @@ const [selectedExpense, setSelectedExpense] = useState(null);
                 {/* Header */}
                 <div className="flex justify-between items-center">
                     <h1 className="text-2xl font-bold text-gray-900">Expense</h1>
-                    <div className="flex space-x-3 -mt-10 mr-10" onClick={() => { setPopup(true); ; }}>
+                    <div className="flex space-x-3 -mt-10 mr-10" onClick={() => { setPopup(true);; }}>
                         <button className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-2 rounded-lg flex items-center gap-2">
                             <CiCirclePlus className="text-xl" /> Add New Expense
                         </button>
@@ -99,13 +99,13 @@ const [selectedExpense, setSelectedExpense] = useState(null);
                                         <td className="p-3">{expense.amount}</td>
                                         <td className="p-3">{new Date(expense.date).toLocaleDateString()}</td>
                                         <td className="p-3 text-blue-800 cursor-pointer" >
-                                        <TbPencilMinus
-  size={20}
-  onClick={() => {
-    setSelectedExpense(expense);
-    setEditPopup(true);
-  }}
-/>
+                                            <TbPencilMinus
+                                                size={20}
+                                                onClick={() => {
+                                                    setSelectedExpense(expense);
+                                                    setEditPopup(true);
+                                                }}
+                                            />
                                         </td>
                                         <td className="p-3 text-red-600 cursor-pointer">
                                             <FaRegTrashCan size={18} />
@@ -144,18 +144,18 @@ const [selectedExpense, setSelectedExpense] = useState(null);
                 <AddExpense
                     setPopup={setPopup}
                     refreshExpenses={fetchExpenses}
-                    
+
                     initialData={editData} // 👈 pass the selected data to edit
                 />
 
             )}
             {editPopup && selectedExpense && (
-  <EditExpenseForm
-    setPopup={setEditPopup}
-    initialData={selectedExpense}
-    refreshExpenses={fetchExpenses}
-  />
-)}
+                <EditExpenseForm
+                    setPopup={setEditPopup}
+                    initialData={selectedExpense}
+                    refreshExpenses={fetchExpenses}
+                />
+            )}
         </>
     );
 }

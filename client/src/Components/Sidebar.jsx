@@ -38,7 +38,8 @@ export default function Sidebar() {
     "Expenses": "/expenses",
     "Lender":"/lender",
     "Commission": "/commission",
-    "Company": "/company"
+    "Company": "/company",
+    "Pickup": "/pickup"
   };
 
   const transactionItemRoutes = {

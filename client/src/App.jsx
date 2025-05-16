@@ -47,6 +47,8 @@ import EditEmployee from "./Pages/EditEmployee";
 import EditItem from "./Pages/EditItem";
 import EditSupplier from "./Pages/EditSupplier";
 import Lender from "./Pages/Lender";
+import Pickup from "./Pages/Pickup";
+import AddPickup from "./Pages/AddPickup";
 
 
 function App() {
@@ -74,6 +76,7 @@ function App() {
 
               <Route path="/commission" element={<Commission />} />
               <Route path="/company" element={<Company />} />
+              <Route path="/pickup" element={<Pickup />} />
               <Route path="/purchase-transaction" element={<Purchasetransaction />} />
               <Route path="/edit-puchase/:id" element={<EditPurchaseTransaction />} />
               <Route path='/sales-transaction' element={<SalesTransaction />} />
@@ -116,6 +119,7 @@ function App() {
         <Route path="/edit-item" element={<EditItem />} />
         <Route path="/edit-supplier" element={<EditSupplier />} />
         <Route path ="/add-lender" element={<AddLender/>} />
+        <Route path ="/add-pickup" element={<AddPickup/>} />
       </Routes>
     </>
   );

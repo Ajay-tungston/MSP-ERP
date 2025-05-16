@@ -14,6 +14,7 @@ export default function Navbar() {
     "/commission":"Master",
     "/company":"Master",
     "/lender":"Master",
+    "/pickup":"Master",
     "/purchase-transaction": "Transaction",      
     "/sales-transaction":"Transaction",                                                                                                                          
      "/sales": "Transaction",

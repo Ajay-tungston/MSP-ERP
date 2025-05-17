@@ -140,7 +140,7 @@ const createSaleTransaction = async (req, res) => {
 
       //update the balance of customer
       customer.previousBalance = customer.openingBalance;
-      customer.openingBalance += (customerTotal - discount);
+      customer.openingBalance += customerTotal - discount;
       await customer.save();
 
       customersArray.push({
@@ -379,10 +379,15 @@ const getCustomerSalesByDate = async (req, res) => {
 
     let report = [];
     let entryNo = 1;
+    let dailyTotal = 0;
+
 
     transactions.forEach((transaction) => {
       transaction.customers.forEach((customerEntry) => {
         if (customerEntry.customer._id.toString() === customerId) {
+
+          dailyTotal += customerEntry.totalAmount;
+
           customerEntry.items.forEach((item) => {
             report.push({
               No: entryNo++,
@@ -399,19 +404,56 @@ const getCustomerSalesByDate = async (req, res) => {
         }
       });
     });
-    const startOfDayForPayment = new Date(date);
-    startOfDayForPayment.setHours(0, 0, 0, 0);
-    const endOfDayForPayment = new Date(date);
-    endOfDayForPayment.setHours(23, 59, 59, 999);
-    
-    const lastPaymentIn = await Payment.findOne({
-      customer: new mongoose.Types.ObjectId(customerId),
+
+    // 2️⃣ STEP 2: Calculate previous total sales (BEFORE selected date)
+    const salesBeforeDate = await SalesEntry.find({
+      dateOfSale: { $lt: startOfDay },
+      "customers.customer": customerId,
+    });
+
+    let totalSalesBefore = 0;
+    salesBeforeDate.forEach((sale) => {
+      sale.customers.forEach((cust) => {
+        if (cust.customer.toString() === customerId) {
+          totalSalesBefore += cust.totalAmount;
+        }
+      });
+    });
+
+    // 3️⃣ STEP 3: Calculate total payments before the selected date
+    const paymentsBeforeDate = await Payment.find({
+      customer: customerId,
       paymentType: "PaymentIn",
-    })
-      .sort({ date: -1 }) // latest first
-      .exec();
-    console.log(lastPaymentIn)
-    res.json({report,lastPaymentIn:lastPaymentIn?.amount?lastPaymentIn.amount:0});
+      date: { $lt: startOfDay },
+    });
+
+    let totalPaymentsBefore = 0;
+    paymentsBeforeDate.forEach((pay) => {
+      totalPaymentsBefore += pay.amount;
+    });
+
+    // 4️⃣ STEP 4: Correct previous balance
+    const previousBalance = totalSalesBefore - totalPaymentsBefore;
+
+    // 5️⃣ STEP 5: Get today's payment (for display)
+    const paymentsToday = await Payment.find({
+      customer: customerId,
+      paymentType: "PaymentIn",
+      date: { $gte: startOfDay, $lte: endOfDay },
+    });
+
+    let dailyReceipts = 0;
+    paymentsToday.forEach((pay) => {
+      dailyReceipts += pay.amount;
+    });
+
+    res.json({
+      report,
+      dailyTotal,
+      previousBalance,
+      dailyReceipts,
+      grossTotal: previousBalance + dailyTotal - dailyReceipts,
+    });
   } catch (error) {
     console.error("Error fetching sales report:", error);
     res.status(500).json({ message: "Server error" });

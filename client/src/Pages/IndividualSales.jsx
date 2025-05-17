@@ -20,10 +20,9 @@ export default function IndividualSales() {
 
   const [entries, setEntries] = useState([]);
   const [whatsapp, setWhatsapp] = useState("");
-  const [prvBalance, setPrvBalance] = useState("");
+  const [reportData, setReportData] = useState({});
   // Date filter (optional)
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
-  const [dailyReceipt, setDailyReceipt] = useState("");
   // Close suggestions on outside click
   useEffect(() => {
     const handler = (e) => {
@@ -70,8 +69,17 @@ export default function IndividualSales() {
       const res = await axiosInstance.get("/admin/sales/getbydate", {
         params: { customerId: custId, date: dateStr },
       });
-console.log(res)
-      setDailyReceipt(res?.data?.lastPaymentIn);
+      console.log("result=", res);
+
+      const {
+        dailyReceipts = [],
+        dailyTotal = 0,
+        grossTotal = 0,
+        previousBalance = 0,
+      } = res?.data || {};
+
+      setReportData({ dailyReceipts, dailyTotal, grossTotal, previousBalance });
+
       const normalized = res.data?.report?.map((entry, idx) => ({
         transactionNumber: entry["No"] || `TX-${idx + 1}`,
         dateOfSale: entry["Date"],
@@ -107,7 +115,6 @@ console.log(res)
     setCustomerName(c.name);
     setCustomerId(c.id);
     setWhatsapp(c?.whatsapp);
-    setPrvBalance(c?.openingBalance);
     setShowSuggestions(false);
   };
 
@@ -141,11 +148,15 @@ console.log(res)
         return;
       }
       setWatsappLoading(true);
-      const pdfBlob = await generateSalesPdfBlob(entries,
+      const pdfBlob = await generateSalesPdfBlob(
+        entries,
         customerName,
         date,
-        prvBalance,
-        dailyReceipt);
+        reportData?.previousBalance,
+        reportData?.dailyReceipts
+        // prvBalance,
+        // dailyReceipt
+      );
       const formData = new FormData();
       formData.append("pdf", pdfBlob, "purchase.pdf");
       formData.append("billType", "sale");
@@ -245,8 +256,10 @@ console.log(res)
                         entries,
                         customerName,
                         date,
-                        prvBalance,
-                        dailyReceipt
+                        reportData?.previousBalance,
+                        reportData?.dailyReceipts
+                        // prvBalance,
+                        // dailyReceipt
                       )
                     }
                   >

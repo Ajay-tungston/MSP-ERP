@@ -81,7 +81,7 @@ export default function TrialBalance() {
         total: totalReceivables,
         rows: breakdown.map((item) => ({
           label: item.customerName,
-          invoice: '-', // placeholder, can be replaced later
+        
           amount: item.balance,
           openingBalance: item.openingBalance, // ✅ Added here
         })),
@@ -155,7 +155,7 @@ export default function TrialBalance() {
         total: totalReceivables,
         rows: breakdown.map(item => ({
           label: item.employeeName, // Employee name from backend
-          invoice: '-', // Placeholder (since invoice is not available)
+        
           amount: item.balance, // Balance for the employee
         })),
       });
@@ -293,7 +293,7 @@ export default function TrialBalance() {
   
       const payables = response.data.payables.map(p => ({
         label: p.supplierName,
-        invoice: '-', // or real invoice if available
+     
         amount: p.balance,
       }));
   
@@ -321,10 +321,6 @@ export default function TrialBalance() {
     }
   };
   
-
-
-
-
   const fetchLenderPayables = async () => {
     setLoading(true);
     setError(null);
@@ -361,7 +357,7 @@ export default function TrialBalance() {
   const totalPayablesSum =
     (commissions?.total || 0) +
     (coolieCharges?.total || 0) +
-    (supplierReceivables?.total || 0) +
+    (supplierPayables?.total || 0) +
     (lenderPayables?.total || 0);
 
   return (

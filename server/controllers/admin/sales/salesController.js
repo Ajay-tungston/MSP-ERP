@@ -138,10 +138,10 @@ const createSaleTransaction = async (req, res) => {
         });
       }
 
-      //update the balance of customer
-      customer.previousBalance = customer.openingBalance;
-      customer.openingBalance += customerTotal - discount;
-      await customer.save();
+      // //update the balance of customer
+      // customer.previousBalance = customer.openingBalance;
+      // customer.openingBalance += customerTotal - discount;
+      // await customer.save();
 
       customersArray.push({
         customer: customer._id,

@@ -20,10 +20,9 @@ export default function IndividualSales() {
 
   const [entries, setEntries] = useState([]);
   const [whatsapp, setWhatsapp] = useState("");
-
+  const [reportData, setReportData] = useState({});
   // Date filter (optional)
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
-
   // Close suggestions on outside click
   useEffect(() => {
     const handler = (e) => {
@@ -46,12 +45,12 @@ export default function IndividualSales() {
         const res = await axiosInstance.get(
           `/admin/customer/getname?q=${encodeURIComponent(q)}`
         );
-        console.log("cusss=", res);
         setSuggestions(
           res.data.customers.map((c) => ({
             id: c.id,
             name: c.name,
             whatsapp: c?.whatsapp,
+            openingBalance: c?.openingBalance,
           }))
         );
         setShowSuggestions(true);
@@ -70,14 +69,25 @@ export default function IndividualSales() {
       const res = await axiosInstance.get("/admin/sales/getbydate", {
         params: { customerId: custId, date: dateStr },
       });
+      console.log("result=", res);
 
-      console.log("Raw response from backend:", res.data);
+      const {
+        dailyReceipts = [],
+        dailyTotal = 0,
+        grossTotal = 0,
+        previousBalance = 0,
+      } = res?.data || {};
 
-      const normalized = res.data.map((entry, idx) => ({
+      setReportData({ dailyReceipts, dailyTotal, grossTotal, previousBalance });
+
+      const normalized = res.data?.report?.map((entry, idx) => ({
         transactionNumber: entry["No"] || `TX-${idx + 1}`,
         dateOfSale: entry["Date"],
         item: { itemName: entry["Item"] },
-        supplier: { supplierName: entry["Supplier"] },
+        supplier: {
+          supplierName: entry["Supplier"],
+          supplierCode: entry["supplierCode"],
+        },
         quantityKg: entry["Qty (KG)"] === "-" ? 0 : entry["Qty (KG)"],
         quantityBox: entry["Qty (Box)"] === "-" ? 0 : entry["Qty (Box)"],
         unitPrice: entry["Price"],
@@ -106,7 +116,6 @@ export default function IndividualSales() {
     setCustomerId(c.id);
     setWhatsapp(c?.whatsapp);
     setShowSuggestions(false);
-    console.log("Selected customerId:", c.id);
   };
 
   const grandTotal = entries.reduce(
@@ -139,7 +148,15 @@ export default function IndividualSales() {
         return;
       }
       setWatsappLoading(true);
-      const pdfBlob = await generateSalesPdfBlob(entries, customerName, date);
+      const pdfBlob = await generateSalesPdfBlob(
+        entries,
+        customerName,
+        date,
+        reportData?.previousBalance,
+        reportData?.dailyReceipts
+        // prvBalance,
+        // dailyReceipt
+      );
       const formData = new FormData();
       formData.append("pdf", pdfBlob, "purchase.pdf");
       formData.append("billType", "sale");
@@ -166,7 +183,6 @@ export default function IndividualSales() {
       setWatsappLoading(false);
     }
   };
-  console.log("tabledata", tableRows);
   return (
     <>
       {watsappLoading && (
@@ -236,7 +252,15 @@ export default function IndividualSales() {
                   <button
                     className="bg-[#F9FAFB] hover:bg-gray-200 text-sm font-medium rounded-[12px] px-8 py-4 flex items-center gap-3 mt-2"
                     onClick={() =>
-                      IndividualsalesReport(entries, customerName, date)
+                      IndividualsalesReport(
+                        entries,
+                        customerName,
+                        date,
+                        reportData?.previousBalance,
+                        reportData?.dailyReceipts
+                        // prvBalance,
+                        // dailyReceipt
+                      )
                     }
                   >
                     <PrinterIcon className="w-4 h-4" /> Print

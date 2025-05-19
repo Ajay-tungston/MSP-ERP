@@ -7,8 +7,6 @@ const uploadPdf = async (req, res) => {
   try {
     const { billType, customerName, date } = req.body;
     const file = req.file;
-console.log(req.body)
-console.log(req.file)
     if (!billType || !customerName || !date || !file) {
       return res.status(400).json({ error: "Missing billType, customerName, date or file" });
     }
@@ -29,14 +27,10 @@ console.log(req.file)
 
     // ✅ File already exists: return link and remove the temp uploaded one
     if (fs.existsSync(uploadPath)) {
-      fs.unlinkSync(file.path); // <== This line removes the unnecessary uploaded file
-      return res.status(200).json({ fileUrl });
+      fs.unlinkSync(uploadPath); // delete the old PDF
     }
-
-    // ✅ Move temp file to target location
     fs.renameSync(file.path, uploadPath);
-    res.status(200).json({ fileUrl });
-
+    return res.status(200).json({ fileUrl });
   } catch (error) {
     console.error("Upload error:", error);
     res.status(500).json({ error: "Upload failed" });

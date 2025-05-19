@@ -37,6 +37,10 @@ const customerSchema = new mongoose.Schema({
   openingBalance: {
     type: Number,
     default: 0,
+  },  
+  previousBalance: {
+    type: Number,
+    default: 0,
   },
   routeCustomer: {
     type: Boolean, // If the customer belongs to a route

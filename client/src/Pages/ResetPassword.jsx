@@ -1,10 +1,10 @@
-//
 import React, { useEffect, useState } from "react";
 import { api } from "../api/api";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 function ResetPassword() {
-  // State to store the new password and confirm password
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
@@ -15,7 +15,7 @@ function ResetPassword() {
   useEffect(() => {
     const checkResetToken = async () => {
       try {
-        const response = await api.get("/admin/auth/check-reset-token", {
+        await api.get("/admin/auth/check-reset-token", {
           withCredentials: true,
         });
       } catch (error) {
@@ -26,39 +26,50 @@ function ResetPassword() {
     checkResetToken();
   }, []);
 
-  // Handle the change for the new password input
   const handleNewPasswordChange = (e) => {
     setNewPassword(e.target.value);
   };
 
-  // Handle the change for the confirm password input
   const handleConfirmPasswordChange = (e) => {
     setConfirmPassword(e.target.value);
   };
 
-  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Validate password with regex
     if (!passwordRegex.test(newPassword)) {
       setError(
         "Password must be 8-32 characters long, with at least one uppercase letter, one lowercase letter, one number, and one special character."
       );
       return;
     }
-    // Check if the passwords match
+
+    // Check if passwords match
     if (newPassword !== confirmPassword) {
       setError("Passwords do not match!");
     } else {
       setError("");
-      // Here you can add further logic for handling password reset (e.g., making an API call)
-      console.log("Password has been successfully reset");
       try {
-        const response = await api.post(
+        // Make API call to reset the password
+        await api.post(
           "/admin/auth/reset-password",
           { newPassword },
           { withCredentials: true }
         );
-        console.log(response);
+        
+        // Show success toast message with tick symbol
+        toast.success("Password reset successful. You’re good to go!", {
+          position: "top-center",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          theme: "light",
+        });
+
+        // Navigate to login page after successful reset
         navigate("/login");
       } catch (error) {
         console.log(error);
@@ -76,10 +87,9 @@ function ResetPassword() {
           className="w-[120px] h-[120px] sm:w-[150px] sm:h-[150px] mb-4"
         />
 
-        {/* Welcome Title and Subtitle */}
         <div className="text-center">
           <div className="text-black text-3xl sm:text-4xl font-bold font-['Urbanist']">
-            Rest your password
+            Reset your password
           </div>
         </div>
 
@@ -87,7 +97,6 @@ function ResetPassword() {
           onSubmit={handleSubmit}
           className="w-full flex flex-col justify-start items-start gap-4"
         >
-          {/* New password Input Section */}
           <div className="w-full flex flex-col justify-start items-start gap-2">
             <label className="self-start text-black text-lg sm:text-xl font-bold font-['Urbanist']">
               New password
@@ -101,7 +110,6 @@ function ResetPassword() {
             />
           </div>
 
-          {/* Confirm Password Input Section */}
           <div className="w-full flex flex-col justify-start items-start gap-2">
             <label className="self-start text-black text-lg sm:text-xl font-bold font-['Urbanist']">
               Confirm new Password
@@ -115,10 +123,8 @@ function ResetPassword() {
             />
           </div>
 
-          {/* Error Message */}
           {error && <div className="text-red-500 text-sm mt-2">{error}</div>}
 
-          {/* Submit Button */}
           <button
             type="submit"
             className="w-full px-10 py-3 sm:px-[100px] sm:py-4 bg-[#5d5fef] rounded-md text-white text-lg sm:text-xl font-bold font-['Urbanist'] hover:bg-[#4a4fdf] focus:outline-none focus:ring-2 focus:ring-[#5d5fef] transition-all"

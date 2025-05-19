@@ -43,10 +43,14 @@ const getReceivablesFromCustomers = async (req, res) => {
       return sum + (val > 0 ? val : 0);
     }, 0);
 
-    const breakdown = customers.map((c) => ({
-      customerName: c.customerName,
-      balance: receivableMap[c._id.toString()] || 0,
-    })).filter((c) => c.balance > 0);
+    const breakdown = customers.map((c) => {
+      const balance = receivableMap[c._id.toString()] || 0;
+      return {
+        customerName: c.customerName,
+        openingBalance: c.openingBalance || 0,
+        balance,
+      };
+    }).filter((c) => c.balance > 0);
 
     res.json({ totalReceivables, breakdown });
   } catch (err) {
@@ -56,50 +60,50 @@ const getReceivablesFromCustomers = async (req, res) => {
 };
 
 // ========== 2. Payables to Suppliers ==========
-const getSupplierPayables = async (req, res) => {
-  try {
-    const suppliers = await Supplier.find({});
-    const purchases = await PurchaseEntry.find({}).lean();
-    const payments = await Payment.find({
-      paymentType: "PaymentOut",
-      category: "supplier",
-    }).lean();
+// const getSupplierPayables = async (req, res) => {
+//   try {
+//     const suppliers = await Supplier.find({});
+//     const purchases = await PurchaseEntry.find({}).lean();
+//     const payments = await Payment.find({
+//       paymentType: "PaymentOut",
+//       category: "supplier",
+//     }).lean();
 
-    const payablesMap = {};
+//     const payablesMap = {};
 
-    suppliers.forEach((s) => {
-      payablesMap[s._id.toString()] = s.openingBalance || 0;
-    });
+//     suppliers.forEach((s) => {
+//       payablesMap[s._id.toString()] = s.openingBalance || 0;
+//     });
 
-    purchases.forEach((purchase) => {
-      const supplierId = purchase.supplier?.toString();
-      if (supplierId) {
-        if (!payablesMap[supplierId]) payablesMap[supplierId] = 0;
-        payablesMap[supplierId] += purchase.netTotalAmount;
-      }
-    });
+//     purchases.forEach((purchase) => {
+//       const supplierId = purchase.supplier?.toString();
+//       if (supplierId) {
+//         if (!payablesMap[supplierId]) payablesMap[supplierId] = 0;
+//         payablesMap[supplierId] += purchase.netTotalAmount;
+//       }
+//     });
 
-    payments.forEach((payment) => {
-      const supplierId = payment.supplier?.toString();
-      if (supplierId) {
-        if (!payablesMap[supplierId]) payablesMap[supplierId] = 0;
-        payablesMap[supplierId] -= payment.amount;
-      }
-    });
+//     payments.forEach((payment) => {
+//       const supplierId = payment.supplier?.toString();
+//       if (supplierId) {
+//         if (!payablesMap[supplierId]) payablesMap[supplierId] = 0;
+//         payablesMap[supplierId] -= payment.amount;
+//       }
+//     });
 
-    const breakdown = suppliers.map((s) => ({
-      supplierName: s.supplierName,
-      balance: payablesMap[s._id.toString()] || 0,
-    })).filter(s => s.balance > 0);
+//     const breakdown = suppliers.map((s) => ({
+//       supplierName: s.supplierName,
+//       balance: payablesMap[s._id.toString()] || 0,
+//     })).filter(s => s.balance > 0);
 
-    const totalPayables = breakdown.reduce((sum, s) => sum + s.balance, 0);
+//     const totalPayables = breakdown.reduce((sum, s) => sum + s.balance, 0);
 
-    res.json({ totalPayables, breakdown });
-  } catch (err) {
-    console.error("Error fetching supplier payables:", err);
-    res.status(500).json({ message: "Failed to fetch supplier payables." });
-  }
-};
+//     res.json({ totalPayables, breakdown });
+//   } catch (err) {
+//     console.error("Error fetching supplier payables:", err);
+//     res.status(500).json({ message: "Failed to fetch supplier payables." });
+//   }
+// };
 
 // ========== 3. Receivables from Employees ==========
 const getReceivablesFromEmployees = async (req, res) => {
@@ -191,7 +195,7 @@ const getMarketFeesFromSuppliers = async (req, res) => {
     res.status(500).json({ message: "Failed to fetch market fees from suppliers." });
   }
 };
-
+// ========== 3. Receivables from cashbalance ==========
 
 const getCashBalance = async (req, res) => {
   try {
@@ -333,58 +337,52 @@ const getCoolieFromSuppliers = async (req, res) => {
 
 // ========== 3. Receivables from payables ==========
 
-const getPayablesToSuppliers = async (req, res) => {
-  try {
-    // Step 1: Get all suppliers
-    const suppliers = await Supplier.find({}).lean();
+// const getPayablesToSuppliers  = async (req, res) => {
+//   try {
+//     const suppliers = await Supplier.find({});
+//     const purchases = await PurchaseEntry.find({}).lean();
+//     const payments = await Payment.find({
+//       paymentType: "PaymentOut",
+//       category: "supplier",
+//     }).lean();
 
-    // Step 2: Get all payments related to suppliers
-    const payments = await Payment.find({ category: 'supplier' }).lean();
+//     const payablesMap = {};
 
-    // Step 3: Create map to track net payable per supplier
-    const supplierPayables = {};
+//     suppliers.forEach((s) => {
+//       payablesMap[s._id.toString()] = s.openingBalance || 0;
+//     });
 
-    // Initialize with supplier names
-    suppliers.forEach(supplier => {
-      supplierPayables[supplier._id.toString()] = {
-        supplierName: supplier.supplierName,
-        payable: 0,
-      };
-    });
+//     purchases.forEach((purchase) => {
+//       const supplierId = purchase.supplier?.toString();
+//       if (supplierId) {
+//         if (!payablesMap[supplierId]) payablesMap[supplierId] = 0;
+//         payablesMap[supplierId] += purchase.netTotalAmount;
+//       }
+//     });
 
-    // Step 4: Apply payments
-    payments.forEach(payment => {
-      const sid = payment.supplier?.toString();
-      if (!sid) return;
+//     payments.forEach((payment) => {
+//       const supplierId = payment.supplier?.toString();
+//       if (supplierId) {
+//         if (!payablesMap[supplierId]) payablesMap[supplierId] = 0;
+//         payablesMap[supplierId] -= payment.amount;
+//       }
+//     });
 
-      if (!supplierPayables[sid]) {
-        supplierPayables[sid] = {
-          supplierName: 'Unknown Supplier',
-          payable: 0,
-        };
-      }
+//     const breakdown = suppliers.map((s) => ({
+//       supplierName: s.supplierName,
+//       balance: payablesMap[s._id.toString()] || 0,
+//     })).filter(s => s.balance > 0);
 
-      if (payment.paymentType === 'PaymentIn') {
-        // Supplier paid company — increase payable
-        supplierPayables[sid].payable += payment.amount;
-      } else if (payment.paymentType === 'PaymentOut') {
-        // Company paid supplier — decrease payable
-        supplierPayables[sid].payable -= payment.amount;
-      }
-    });
+//     const totalPayables = breakdown.reduce((sum, s) => sum + s.balance, 0);
 
-    // Step 5: Filter out zero balances
-    const breakdown = Object.values(supplierPayables).filter(s => s.payable !== 0);
+//     res.json({ totalPayables, breakdown });
+//   } catch (err) {
+//     console.error("Error fetching supplier payables:", err);
+//     res.status(500).json({ message: "Failed to fetch supplier payables." });
+//   }
+// };
 
-    const totalPayables = breakdown.reduce((sum, s) => sum + s.payable, 0);
-
-    res.json({ totalPayables, breakdown });
-  } catch (err) {
-    console.error('Error calculating payables to suppliers:', err);
-    res.status(500).json({ message: 'Failed to fetch payables to suppliers.' });
-  }
-};
-
+// ========== 3. Receivables from lender ==========
 const getLenderPayables = async (req, res) => {
   try {
     const lenders = await Lender.find({}).lean();  // Assuming you have a Lender model
@@ -426,15 +424,90 @@ const getLenderPayables = async (req, res) => {
     res.status(500).json({ message: 'Failed to fetch lender payables.' });
   }
 };
+
+const getSupplierBalances = async (req, res) => {
+  try {
+    const suppliers = await Supplier.find({});
+    const purchases = await PurchaseEntry.find({}).lean();
+    const payments = await Payment.find({
+      paymentType: { $in: ["PaymentOut", "PaymentIn"] },
+      category: "supplier",
+    }).lean();
+
+    const balancesMap = {};
+
+    // Initialize balances with opening balances
+    suppliers.forEach((s) => {
+      balancesMap[s._id.toString()] = s.openingBalance || 0;
+    });
+
+    // Add purchases (increase payables)
+    purchases.forEach((purchase) => {
+      const supplierId = purchase.supplier?.toString();
+      if (supplierId) {
+        balancesMap[supplierId] = balancesMap[supplierId] || 0;
+        balancesMap[supplierId] += purchase.netTotalAmount;
+      }
+    });
+
+    // Add payments
+    payments.forEach((payment) => {
+      const supplierId = payment.supplier?.toString();
+      if (supplierId) {
+        balancesMap[supplierId] = balancesMap[supplierId] || 0;
+
+        if (payment.paymentType === "PaymentOut") {
+          balancesMap[supplierId] -= payment.amount;
+        } else if (payment.paymentType === "PaymentIn") {
+          balancesMap[supplierId] += payment.amount;
+        }
+      }
+    });
+
+    // Prepare final breakdown
+    const payables = [];
+    const receivables = [];
+
+    suppliers.forEach((s) => {
+      const supplierId = s._id.toString();
+      const balance = balancesMap[supplierId] || 0;
+
+      if (balance > 0) {
+        payables.push({
+          supplierId: supplierId,
+          supplierName: s.supplierName,
+          balance: Number(balance.toFixed(2)),
+        });
+      } else if (balance < 0) {
+        receivables.push({
+          supplierId: supplierId,
+          supplierName: s.supplierName,
+          balance: Number(Math.abs(balance.toFixed(2))),
+        });
+      }
+    });
+
+    res.json({
+      payables,
+      receivables,
+    });
+  } catch (err) {
+    console.error("Error fetching supplier balances:", err);
+    res.status(500).json({ message: "Failed to fetch supplier balances." });
+  }
+};
+
+
 module.exports = {
   getReceivablesFromCustomers,
-  getSupplierPayables,
+  // getSupplierPayables,
   getReceivablesFromEmployees,
   getMarketFeesFromSuppliers,
   getCashBalance,
   getCommissionsFromSuppliers,
   getCoolieFromSuppliers,
-  getPayablesToSuppliers,
-  getLenderPayables
+  // getPayablesToSuppliers,
+  getLenderPayables,
+  getSupplierBalances
 
 };

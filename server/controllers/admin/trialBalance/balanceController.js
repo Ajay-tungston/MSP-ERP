@@ -7,21 +7,44 @@ const PurchaseEntry = require("../../../models/PurchaseEntry");
 const Supplier = require("../../../models/Supplier");
 const Employee = require("../../../models/Employee");
 const Lender = require ("../../../models/Lender");
+const MonthlyClosure = require("../../../models/MonthlyClosure");
 // ========== 1. Receivables from Customers ==========
 const getReceivablesFromCustomers = async (req, res) => {
   try {
-    const customers = await Customer.find({});
-    const sales = await SalesEntry.find({}).lean();
-    const payments = await Payment.find({
-      paymentType: "PaymentIn",
-      category: "customer",
-    }).lean();
+    const selectedMonth = req.query.month; // format: "YYYY-MM"
+    if (!selectedMonth || !/^\d{4}-\d{2}$/.test(selectedMonth)) {
+      return res.status(400).json({ message: "Invalid month format. Use YYYY-MM" });
+    }
 
+    const [yearStr, monthStr] = selectedMonth.split("-");
+    const year = parseInt(yearStr);
+    const month = parseInt(monthStr);
+
+    const startOfMonth = new Date(year, month - 1, 1);
+    const endOfMonth = new Date(year, month, 0, 23, 59, 59, 999);
+
+    // Fetch customers
+    const customers = await Customer.find({}).lean();
+
+    // Step 1: Load previous month's customer closing balances
+    const prevMonth = month === 1 ? 12 : month - 1;
+    const prevYear = month === 1 ? year - 1 : year;
+    const prevMonthKey = `${prevYear}-${String(prevMonth).padStart(2, "0")}`;
+    const previousClosure = await MonthlyClosure.findOne({ month: prevMonthKey });
+
+    const prevCustomerBalances = previousClosure?.customerBalances || new Map();
+
+    // Step 2: Set initial balance from previous month's closing or customer's opening balance
     const receivableMap = {};
-
-    customers.forEach((c) => {
-      receivableMap[c._id.toString()] = c.openingBalance || 0;
+    customers.forEach((customer) => {
+      const cid = customer._id.toString();
+      receivableMap[cid] = prevCustomerBalances.get?.(cid) ?? customer.openingBalance ?? 0;
     });
+
+    // Step 3: Add sales in the selected month
+    const sales = await SalesEntry.find({
+      dateOfSale: { $gte: startOfMonth, $lte: endOfMonth }
+    }).lean();
 
     sales.forEach((sale) => {
       sale.customers.forEach((custSale) => {
@@ -31,6 +54,13 @@ const getReceivablesFromCustomers = async (req, res) => {
       });
     });
 
+    // Step 4: Subtract payments in the selected month
+    const payments = await Payment.find({
+      paymentType: "PaymentIn",
+      category: "customer",
+      date: { $gte: startOfMonth, $lte: endOfMonth }
+    }).lean();
+
     payments.forEach((payment) => {
       const cid = payment.customer?.toString();
       if (cid) {
@@ -39,25 +69,33 @@ const getReceivablesFromCustomers = async (req, res) => {
       }
     });
 
+    // Step 5: Format result
     const totalReceivables = Object.values(receivableMap).reduce((sum, val) => {
       return sum + (val > 0 ? val : 0);
     }, 0);
 
     const breakdown = customers.map((c) => {
-      const balance = receivableMap[c._id.toString()] || 0;
+      const cid = c._id.toString();
+      const balance = receivableMap[cid] || 0;
       return {
         customerName: c.customerName,
-        openingBalance: c.openingBalance || 0,
+        openingBalance: prevCustomerBalances.get?.(cid) ?? c.openingBalance ?? 0,
         balance,
       };
     }).filter((c) => c.balance > 0);
 
-    res.json({ totalReceivables, breakdown });
+    res.json({
+      month: selectedMonth,
+      totalReceivables,
+      breakdown,
+      previousMonthSummary: previousClosure?.totals || {}
+    });
   } catch (err) {
     console.error("Error calculating receivables:", err);
     res.status(500).json({ message: "Failed to calculate receivables from customers." });
   }
 };
+
 
 // ========== 2. Payables to employe ==========
 // const getSupplierPayables = async (req, res) => {

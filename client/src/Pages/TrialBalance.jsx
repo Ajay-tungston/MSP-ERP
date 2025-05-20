@@ -7,6 +7,12 @@ import { ChevronDown, ChevronUp, Printer } from 'lucide-react';
 
 export default function TrialBalance() {
 
+  const [selectedMonth, setSelectedMonth] = useState(() => {
+    // Default to current month: "2025-05"
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  })
+console.log(selectedMonth)
   // Date range state
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -95,12 +101,12 @@ export default function TrialBalance() {
     setError(null);
     try {
       const response = await axiosPrivate.get(
-        '/admin/trialBalance/receivable',
-        { params: { startDate, endDate } }
+        `/admin/trialBalance/receivable?month=${selectedMonth}`,
+        // { params: { startDate, endDate } }
       );
 
       const { totalReceivables, breakdown } = response.data;
-
+console.log("from cus",response)
       setReceivables({
         total: totalReceivables,
         rows: breakdown.map((item) => ({
@@ -152,35 +158,7 @@ export default function TrialBalance() {
     fetchProfitLossData();
 
 
-  }, [startDate, endDate]);
-
-
-
-  // Fetch receivables from suppliers
-  // const fetchPayablesToSuppliers = async () => {
-  //   setLoading(true);
-  //   setError(null);
-  //   try {
-  //     const response = await axiosPrivate.get(
-  //       '/admin/trialBalance/suppliers',
-  //       { params: { startDate, endDate } }
-  //     );
-  //     const { totalPayables, breakdown } = response.data;
-  //     setSupplierReceivables({
-  //       total: totalPayables,
-  //       rows: breakdown.map(item => ({
-  //         label: item.supplierName,
-  //         invoice: '-', // Placeholder
-  //         amount: item.balance,
-  //       })),
-  //     });
-  //   } catch (err) {
-  //     console.error('Failed to load supplier receivables:', err);
-  //     setError('Could not fetch payables to suppliers.');
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
+  }, [startDate, endDate,selectedMonth]);
 
 
   const fetchReceivablesFromEmployees = async () => {
@@ -209,34 +187,6 @@ export default function TrialBalance() {
       setLoading(false);
     }
   };
-
-  // const fetchMarketFeesFromSuppliers = async () => {
-  //   setLoading(true); // Loading state for Market Fees
-  //   setError(null); // Reset any errors
-
-  //   try {
-  //     const response = await axiosPrivate.get(
-  //       '/admin/trialBalance/marketfee', // Endpoint to fetch market fees
-  //       { params: { startDate, endDate } } // Optional date filter if needed
-  //     );
-
-  //     const { totalMarketFees, breakdown } = response.data;
-
-  //     setMarketFees({
-  //       total: totalMarketFees,
-  //       rows: breakdown.map(item => ({
-  //         label: item.supplierName, // Supplier name
-  //         invoice: '-', // Placeholder (since no invoice is available)
-  //         amount: item.marketFee, // Market fee amount for the supplier
-  //       })),
-  //     });
-  //   } catch (err) {
-  //     console.error('Failed to load market fees from suppliers:', err);
-  //     setError('Could not fetch market fees from suppliers.');
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
 
 
   const fetchCashBalance = async () => {
@@ -302,32 +252,6 @@ export default function TrialBalance() {
       setLoadingCoolie(false);
     }
   };
-
-
-  // const fetchPayablesToSupplier = async () => {
-  //   setLoadingSupplierPayables(true);
-  //   setErrorSupplierPayables(null);
-
-  //   try {
-  //     const response = await axiosPrivate.get('/admin/trialBalance/pay');
-  //     const { totalPayables, breakdown } = response.data;
-
-  //     setSupplierPayables({
-  //       total: Number(totalPayables || 0),
-  //       rows: Array.isArray(breakdown)
-  //         ? breakdown.map(item => ({
-  //           supplierName: item.supplierName || 'Unknown',
-  //           amount: Number(item.payable || 0),
-  //         }))
-  //         : [],
-  //     });
-  //   } catch (err) {
-  //     console.error('Failed to load supplier payables:', err);
-  //     setErrorSupplierPayables('Could not fetch payables to suppliers.');
-  //   } finally {
-  //     setLoadingSupplierPayables(false);
-  //   }
-  // };
 
 
   const fetchPayablesToSuppliers = async () => {
@@ -459,6 +383,12 @@ export default function TrialBalance() {
         <button className="flex items-center px-4 py-2 bg-[#F9FAFB] rounded hover:bg-indigo-200">
           <Printer className="mr-2" size={16} /> Print
         </button>
+        <input
+        type="month"
+        value={selectedMonth}
+        onChange={(e) => setSelectedMonth(e.target.value)}
+        className="border px-2 py-1 rounded"
+      />
       </div>
 
 

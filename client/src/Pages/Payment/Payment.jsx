@@ -61,69 +61,63 @@ function Payment() {
   };
   return (
     <>
-      <div className="h-fit relative bg-gray-50 outline-1 outline-offset-[-1px] outline-white mt-10">
-        <div className="w-[1471px] h-[1095px] absolute bg-white rounded-3xl overflow-hidden">
-          <div className="left-[48px] top-[48px] absolute inline-flex justify-start items-center gap-3">
-            <div className="flex items-center text-slate-500 text-xl font-normal font-['Urbanist']">
-              Transactions <FaChevronRight className="ml-2" />
-              {paymentType === "PaymentIn" ? "Payment in" : "Payment out"}
-            </div>
-
-            <div
-              className="w-80 h-[64px] px-6 py-4 left-[1023px] top-[32px] absolute bg-indigo-500 rounded-2xl inline-flex justify-center items-center gap-3"
-              onClick={() => setPopup(true)}
-            >
-              <div className="w-8 h-8 relative">
-                <CiCirclePlus className="w-7 h-7 left-[2.67px] top-[2.67px] absolute text-white" />
-                <div className="w-8 h-8 left-[32px] top-[32px] absolute origin-top-left -rotate-180 opacity-0" />
-              </div>
-              <div className="justify-start text-white text-xl font-bold font-['Urbanist']">
-                {paymentType === "PaymentIn" ? "Payment In" : "Payment Out"}
-              </div>
-            </div>
-          </div>
-
-          <div className="left-[48px] top-[80px] absolute justify-start text-indigo-950 text-4xl font-bold font-['Urbanist'] leading-[50.40px]">
-            {paymentType === "PaymentIn" ? "Payment In" : "Payment Out"}
-          </div>
-
-          <div className="w-[1451px] left-0 top-[202px] absolute inline-flex flex-col justify-start items-start">
-            {/* Header */}
-            <div className="self-stretch px-12 py-4 bg-gray-50 border-b border-gray-200 inline-flex justify-between items-center">
-              <div className="min-w-32 justify-center text-indigo-950 text-xl font-bold font-['Urbanist'] tracking-wide">
-                Category
-              </div>
-              <div className="w-44 min-w-32 justify-center text-indigo-950 text-xl font-bold font-['Urbanist'] tracking-wide">
-                Names
-              </div>
-              <div className="min-w-32 justify-center text-indigo-950 text-xl font-bold font-['Urbanist'] tracking-wide">
-                Date
-              </div>
-              <div className="min-w-36 justify-center text-indigo-950 text-xl font-bold font-['Urbanist'] tracking-wide">
-                Amount
-              </div>
-              <div className="w-6 h-6 relative" />
-              {/* <div className="w-6 h-6 relative" /> */}
-            </div>
-
+    <div className="p-4 rounded-lg shadow-sm bg-white mt-10">
+      {/* Breadcrumb */}
+      <nav className="flex items-center gap-x-2 text-[20px] text-gray-500 mb-4">
+        <span>Transactions</span>
+        <FaChevronRight />
+        <span className="text-gray-700">
+          {paymentType === "PaymentIn" ? "Payment In" : "Payment Out"}
+        </span>
+      </nav>
+  
+      {/* Header & Add Button */}
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold text-gray-800">
+          {paymentType === "PaymentIn" ? "Payment In" : "Payment Out"}
+        </h1>
+        <button
+          className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-2 rounded-lg flex items-center gap-2"
+          onClick={() => setPopup(true)}
+        >
+          <CiCirclePlus className="text-xl" />
+          Add {paymentType === "PaymentIn" ? "Payment In" : "Payment Out"}
+        </button>
+      </div>
+  
+      {/* Table Header */}
+      <div className="mt-4 bg-white">
+        <table className="w-full border-collapse text-gray-900">
+          <thead>
+            <tr className="text-left text-gray-900 font-bold border-b-2 border-gray-200 bg-[#F9FAFB]">
+              <th className="p-3">Category</th>
+              <th className="p-3">Name</th>
+              <th className="p-3">Date</th>
+              <th className="p-3">Amount</th>
+          <th className="p-3"></th>
+            </tr>
+          </thead>
+          <tbody>
             {isLoading ? (
-              <div className="w-full h-60 flex items-center justify-center">
-                <OvalSpinner />
-              </div>
-            ) : paymentIndata?.length < 0 ? (
-              <div className="w-full h-60 flex items-center justify-center text-gray-500 text-lg">
-                No payments found.
-              </div>
+              <tr>
+                <td colSpan="5" className="text-center py-10">
+                  <OvalSpinner />
+                </td>
+              </tr>
+            ) : paymentIndata?.length === 0 ? (
+              <tr>
+                <td colSpan="5" className="text-center py-10 text-gray-500">
+                  No payments found.
+                </td>
+              </tr>
             ) : (
               paymentIndata?.map((row, index) => (
-                <div
+                <tr
                   key={index}
-                  className="self-stretch px-12 py-4 bg-white border-b border-gray-200 inline-flex justify-between items-center"
+                  className="border-b border-gray-200 hover:bg-gray-50 bg-white"
                 >
-                  <div className="min-w-32 justify-center text-slate-900 text-xl font-normal font-['Urbanist'] tracking-wide">
-                    {row.category}
-                  </div>
-                  <div className="w-44 min-w-32 justify-center text-slate-900 text-xl font-normal font-['Urbanist'] tracking-wide">
+                  <td className="p-3">{row.category}</td>
+                  <td className="p-3">
                     {row.category === "Other"
                       ? row?.otherPartyName
                       : row.category === "supplier"
@@ -137,78 +131,68 @@ function Payment() {
                       : row.category === "lender"
                       ? row?.lender?.name
                       : "N/A"}
-                  </div>
-                  <div className="min-w-32 justify-center text-slate-900 text-xl font-normal font-['Urbanist'] tracking-wide">
+                  </td>
+                  <td className="p-3">
                     {format(new Date(row.date), "dd/MM/yyyy")}
-                  </div>
-                  <div className="min-w-36 justify-center text-slate-900 text-xl font-normal font-['Urbanist'] tracking-wide">
-                    {row.amount}
-                  </div>
-                  <div
-                    className="w-6 h-6 flex items-center justify-center text-slate-500 cursor-pointer"
-                    onClick={() => fetchInduvidualPayment(row?._id)}
-                  >
-                    <PiPrinterLight className="w-5 h-5" />
-                  </div>
-                  {/* <div className="w-6 h-6 flex items-center justify-center text-slate-500 cursor-pointer"
-                  onClick={()=>fetchInduvidualPayment(row?._id)}>
-                    <FaWhatsapp className="w-5 h-5" />
-                  </div> */}
-                </div>
+                  </td>
+                  <td className="p-3">{row.amount}</td>
+                  <td className="p-3 text-indigo-600">
+                    <PiPrinterLight
+                      className="w-5 h-5 cursor-pointer"
+                      onClick={() => fetchInduvidualPayment(row?._id)}
+                    />
+                  </td>
+                </tr>
               ))
             )}
-          </div>
-
-          {/* Pagination Controls */}
-          {paymentIndata?.length > 0 && (
-            <div className="w-[1511px] px-12 py-6 left-0 top-[976px] absolute border-b border-gray-200 inline-flex justify-between items-center">
-              <div className="flex justify-start items-center gap-4">
-                <div className="text-center justify-center text-slate-900 text-xl font-normal font-['Urbanist'] tracking-wide">
-                  Page {currentPage} of {totalPages}
-                </div>
-              </div>
-              <div className="flex justify-end items-center gap-6">
-                <button
-                  onClick={handlePrevious}
-                  disabled={currentPage === 1}
-                  className="w-40 px-6 py-4 bg-white rounded-2xl outline-1 outline-offset-[-1px] outline-gray-300/30 flex justify-center items-center gap-3"
-                >
-                  <div
-                    className={`text-xl font-bold font-['Urbanist'] ${
-                      currentPage === 1 ? "text-gray-300/30" : "text-blue-500"
-                    }`}
-                  >
-                    Previous
-                  </div>
-                </button>
-                <button
-                  onClick={handleNext}
-                  disabled={currentPage === totalPages}
-                  className="w-40 px-6 py-4 bg-white rounded-2xl outline-1 outline-offset-[-1px] outline-gray-300/30 flex justify-center items-center gap-3"
-                >
-                  <div
-                    className={`text-xl font-bold font-['Urbanist'] ${
-                      currentPage === totalPages
-                        ? "text-gray-300/30"
-                        : "text-blue-500"
-                    }`}
-                  >
-                    Next
-                  </div>
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
+          </tbody>
+        </table>
       </div>
-      {popup && (
-        <AddPayment
-          setPopup={setPopup}
-          fetchData={fetchPaymentData}
-          type={paymentType}
-        />
+  
+      {/* Pagination */}
+      {paymentIndata?.length > 0 && (
+        <div className="flex justify-between items-center mt-8 text-gray-600">
+          <span>
+            Page {currentPage} of {totalPages}
+          </span>
+          <div className="flex space-x-2">
+            <button
+              onClick={handlePrevious}
+              disabled={currentPage === 1}
+              className={`px-4 py-2 border border-gray-300 rounded-lg ${
+                currentPage === 1
+                  ? "text-gray-400 cursor-not-allowed"
+                  : "hover:bg-gray-100"
+              }`}
+            >
+              Previous
+            </button>
+            <button
+              onClick={handleNext}
+              disabled={currentPage === totalPages}
+              className={`px-4 py-2 border border-gray-300 rounded-lg ${
+                currentPage === totalPages
+                  ? "text-gray-400 cursor-not-allowed"
+                  : "hover:bg-gray-100"
+              }`}
+            >
+              Next
+            </button>
+          </div>
+        </div>
       )}
-    </>
+    </div>
+  
+    {/* Popup */}
+    {popup && (
+      <AddPayment
+        setPopup={setPopup}
+        fetchData={fetchPaymentData}
+        type={paymentType}
+      />
+    )}
+  </>
+  
   );
 }
 

@@ -556,45 +556,106 @@ const getSupplierBalances = async (req, res) => {
 };
 
 // ========== 3. Receivables from profit and loss ==========
-const getProfitAndLoss = async (req, res) => {
+const getDetailedProfitAndLoss = async (req, res) => {
   try {
-    // Aggregate total net purchase amount
-    const purchaseAgg = await PurchaseEntry.aggregate([
-      {
-        $group: {
-          _id: null,
-          totalPurchase: { $sum: "$netTotalAmount" },
-        },
-      },
-    ]);
-    const totalPurchase = purchaseAgg[0]?.totalPurchase || 0;
+    const sales = await SalesEntry.find()
+      .populate({
+        path: "customers.items.item",
+        model: "Item",
+      })
+      .populate({
+        path: "customers.items.supplier",
+        model: "Supplier",
+      })
+      .populate({
+        path: "purchase",
+        model: "PurchaseEntry",
+      });
 
-    // Aggregate total sales amount
-    const salesAgg = await SalesEntry.aggregate([
-      {
-        $group: {
-          _id: null,
-          totalSales: { $sum: "$totalAmount" },
-        },
-      },
-    ]);
-    const totalSales = salesAgg[0]?.totalSales || 0;
+    let results = [];
+    let totalProfit = 0;
+    let totalLoss = 0;
 
-    // Calculate profit or loss
-    const profitOrLoss = totalSales - totalPurchase;
-    const status = profitOrLoss > 0 ? "profit" : profitOrLoss < 0 ? "loss" : "break-even";
+    for (const sale of sales) {
+      const purchase = sale.purchase;
+      const purchaseItems = purchase?.items || [];
+      const purchaseSupplierId = purchase?.supplier?.toString();
+
+      if (!purchaseItems.length || !purchaseSupplierId) {
+        console.warn(`Missing purchase data for sale transaction #${sale.transactionNumber}`);
+        continue;
+      }
+
+      for (const customer of sale.customers) {
+        for (const item of customer.items) {
+          const { quantity, unitPrice, supplier, item: itemRef } = item;
+
+          if (!itemRef || !supplier) {
+            console.warn(
+              `Skipping: Missing item or supplier. Item: ${itemRef ? itemRef.name : "undefined"}, Supplier: ${supplier ? supplier.name : "undefined"}`
+            );
+            continue;
+          }
+
+          const purchaseItem = purchaseItems.find(p =>
+            p.item?.toString() === itemRef._id.toString() &&
+            purchaseSupplierId === supplier._id.toString()
+          );
+
+          if (!purchaseItem) {
+            console.warn(
+              `No matching purchase for item: ${itemRef.name} [${itemRef._id}] from supplier: ${supplier.name} [${supplier._id}]`
+            );
+            continue;
+          }
+
+          const costPrice = purchaseItem.unitPrice;
+          const totalSellingPrice = unitPrice * quantity;
+          const totalCostPrice = costPrice * quantity;
+          const diff = totalSellingPrice - totalCostPrice;
+
+          const record = {
+            item: itemRef.name,
+            supplier: supplier.name,
+            quantity,
+            unitPrice,
+            costPrice,
+            totalSellingPrice,
+            totalCostPrice,
+            profitAmount: diff > 0 ? diff : 0,
+            lossAmount: diff < 0 ? Math.abs(diff) : 0,
+            status: diff > 0 ? "profit" : diff < 0 ? "loss" : "break-even",
+          };
+
+          if (diff > 0) totalProfit += diff;
+          else if (diff < 0) totalLoss += Math.abs(diff);
+
+          results.push(record);
+        }
+      }
+    }
 
     return res.json({
-      totalSales,
-      totalPurchase,
-      profitOrLoss: Math.abs(profitOrLoss),
-      status,
+      summary: {
+        totalProfit,
+        totalLoss,
+        netProfitOrLoss: totalProfit - totalLoss,
+        status:
+          totalProfit > totalLoss
+            ? "profit"
+            : totalLoss > totalProfit
+            ? "loss"
+            : "break-even",
+      },
+      breakdown: results,
     });
+
   } catch (err) {
-    console.error("Error calculating profit and loss:", err);
-    return res.status(500).json({ message: "Failed to calculate profit and loss." });
+    console.error("Error calculating detailed profit and loss:", err);
+    return res.status(500).json({ message: "Failed to calculate detailed profit and loss." });
   }
 };
+
 
 module.exports = {
   getReceivablesFromCustomers,
@@ -608,6 +669,6 @@ module.exports = {
   getLenderPayables,
   getSupplierBalances,
   getStockInHand,
-  getProfitAndLoss
+  getDetailedProfitAndLoss
 
 };

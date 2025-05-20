@@ -46,6 +46,10 @@ export default function TrialBalance() {
     rows: [],
   });
 
+
+
+
+
   const [openCommissionSection, setOpenCommissionSection] = useState(false);
 
   const [cashBalance, setCashBalance] = useState({ total: 0 });
@@ -68,10 +72,18 @@ export default function TrialBalance() {
 
 
   const [openProfitLossSection, setOpenProfitLossSection] = useState(true);
-  const [profitLossData, setProfitLossData] = useState(null);
+  const [profitLossData, setProfitLossData] = useState({
+    totalProfit: 0,
+    totalLoss: 0,
+    netProfitOrLoss: 0,
+    totalSales: 0,
+    totalPurchases: 0,
+    totalCommissionPaid: 0,
+  });
+
   const [loadingProfitLoss, setLoadingProfitLoss] = useState(false);
   const [profitLossError, setProfitLossError] = useState(null);
-
+  const [openLossSection, setOpenLossSection] = useState(false);
 
   const [openProfitLoss, setOpenProfitLoss] = useState(false);
   const [data, setData] = useState(null);
@@ -114,7 +126,7 @@ export default function TrialBalance() {
   const fetchProfitAndLoss = async () => {
     setLoading(true);
     try {
-      const res = await axios.get("/api/profit-loss"); // Update path if needed
+      const res = await axiosPrivate.get("/api/profitloss"); // Update path if needed
       setData(res.data);
       setError(null);
     } catch (err) {
@@ -137,6 +149,7 @@ export default function TrialBalance() {
     fetchLenderPayables();
     fetchPayablesToSuppliers();
     fetchStockData();
+    fetchProfitLossData();
 
 
   }, [startDate, endDate]);
@@ -407,22 +420,27 @@ export default function TrialBalance() {
 
 
   const fetchProfitLossData = async () => {
-    setLoadingProfitLoss(true);
     try {
-      const res = await axios.get("/api/profit-loss"); // Backend API endpoint
-      setProfitLossData(res.data);
+      const response = await axiosPrivate.get('/admin/trialBalance/profitloss');
+      setProfitLossData(response.data.summary);
+      console.log(response)
     } catch (err) {
-      console.error("Error fetching Profit & Loss data", err);
-      setProfitLossError("Failed to fetch Profit & Loss data.");
+      setProfitLossError("Failed to fetch profit/loss.");
+      console.log(err)
     } finally {
       setLoadingProfitLoss(false);
     }
   };
 
+
+
+
+
   const totalReceivablesSum =
     (receivables?.total || 0) +
     (supplierReceivables?.total || 0) +
     (stockData?.total || 0) +
+    (profitLossData?.totalLoss || 0) +
     (employeeReceivables?.total || 0) +
     (cashBalance?.total || 0);
 
@@ -430,6 +448,7 @@ export default function TrialBalance() {
     (commissions?.total || 0) +
     (coolieCharges?.total || 0) +
     (supplierPayables?.total || 0) +
+    (profitLossData?.totalProfit || 0) +
     (lenderPayables?.total || 0);
 
   return (
@@ -660,65 +679,49 @@ export default function TrialBalance() {
             )}
           </div>
 
-  {/* Receivables Section (profit ) */}
+      {/* Receivables Section (loss ) */}
           <div className="rounded-b-lg">
-      <div
-        className="flex justify-between bg-[#F0F9FF] px-6 py-3 cursor-pointer"
-        onClick={() => setOpenProfitLossSection(prev => !prev)}
-      >
-        <div className="flex items-center gap-2">
-          {openProfitLossSection ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-          <span className="font-semibold text-[#05004E]">Profit </span>
-        </div>
-        <span className="font-semibold text-[#05004E]">
-          {profitLossData ? formatAmount(profitLossData.totalProfitOrLoss) : "₹0.00"}
-        </span>
-      </div>
+            <div
+              className="flex justify-between bg-[#FEF2F2] px-6 py-3 cursor-pointer"
+              onClick={() => setOpenLossSection(prev => !prev)}
+            >
+              <div className="flex items-center gap-2">
+                {openLossSection ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                <span className="font-semibold text-[#7F1D1D]">Sales Difference (Loss)</span>
+              </div>
+              <span className="font-semibold text-[#7F1D1D]">
+                ₹{(profitLossData?.totalLoss || 0).toFixed(2)}
+              </span>
+            </div>
 
-      {openProfitLossSection && (
-        <>
-          {loadingProfitLoss && <p className="p-4">Loading...</p>}
-          {profitLossError && <p className="p-4 text-red-500">{profitLossError}</p>}
+            {/* {openLossSection && (
+              <>
+                {loadingProfitLoss && <p className="p-4">Loading...</p>}
+                {profitLossError && <p className="p-4 text-red-500">{profitLossError}</p>}
+                {!loadingProfitLoss && !profitLossError && (
+                  <table className="w-full">
+                    <tbody>
+                      {profitLossData?.breakdown
+              ?.filter(entry => entry.status === "loss")
+              .map((entry, index) => (
+                <tr key={`loss-${index}`} className="border-b border-gray-200 hover:bg-gray-50">
+                  <td className="px-6 py-2">{entry.item} (by {entry.supplier})</td>
+                  <td className="px-6 py-2 text-red-600">₹{entry.lossAmount.toFixed(2)}</td>
+                </tr>
+              ))}
+                      <tr className="border-b border-gray-200 hover:bg-gray-50">
+                        <td className="px-6 py-2">Loss (Payable)</td>
+                        <span className="px-6 py-2 text-red-600">₹{profitLossData?.totalLoss?.toFixed(2)}</span>
+                      </tr>
+                    </tbody>
+                  </table>
+                )}
+              </>
+            )} */}
+          </div>
 
-          {!loadingProfitLoss && !profitLossError && profitLossData && (
-            <table className="w-full">
-              <thead className="bg-[#F9FAFB] text-left text-sm text-[#05004E] uppercase border-b border-gray-200">
-                <tr>
-                  <th className="px-6 py-2 w-6/12">Description</th>
-                  <th className="px-6 py-2 w-3/12">Amount</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr className="border-b border-gray-200 hover:bg-gray-50">
-                  <td className="px-6 py-2">Total Sales</td>
-                  <td className="px-6 py-2">{formatAmount(profitLossData.totalSales)}</td>
-                </tr>
-                <tr className="border-b border-gray-200 hover:bg-gray-50">
-                  <td className="px-6 py-2">Total Purchases</td>
-                  <td className="px-6 py-2">{formatAmount(profitLossData.totalPurchases)}</td>
-                </tr>
-                <tr className="border-b border-gray-200 hover:bg-gray-50">
-                  <td className="px-6 py-2">Commission Paid</td>
-                  <td className="px-6 py-2">{formatAmount(profitLossData.totalCommissionPaid)}</td>
-                </tr>
-                <tr className="font-semibold border-t bg-gray-50 hover:bg-gray-100">
-                  <td className="px-6 py-2">Net Profit/Loss</td>
-                  <td
-                    className={`px-6 py-2 ₹{
-                      profitLossData.netProfitOrLoss >= 0
-                        ? "text-green-600"
-                        : "text-red-600"
-                    }`}
-                  >
-                    {formatAmount(profitLossData.netProfitOrLoss)}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          )}
-        </>
-      )}
-    </div>
+
+          {/* Receivables Section (profit ) */}
 
           {/* Receivables Section (Cash Balance) */}
           <div className="rounded-b-lg">
@@ -953,76 +956,51 @@ export default function TrialBalance() {
             )}
           </div>
 
-     {/* Receivables Section (loss ) */}
+          {/* Receivables Section (loss ) */}
 
           <div className="rounded-b-lg">
             <div
               className="flex justify-between bg-[#F0F9FF] px-6 py-3 cursor-pointer"
-              onClick={() => setOpenProfitLoss(prev => !prev)}
+              onClick={() => setOpenProfitLossSection(prev => !prev)}
             >
               <div className="flex items-center gap-2">
-                {openProfitLoss ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-                <span className="font-semibold text-[#05004E]">Loss</span>
+                {openProfitLossSection ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                <span className="font-semibold text-[#05004E]">Profit </span>
               </div>
               <span className="font-semibold text-[#05004E]">
-                {data ? (
-                  data.status === "profit" ? (
-                    <span className="text-green-600">+₹{Number(data.profitOrLoss).toFixed(2)}</span>
-                  ) : data.status === "loss" ? (
-                    <span className="text-red-600">-₹{Number(data.profitOrLoss).toFixed(2)}</span>
-                  ) : (
-                    "Break-even"
-                  )
-                ) : (
-                  "₹0.00"
-                )}
+                ₹{(profitLossData?.totalProfit || 0).toFixed(2)}
               </span>
             </div>
 
-            {openProfitLoss && (
+            {/* {openProfitLossSection && (
               <>
-                {loading && <p className="p-4">Loading...</p>}
-                {error && <p className="p-4 text-red-500">{error}</p>}
-
-                {!loading && !error && data && (
+                {loadingProfitLoss && <p className="p-4">Loading...</p>}
+                {profitLossError && <p className="p-4 text-red-500">{profitLossError}</p>}
+                {!loadingProfitLoss && !profitLossError && (
                   <table className="w-full">
-                    <thead className="bg-[#F9FAFB] text-left text-sm text-[#05004E] uppercase border-b border-gray-200">
-                      <tr>
-                        <th className="px-6 py-2 w-6/12">Type</th>
-                        <th className="px-6 py-2 w-6/12">Amount</th>
-                      </tr>
-                    </thead>
+                   
                     <tbody>
-                      <tr className="border-b border-gray-200">
-                        <td className="px-6 py-2">Total Sales</td>
-                        <td className="px-6 py-2">₹{Number(data.totalSales).toFixed(2)}</td>
+                      <tr className="border-b border-gray-200 hover:bg-gray-50">
+                        <td className="px-6 py-2">Profit (Receivable)</td>
+                        <td className="px-6 py-2 text-green-600">₹{profitLossData?.totalProfit?.toFixed(2)}</td>
                       </tr>
-                      <tr className="border-b border-gray-200">
-                        <td className="px-6 py-2">Total Purchases</td>
-                        <td className="px-6 py-2">₹{Number(data.totalPurchase).toFixed(2)}</td>
-                      </tr>
-                      <tr className="font-semibold border-t border-gray-300 bg-gray-50">
-                        <td className="px-6 py-2">
-                          {data.status === "profit"
-                            ? "Net Profit"
-                            : data.status === "loss"
-                              ? "Net Loss"
-                              : "Break-even"}
-                        </td>
-                        <td className="px-6 py-2">
-                          {data.status === "profit"
-                            ? `+ ₹₹{Number(data.profitOrLoss).toFixed(2)}`
-                            : data.status === "loss"
-                              ? `- ₹₹{Number(data.profitOrLoss).toFixed(2)}`
-                              : "₹0.00"}
+
+                      <tr className="font-semibold border-t bg-gray-50 hover:bg-gray-100">
+                        <td className="px-6 py-2">Net Profit / Loss</td>
+                        <td
+                          className={`px-6 py-2 ${profitLossData.netProfitOrLoss >= 0 ? "text-green-600" : "text-red-600"
+                            }`}
+                        >
+                          ₹{profitLossData.netProfitOrLoss?.toFixed(2)}
                         </td>
                       </tr>
                     </tbody>
                   </table>
                 )}
               </>
-            )}
+            )} */}
           </div>
+
 
         </div>
       </div>

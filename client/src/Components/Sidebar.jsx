@@ -329,7 +329,7 @@ export default function Sidebar() {
             ))}
           </div>
         </div>
-        <div className="absolute  px-5 bottom-5 flex items-center ">
+        <div className="absolute  px-12 bottom-5 flex items-center ">
           {/* ml-[2%] */}
           <div>
             <img src="images/Layer 2.png" />

@@ -9,7 +9,9 @@ const { getReceivablesFromCustomers,
       getCashBalance,
       // getPayablesToSuppliers,
       getLenderPayables,
-      getSupplierBalances
+      getSupplierBalances,
+      getStockInHand,
+      getDetailedProfitAndLoss
 
 } = require("../../../controllers/admin/trialBalance/balanceController");
 
@@ -24,5 +26,7 @@ router.get('/commission',verifyJwt,getCommissionsFromSuppliers)
 router.get('/coolie', verifyJwt,getCoolieFromSuppliers);
 router.get('/lender',verifyJwt,getLenderPayables)
 router.get('/supplierbalance',verifyJwt,getSupplierBalances)
+router.get('/stock',verifyJwt,getStockInHand)
+router.get('/profitloss',verifyJwt,getDetailedProfitAndLoss)
 // router.get('/pay',verifyJwt,getPayablesToSuppliers)
 module.exports = router;

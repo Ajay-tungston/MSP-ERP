@@ -59,7 +59,7 @@ const getReceivablesFromCustomers = async (req, res) => {
   }
 };
 
-// ========== 2. Payables to Suppliers ==========
+// ========== 2. Payables to employe ==========
 // const getSupplierPayables = async (req, res) => {
 //   try {
 //     const suppliers = await Supplier.find({});
@@ -195,6 +195,63 @@ const getMarketFeesFromSuppliers = async (req, res) => {
     res.status(500).json({ message: "Failed to fetch market fees from suppliers." });
   }
 };
+
+// ========== 3. Receivables from stock in hand ==========
+
+const getStockInHand = async (req, res) => {
+  try {
+    // Fetch all purchase entries and populate item names
+    const purchases = await PurchaseEntry.find().populate("items.item", "itemName").lean();
+
+    const itemMap = {};
+
+    // Loop through all purchase entries
+    for (const purchase of purchases) {
+      for (const purchaseItem of purchase.items) {
+        const itemId = purchaseItem.item?._id?.toString();
+        const itemName = purchaseItem.item?.itemName;
+
+        if (!itemId || !itemName) continue;
+
+        const remainingQty = purchaseItem.remainingQuantity || 0;
+
+        // Skip if no stock left
+        if (remainingQty <= 0) continue;
+
+        const unitPrice = purchaseItem.unitPrice || 0;
+        const stockValue = remainingQty * unitPrice;
+
+        // If item already exists, accumulate
+        if (itemMap[itemId]) {
+          itemMap[itemId].quantity += remainingQty;
+          itemMap[itemId].value += stockValue;
+        } else {
+          itemMap[itemId] = {
+            itemName,
+            quantity: remainingQty,
+            unitPrice,
+            value: stockValue,
+          };
+        }
+      }
+    }
+
+    const breakdown = Object.values(itemMap);
+
+    const totalStockValue = breakdown.reduce((sum, item) => sum + item.value, 0);
+
+    return res.json({
+      totalStockValue,
+      breakdown,
+    });
+  } catch (err) {
+    console.error("Error fetching stock in hand:", err);
+    return res.status(500).json({ message: "Failed to fetch stock in hand." });
+  }
+};
+
+
+
 // ========== 3. Receivables from cashbalance ==========
 
 const getCashBalance = async (req, res) => {
@@ -335,7 +392,7 @@ const getCoolieFromSuppliers = async (req, res) => {
   }
 };
 
-// ========== 3. Receivables from payables ==========
+// ========== 3. Receivables from lender ==========
 
 // const getPayablesToSuppliers  = async (req, res) => {
 //   try {
@@ -425,6 +482,7 @@ const getLenderPayables = async (req, res) => {
   }
 };
 
+// ========== 3. Receivables from supplier ==========
 const getSupplierBalances = async (req, res) => {
   try {
     const suppliers = await Supplier.find({});
@@ -497,6 +555,107 @@ const getSupplierBalances = async (req, res) => {
   }
 };
 
+// ========== 3. Receivables from profit and loss ==========
+const getDetailedProfitAndLoss = async (req, res) => {
+  try {
+    const sales = await SalesEntry.find()
+      .populate({
+        path: "customers.items.item",
+        model: "Item",
+      })
+      .populate({
+        path: "customers.items.supplier",
+        model: "Supplier",
+      })
+      .populate({
+        path: "purchase",
+        model: "PurchaseEntry",
+      });
+
+    let results = [];
+    let totalProfit = 0;
+    let totalLoss = 0;
+
+    for (const sale of sales) {
+      const purchase = sale.purchase;
+      const purchaseItems = purchase?.items || [];
+      const purchaseSupplierId = purchase?.supplier?.toString();
+
+      if (!purchaseItems.length || !purchaseSupplierId) {
+        console.warn(`Missing purchase data for sale transaction #${sale.transactionNumber}`);
+        continue;
+      }
+
+      for (const customer of sale.customers) {
+        for (const item of customer.items) {
+          const { quantity, unitPrice, supplier, item: itemRef } = item;
+
+          if (!itemRef || !supplier) {
+            console.warn(
+              `Skipping: Missing item or supplier. Item: ${itemRef ? itemRef.name : "undefined"}, Supplier: ${supplier ? supplier.name : "undefined"}`
+            );
+            continue;
+          }
+
+          const purchaseItem = purchaseItems.find(p =>
+            p.item?.toString() === itemRef._id.toString() &&
+            purchaseSupplierId === supplier._id.toString()
+          );
+
+          if (!purchaseItem) {
+            console.warn(
+              `No matching purchase for item: ${itemRef.name} [${itemRef._id}] from supplier: ${supplier.name} [${supplier._id}]`
+            );
+            continue;
+          }
+
+          const costPrice = purchaseItem.unitPrice;
+          const totalSellingPrice = unitPrice * quantity;
+          const totalCostPrice = costPrice * quantity;
+          const diff = totalSellingPrice - totalCostPrice;
+
+          const record = {
+            item: itemRef.name,
+            supplier: supplier.name,
+            quantity,
+            unitPrice,
+            costPrice,
+            totalSellingPrice,
+            totalCostPrice,
+            profitAmount: diff > 0 ? diff : 0,
+            lossAmount: diff < 0 ? Math.abs(diff) : 0,
+            status: diff > 0 ? "profit" : diff < 0 ? "loss" : "break-even",
+          };
+
+          if (diff > 0) totalProfit += diff;
+          else if (diff < 0) totalLoss += Math.abs(diff);
+
+          results.push(record);
+        }
+      }
+    }
+
+    return res.json({
+      summary: {
+        totalProfit,
+        totalLoss,
+        netProfitOrLoss: totalProfit - totalLoss,
+        status:
+          totalProfit > totalLoss
+            ? "profit"
+            : totalLoss > totalProfit
+            ? "loss"
+            : "break-even",
+      },
+      breakdown: results,
+    });
+
+  } catch (err) {
+    console.error("Error calculating detailed profit and loss:", err);
+    return res.status(500).json({ message: "Failed to calculate detailed profit and loss." });
+  }
+};
+
 
 module.exports = {
   getReceivablesFromCustomers,
@@ -508,6 +667,8 @@ module.exports = {
   getCoolieFromSuppliers,
   // getPayablesToSuppliers,
   getLenderPayables,
-  getSupplierBalances
+  getSupplierBalances,
+  getStockInHand,
+  getDetailedProfitAndLoss
 
 };

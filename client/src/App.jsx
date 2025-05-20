@@ -49,7 +49,7 @@ import EditSupplier from "./Pages/EditSupplier";
 import Lender from "./Pages/Lender";
 import Pickup from "./Pages/Pickup";
 import AddPickup from "./Pages/AddPickup";
-
+import Sample from "./Pages/Sample";
 
 function App() {
   return (
@@ -120,6 +120,7 @@ function App() {
         <Route path="/edit-supplier" element={<EditSupplier />} />
         <Route path ="/add-lender" element={<AddLender/>} />
         <Route path ="/add-pickup" element={<AddPickup/>} />
+        <Route path="/sample" element={<Sample/>} />
       </Routes>
     </>
   );

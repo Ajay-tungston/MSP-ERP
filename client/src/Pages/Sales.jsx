@@ -392,11 +392,11 @@ const Sales = () => {
   
 
   return (
-    <div>
+ <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75">
       <div className="  bg-[#fff] w-full h-screen  ">
-        <div className="w-[665px] h-full left-[1200px] top-[148px] absolute bg-[#fff]">
+        <div className="w-[665px] h-full left-[1200px] top-[148px] absolute bg-[#c92222]">
           <div className="w-[653px] left-[6px] top-[176px] absolute inline-flex flex-col justify-start items-start">
-            <div className="self-stretch px-2.5 py-4 bg-[white] outline-[0.20px] outline-offset-[-0.20px] outline-slate-600/40 inline-flex justify-start items-center gap-[5px]">
+            <div className="self-stretch px-2.5 py-4 bg-[#6fbe08] outline-[0.20px] outline-offset-[-0.20px] outline-slate-600/40 inline-flex justify-start items-center gap-[5px]">
               <div className="flex-1 max-w-16 justify-center text-indigo-950 text-sm font-bold font-['Urbanist'] tracking-wide">
                 No.
               </div>
@@ -500,7 +500,7 @@ const Sales = () => {
             </div>
           </div>
         </div>
-        <div className="w-[865px] h-full left-[329px] top-[148px] absolute bg-[#EEEEEE] shadow-[0px_4px_5.800000190734863px_0px_rgba(0,0,0,0.25)] overflow-y-scroll ">
+        <div className="w-[865px] h-full left-[329px] top-[148px] absolute bg-[#270909] shadow-[0px_4px_5.800000190734863px_0px_rgba(0,0,0,0.25)] overflow-y-scroll ">
           <div className="w-[782px] left-[44px] top-[80px] absolute inline-flex flex-col justify-start items-start gap-2.5">
             <div className="inline-flex justify-start items-center gap-3">
               <div className="justify-start text-slate-500 text-xl font-normal font-['Urbanist']">
@@ -529,11 +529,11 @@ const Sales = () => {
           </div>
         </div>
 
-        <div className="w-[851px] left-[337px] top-[324px] absolute inline-flex flex-col justify-start items-start bf gap-3.5  ">
+        <div className="w-[851px] left-[337px] top-[324px] absolute inline-flex flex-col justify-start items-start bf gap-3.5">
           <div className="self-stretch flex flex-col justify-start items-start  ">
             <div className="self-stretch flex flex-col justify-start items-start">
               {/* Header row */}
-              <div className="self-stretch px-2.5 py-4 relative bg-[white] border-t-[0.20px] border-b-[0.20px] border-slate-600/40 inline-flex justify-start items-center gap-3.5">
+              <div className="self-stretch px-2.5 py-4 relative bg-[#ffffff] border-t-[0.20px] border-b-[0.20px] border-slate-600/40 inline-flex justify-start items-center gap-3.5">
                 <div className="flex-1 max-w-16 justify-center text-indigo-950 text-sm font-bold font-['Urbanist'] tracking-wide">
                   No.
                 </div>

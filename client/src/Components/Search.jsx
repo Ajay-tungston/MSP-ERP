@@ -31,6 +31,9 @@ export default function Navbar() {
     "/whatsapp":"Whatsapp",
     "/paymentin":"Transaction",
     "/paymentout":"Transaction",
+    "/vehicle":"Vehicle",
+    "/money-in":"Vehicle",
+    "/money-out":"Vehicle"
  
   };          
 console.log(location.pathname)

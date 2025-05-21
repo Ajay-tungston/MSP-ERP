@@ -5,8 +5,9 @@ import { FaChevronRight } from "react-icons/fa6";
 import useAxiosPrivate from "../hooks/useAxiosPrivate";
 
 const CashbookHeader = () => {
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const getToday = () => new Date().toISOString().split("T")[0]; 
+  const [startDate, setStartDate] = useState(getToday());
+  const [endDate, setEndDate] = useState(getToday());
   const [transactions, setTransactions] = useState({
     sales: [],
     purchases: [],
@@ -108,32 +109,28 @@ const CashbookHeader = () => {
             <FaPrint className="text-lg" />
             Print
           </button>
-          <div className="flex items-center gap-2 pr-20">
-            <div className="flex flex-col text-sm text-gray-400">
-              <div className="flex items-center gap-2">
-                <label className="mb-1">Date Range</label>
-                <input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => {
-                    setStartDate(e.target.value);
-                    setPage(1); // Reset to first page when date changes
-                  }}
-                  className="px-3 py-2 rounded-md border border-gray-200 text-gray-700 bg-gray-50 focus:outline-none"
-                />
-                <span className="text-gray-500">to</span>
-                <input
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => {
-                    setEndDate(e.target.value);
-                    setPage(1); // Reset to first page when date changes
-                  }}
-                  className="px-3 py-2 rounded-md border border-gray-200 text-gray-700 bg-gray-50 focus:outline-none"
-                />
-              </div>
-            </div>
-          </div>
+          <div className="flex items-center gap-2">
+      <label className="mb-1">Date Range</label>
+      <input
+        type="date"
+        value={startDate}
+        onChange={(e) => {
+          setStartDate(e.target.value || getToday());
+          setPage(1); // Reset to first page when date changes
+        }}
+        className="px-3 py-2 rounded-md border border-gray-200 text-gray-700 bg-gray-50 focus:outline-none"
+      />
+      <span className="text-gray-500">to</span>
+      <input
+        type="date"
+        value={endDate}
+        onChange={(e) => {
+          setEndDate(e.target.value || getToday());
+          setPage(1); // Reset to first page when date changes
+        }}
+        className="px-3 py-2 rounded-md border border-gray-200 text-gray-700 bg-gray-50 focus:outline-none"
+      />
+    </div>
         </div>
       </div>
 

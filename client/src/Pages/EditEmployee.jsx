@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom";
-import { XCircleIcon, PlusCircleIcon } from "@heroicons/react/24/solid";
+import { XCircleIcon, CheckCircleIcon } from "@heroicons/react/24/solid";
 import useAxiosPrivate from "../hooks/useAxiosPrivate";
 
 const EditEmployeeModal = ({ employeeId, setEditPopup,fetchEmployee }) => {
@@ -286,7 +286,7 @@ const EditEmployeeModal = ({ employeeId, setEditPopup,fetchEmployee }) => {
             onClick={handleSubmit}
             className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
           >
-            <PlusCircleIcon className="w-5 h-5" /> Update
+            <CheckCircleIcon className="w-5 h-5" /> Update
           </button>
         </div>
       </div>

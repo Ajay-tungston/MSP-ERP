@@ -1,5 +1,5 @@
 import { useState, } from "react";
-import { XCircleIcon, PlusCircleIcon } from '@heroicons/react/24/outline';
+import { XCircleIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
 import { FaCalendarAlt } from "react-icons/fa";  // Import the FaCalendarAlt icon
 import { useNavigate } from 'react-router-dom';
 
@@ -190,8 +190,8 @@ export default function AddCompanyForm() {
                                     onClick={handleSubmit}
                                     className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
                                 >
-                                    <PlusCircleIcon className="w-5 h-5" />
-                                    Save
+                                    <CheckCircleIcon className="w-5 h-5" />
+                               Update
                                 </button>
                             </div>
                         </div>

@@ -1,23 +1,20 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const pickupSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  route: { type: String, required: true },
-  phone: { type: String, required: true },
-  address: { type: String, required: true },
-  vehicleNo: { type: String, required: true },
-  licenseNo: { type: String, required: true },
-  rate: { type: Number, required: true },
-  date: {
-    type: Date,
+  vehicleName: {
+    type: String,
     required: true,
-    validate: {
-      validator: function(value) {
-        return value <= new Date();
-      },
-      message: "Date cannot be in the future."
-    }
-  }
+  },
+  vehicleNo: {
+    type: String,
+    required: true,
+    unique: true,
+  },
+  rcNo: {
+    type: String,
+    required: true,
+    unique: true,
+  },
 }, { timestamps: true });
 
-module.exports = mongoose.model('Pickup', pickupSchema);
+module.exports = mongoose.model("Pickup", pickupSchema);

@@ -125,6 +125,7 @@ export default function CustomerHeader() {
   type="text"
   placeholder="Search here..."
   value={search}
+    autoComplete="off"
   onChange={(e) => {
     const value = e.target.value;
     setSearch(value);

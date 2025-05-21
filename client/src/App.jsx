@@ -47,9 +47,12 @@ import EditEmployee from "./Pages/EditEmployee";
 import EditItem from "./Pages/EditItem";
 import EditSupplier from "./Pages/EditSupplier";
 import Lender from "./Pages/Lender";
-import Pickup from "./Pages/Pickup";
+
 import AddPickup from "./Pages/AddPickup";
-import Sample from "./Pages/Sample";
+
+import Vehicle from "./Pages/Vehicle";
+import MoneyIn from "./Pages/MoneyIn";
+import MoneyOut from "./Pages/MoneyOut";
 
 function App() {
   return (
@@ -76,11 +79,10 @@ function App() {
 
               <Route path="/commission" element={<Commission />} />
               <Route path="/company" element={<Company />} />
-              <Route path="/pickup" element={<Pickup />} />
               <Route path="/purchase-transaction" element={<Purchasetransaction />} />
               <Route path="/edit-puchase/:id" element={<EditPurchaseTransaction />} />
               <Route path='/sales-transaction' element={<SalesTransaction />} />
-              <Route path='/sales/:id' element={<Sales />} />
+              {/* <Route path='/sales/:id' element={<Sales />} /> */}
              <Route path="/payment/:type" element={<Payment />} />
 
               <Route path='/cashbook' element={<Cashbook />} />
@@ -90,7 +92,9 @@ function App() {
 
               <Route path="/trail" element={<TrialBalance />}/>
               <Route path="/individualsales" element={<IndividualSales/>}/>
-
+              <Route path="/vehicle" element={<Vehicle />} />
+<Route path="/money-in" element={<MoneyIn/>}/>
+<Route path="/money-out" element={<MoneyOut/>}/>
 
               {/* <Route path='/whatsapp' element={<Whatsapp />} /> */}
 
@@ -120,7 +124,9 @@ function App() {
         <Route path="/edit-supplier" element={<EditSupplier />} />
         <Route path ="/add-lender" element={<AddLender/>} />
         <Route path ="/add-pickup" element={<AddPickup/>} />
-        <Route path="/sample" element={<Sample/>} />
+  
+
+        <Route path='/sales/:id' element={<Sales />} />
       </Routes>
     </>
   );

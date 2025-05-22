@@ -130,6 +130,8 @@ function Payment() {
                       ? row?.company?.companyName
                       : row.category === "lender"
                       ? row?.lender?.name
+                      : row.category === "expense"
+                      ? row?.expense?.expense
                       : "N/A"}
                   </td>
                   <td className="p-3">

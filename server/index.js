@@ -17,7 +17,7 @@ app.use(cookieParser());
 app.use("/uploads", express.static(path.join(__dirname, "public/uploads")));
 
 app.use("/welcome", (req, res) => {
-  return res.send("Hello from express");
+  res.sendFile(path.join(__dirname, "views", "welcome.html"));
 });
 
 //admin-routes
@@ -38,6 +38,17 @@ app.use("/admin/trialBalance",require("./routes/admin/trialBalnce/trialBalanceRo
 app.use("/admin/pickup",require("./routes/admin/pickup/adminPickupRoutes"))
 
 app.use("/admin/transaction",require("./routes/admin/transaction/transactionRoutes"))
+
+app.use("*", (req, res) => {
+  if (req.accepts("html")) {
+    res.sendFile(path.join(__dirname, "views", "404.html"));
+  } else if (req.accepts("json")) {
+    res.json({ message: "404-Page not found" });
+  } else {
+    res.type("txt").send("404-Page not found");
+  }
+});
+
 connectDb()
   .then(() =>
     app.listen(PORT, () => {

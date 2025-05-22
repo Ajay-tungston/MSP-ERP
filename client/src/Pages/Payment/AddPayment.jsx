@@ -12,7 +12,6 @@ import Swal from "sweetalert2";
 function AddPayment({ setPopup, fetchData, type }) {
   const [category, setCategory] = useState("supplier");
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
-  console.log(date)
   const [name, setName] = useState("");
   const [name2, setName2] = useState("");
   const [amount, setAmount] = useState("");
@@ -20,6 +19,8 @@ function AddPayment({ setPopup, fetchData, type }) {
   const [errors, setErrors] = useState({});
   const [nameList, setNameList] = useState([]);
   const [sellectedData, setselectedData] = useState(null);
+  console.log(sellectedData);
+  const [purpose, setPurpose] = useState("salary");
   const axiosInstance = useAxiosPrivate();
 
   useEffect(() => {
@@ -33,7 +34,7 @@ function AddPayment({ setPopup, fetchData, type }) {
         category === "customer"
           ? setNameList(response?.data?.customers)
           : setNameList(response?.data);
-          console.log(response)
+        console.log(response);
       } catch (error) {
         console.log(error);
       }
@@ -67,8 +68,8 @@ function AddPayment({ setPopup, fetchData, type }) {
     } else if (parseFloat(amount) <= 0) {
       newErrors.amount = "Amount is invalid";
     }
-    if(note&&note.length>100){
-      newErrors.note="Max length is 100 characters."
+    if (note && note.length > 100) {
+      newErrors.note = "Max length is 100 characters.";
     }
 
     // Set the errors state
@@ -76,12 +77,6 @@ function AddPayment({ setPopup, fetchData, type }) {
 
     // If no errors, proceed to submit
     if (Object.keys(newErrors).length === 0) {
-      console.log("Submitting Data:", {
-        category,
-        date,
-        name,
-        amount,
-      });
       try {
         const payload = {
           paymentType: type,
@@ -108,6 +103,9 @@ function AddPayment({ setPopup, fetchData, type }) {
           case "lender":
             payload.lender = sellectedData?._id;
             break;
+          case "expense":
+            payload.expense = sellectedData?._id;
+            break;
           case "Other":
             payload.otherPartyName = name2;
             break;
@@ -119,6 +117,7 @@ function AddPayment({ setPopup, fetchData, type }) {
           payload
         );
         fetchData();
+        console.log(payload);
         Swal.fire({
           title: "Payment added successfully!",
           icon: "success",
@@ -145,7 +144,19 @@ function AddPayment({ setPopup, fetchData, type }) {
     setErrors({});
     setPopup("");
   };
-
+  useEffect(() => {
+    if (category !== "employee") return;
+    setAmount(sellectedData?.salary);
+  }, [sellectedData]);
+  useEffect(() => {
+    setselectedData(null)
+    setDate("");
+    setName("");
+    setName2("");
+    setAmount("");
+    setErrors({});
+    setnote("")
+  }, [category]);
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75">
       <div className="w-[900px] px-8 py-10 bg-gray-100 rounded-3xl shadow-lg">
@@ -178,6 +189,9 @@ function AddPayment({ setPopup, fetchData, type }) {
                     <option value="supplier">Supplier</option>
                     <option value="company">Company</option>
                     <option value="lender">Lender</option>
+                    {type === "PaymentOut" && (
+                      <option value="expense">Expense</option>
+                    )}
                     <option value="Other">Others</option>
                   </select>
                 </div>
@@ -202,6 +216,21 @@ function AddPayment({ setPopup, fetchData, type }) {
                   />
                 </div>
               </div>
+              {category === "employee" && (
+                <div className="px-6 py-4 bg-gray-50 rounded-xl rounded-tr-xl flex justify-between items-center">
+                  <div className="text-slate-500 text-xl font-normal font-['Urbanist']">
+                    Select Purpose
+                  </div>
+                  <select
+                    value={purpose}
+                    onChange={(e) => setPurpose(e.target.value)}
+                    className="w-40 text-xl font-normal font-['Urbanist'] px-4 py-2 border border-gray-300 rounded-lg"
+                  >
+                    <option value="salary">Salary</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+              )}
             </div>
 
             {/* Right Column */}
@@ -241,6 +270,7 @@ function AddPayment({ setPopup, fetchData, type }) {
                           if (category === "company") return item.companyName;
                           if (category === "customer") return item.name;
                           if (category === "lender") return item.name;
+                          if (category === "expense") return item.expense;
                           return "";
                         }}
                         onChange={(e) => setName(e.target.value)}
@@ -266,8 +296,10 @@ function AddPayment({ setPopup, fetchData, type }) {
                                 ? item?.companyName
                                 : category === "customer"
                                 ? item.name
-                                :category === "lender"
+                                : category === "lender"
                                 ? item.name
+                                : category === "expense"
+                                ? item.expense
                                 : ""}
                             </ComboboxOption>
                           ))}
@@ -305,7 +337,7 @@ function AddPayment({ setPopup, fetchData, type }) {
             {(category === "supplier" ||
               category === "employee" ||
               category === "customer" ||
-            category === "Lender") && 
+              category === "Lender") &&
               sellectedData && (
                 <div className="mb-4">
                   <label className="text-slate-500 text-xl font-normal font-['Urbanist'] pl-6 ">
@@ -321,15 +353,12 @@ function AddPayment({ setPopup, fetchData, type }) {
                 </div>
               )}
             <div>
-           
               <label className="text-slate-500 text-xl font-normal font-['Urbanist'] pl-6">
                 Note:
               </label>
               {errors.note && (
-                  <span className="text-red-600 text-sm ml-6">
-                    {errors.note}
-                  </span>
-                )}
+                <span className="text-red-600 text-sm ml-6">{errors.note}</span>
+              )}
               <div className="px-6 py-4 mt-2 bg-gray-50 rounded-2xl">
                 <textarea
                   value={note}

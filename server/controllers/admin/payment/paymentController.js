@@ -5,7 +5,8 @@ const Customer = require("../../../models/Customer");
 const Employee = require("../../../models/Employee");
 const Company = require("../../../models/Company");  
 const Payment = require("../../../models/Payment");  
-const Lender = require("../../../models/Lender")
+const Lender = require("../../../models/Lender");
+const Expense = require("../../../models/Expense");
 
 const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
 
@@ -19,6 +20,7 @@ const addPayment = async (req, res) => {
       employee,
       company, 
       lender,
+      expense,
       otherPartyName,
       amount,
       paymentMode,
@@ -38,7 +40,7 @@ const addPayment = async (req, res) => {
       return res.status(400).json({ message: "Invalid payment type." });
     }
 
-    if (!['supplier', 'customer', 'Bank', 'employee', 'Other', 'company', 'lender'].includes(category)) {
+    if (!['supplier', 'customer', 'Bank', 'employee', 'Other', 'company', 'lender','expense'].includes(category)) {
       return res.status(400).json({ message: "Invalid category." });
     }
 
@@ -124,6 +126,15 @@ const addPayment = async (req, res) => {
         return res.status(404).json({ message: "Lender not found." });
       }
     }
+    if (category === 'expense') {
+      if (!expense || !isValidObjectId(req.body.expense)) {
+        return res.status(400).json({ message: "Valid expense ID is required." });
+      }
+      const existingexpense = await Expense.findById(expense);
+      if (!existingexpense) {
+        return res.status(404).json({ message: "expense not found." });
+      }
+    }
     
     // Validate Other category (Other Party Name is required)
     if (
@@ -155,6 +166,7 @@ const addPayment = async (req, res) => {
       employee: employee || null,
       company: company || null,
       lender: lender || null,
+      expense: expense || null,
       otherPartyName: otherPartyName || null,
       amount,
       paymentMode,
@@ -194,6 +206,7 @@ const getAllPayments = async (req, res) => {
       .populate({ path: 'customer', select: 'customerName' })
       .populate({ path: 'employee', select: 'employeeName' })
       .populate({ path: 'company', select: 'companyName' })
+      .populate({ path: 'expense', select: 'expense' })
       .populate({path: 'lender', select: 'name'})
       .lean();
 
@@ -220,6 +233,7 @@ const getPaymentById = async (req, res) => {
       .populate({ path: 'customer', select: 'customerName' })
       .populate({ path: 'employee', select: 'employeeName' })
       .populate({ path: 'company', select: 'companyName' })
+      .populate({ path: 'expense', select: 'expense' })
     .populate({path:'lender', select: 'lenderName'})
 
       .lean();

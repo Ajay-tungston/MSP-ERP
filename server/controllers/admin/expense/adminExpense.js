@@ -64,3 +64,18 @@ exports.deleteExpense = async (req, res) => {
     res.status(500).json({ message: 'Server Error' });
   }
 };
+
+exports.getExpenseList = async (req, res) => {
+  try {
+    const search = req.query.search || "";
+    const query = search
+  ? { expense: { $regex: search, $options: "i" } }
+  : {};
+    const expense = await Expense.find(query)
+   
+    return res.status(200).json(expense);
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: "Error getting expense" });
+  }
+};

@@ -212,13 +212,13 @@ function PurchaseReport() {
                       {i?.totalBox}
                     </td>
                     <td className="px-4 py-2 text-slate-900 text-xl font-normal font-['Urbanist']">
-                      {i?.commissionPaid?.toFixed(2)}
+                    ₹ {i?.commissionPaid?.toFixed(2)}
                     </td>
                     <td className="px-4 py-2 text-slate-900 text-xl font-normal font-['Urbanist']">
-                      {i?.grossTotalAmount?.toFixed(2)}
+                    ₹{i?.grossTotalAmount?.toFixed(2)}
                     </td>
                     <td className="px-4 py-2 text-slate-900 text-xl font-normal font-['Urbanist']">
-                      {i?.netTotalAmount?.toFixed(2)}
+                    ₹{i?.netTotalAmount?.toFixed(2)}
                     </td>
                   </tr>
                 ))
@@ -230,17 +230,17 @@ function PurchaseReport() {
         {/* Totals Row */}
         <div className="w-full  px-6 py-4 bg-teal-50 border-b border-gray-200 flex flex-wrap justify-between items-center text-xl font-['Urbanist'] text-slate-500/40">
           <div className="w-full sm:w-auto font-normal">Total</div>
-          <div className="text-slate-900 font-bold">{totalStats?.netTotalAmount?.toFixed(2)}</div>
+          <div className="text-slate-900 font-bold"> ₹{totalStats?.netTotalAmount?.toFixed(2)}</div>
         </div>
   
         {/* Summary Info */}
         <div className="w-full px-6 py-2 bg-white border-b border-gray-200 flex flex-wrap gap-y-3 justify-between items-center text-xl font-['Urbanist']">
-          {[
+         {[
             ["Commission", totalStats?.totalCommission?.toFixed(2)],
             ["Qty(kg)", totalStats?.totalKg],
             ["Qty(Box)", totalStats?.totalBox],
             ["Expenses", totalStats?.totalMarketFee?.toFixed(2)],
-            ["Gross Total", totalStats?.grossTotalAmount?.toFixed(2)],
+            ["Gross Total",totalStats?.grossTotalAmount?.toFixed(2)],
           ].map(([label, value], i) => (
             <div key={i} className="flex gap-2 items-center">
               <div className="text-slate-500/40">{label}</div>

@@ -518,10 +518,10 @@ const IndividualReports = () => {
                     <td className="py-3 px-4">{new Date(entry.dateOfPurchase).toLocaleDateString("en-GB")}</td>
                     <td className="py-3 px-4">{entry.totalKg}</td>
                     <td className="py-3 px-4">{entry.totalBox}</td>
-                    <td className="py-3 px-4">{entry.commissionPaid?.toFixed(2)}</td>
-                    <td className="py-3 px-4">{entry.grossTotalAmount?.toFixed(2)}</td>
-                    <td className="py-3 px-4">{entry.marketFee?.toFixed(2) || "0.00"}</td>
-                    <td className="py-3 px-4">{entry.netTotalAmount?.toFixed(2)}</td>
+                    <td className="py-3 px-4">₹{entry.commissionPaid?.toFixed(2)}</td>
+                    <td className="py-3 px-4">₹{entry.grossTotalAmount?.toFixed(2)}</td>
+                    <td className="py-3 px-4">₹{entry.marketFee?.toFixed(2) || "0.00"}</td>
+                    <td className="py-3 px-4">₹{entry.netTotalAmount?.toFixed(2)}</td>
                     <td className="py-3 px-4 cursor-pointer " onClick={() => handlePurchasePrint(transaction)}>
                       <BsPrinter />
                     </td>

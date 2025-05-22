@@ -187,7 +187,7 @@ export default function CustomerHeader() {
                     <td className="p-2">{customer.discount}%</td>
 
                     <td className="p-2">
-                      ${customer.openingBalance.toFixed(2)}
+                    ₹{customer.openingBalance.toFixed(2)}
                     </td>
                     <td className="p-2 flex items-center gap-8 ">
                       {customer.routeCustomer ? "Yes" : "No"}

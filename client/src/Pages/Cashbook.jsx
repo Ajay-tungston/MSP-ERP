@@ -98,7 +98,7 @@ const CashbookHeader = () => {
           <div className="flex items-center gap-3">
             <span className="text-gray-400">Opening Cash Balance</span>
             <div className="bg-blue-50 text-blue-600 font-medium px-4 py-2 rounded-md">
-              $ {openingBalance.toFixed(2)}
+             ₹ {openingBalance.toFixed(2)}
             </div>
           </div>
         </div>

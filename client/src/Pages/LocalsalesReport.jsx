@@ -4,6 +4,7 @@ import useAxiosPrivate from "../hooks/useAxiosPrivate";
 import OvalSpinner from "../Components/spinners/OvalSpinner";
 import { openSalesRegisterPrintPage } from "../utils/totalSaleReport";
 import Swal from "sweetalert2";
+import { FaChevronRight } from "react-icons/fa6";
 
 function LocalsalesReport() {
   const getToday = () => new Date().toISOString().split("T")[0]; // YYYY-MM-DD format
@@ -98,49 +99,54 @@ function LocalsalesReport() {
         </div>
       )}
       <div className="p-6 bg-white rounded-md mt-10">
-        <div className="text-[20px] text-gray-500 mb-1">
-          Reports &gt; <span className=" font-medium">Local Sales Report</span>
+        <div className="flex items-center text-[20px] text-gray-500 mb-1">
+          Report
+          <FaChevronRight className="mx-2" />
+          <span className="font-medium">Local Sales Report</span>
         </div>
-        <h1 className="text-3xl font-bold text-[#0E0F3C] mb-4 mt-8 p-2">
+
+        <h1 className="text-3xl font-bold text-[#0E0F3C] mb-4  p-2">
           Local Sales Report
         </h1>
         {salesData?.length > 0 &&
-        <div className="flex items-center justify-between mb-4 float-right -mt-[5%] mr-[5%]">
-          <button
-            className="flex items-center gap-1 px-4 py-2  rounded-md bg-[#F9FAFB] "
-            onClick={fetchPrintData}
-          >
-            <Printer size={16} />
-            <span className="font-medium text-[#0E0F3C]">Print</span>
-          </button>
-        </div>}
+          <div className="flex items-center justify-between mb-4 float-right -mt-[5%] mr-[5%]">
+            <button
+              className="flex items-center gap-1 px-4 py-2  rounded-md bg-[#F9FAFB] "
+              onClick={fetchPrintData}
+            >
+              <Printer size={16} />
+              <span className="font-medium text-[#0E0F3C]">Print</span>
+            </button>
+          </div>}
         <div className="flex items-center gap-2 text-sm text-gray-500 float-right">
-      <span>Date Range</span>
-      <input
-        type="date"
-        value={startDate}
-        onChange={(e) => setStartDate(e.target.value || getToday())}
-        placeholder="DD/MM/YYYY"
-        className="px-5 py-3 rounded-md text-sm text-gray-500 bg-[#F9FAFB]"
-      />
-      <span>to</span>
-      <input
-        type="date"
-        value={endDate}
-        onChange={(e) => setEndDate(e.target.value || getToday())}
-        placeholder="DD/MM/YYYY"
-        className="px-5 py-3 rounded-md text-sm text-gray-500 bg-[#F9FAFB]"
-      />
-    </div>
+          <span>Date Range</span>
+          <input
+            type="date"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value || getToday())}
+            placeholder="DD/MM/YYYY"
+            className="w-52 px-4 py-3 bg-gray-50 rounded-xl text-zinc-700 text-xl outline-none"
+          
+          />
+          <span>to</span>
+          <input
+            type="date"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value || getToday())}
+            placeholder="DD/MM/YYYY"
+            className="w-52 px-4 py-3 bg-gray-50 rounded-xl text-zinc-700 text-xl outline-none"
+            />
+         
+        </div>
 
-        <table className="w-full text-sm border rounded-md overflow-hidden mt-[7%]  ">
-          <thead className="bg-[#F9FAFB] text-[#0E0F3C] text-left ">
-            <tr>
-              <th className="p-2 py-3">No.</th>
-              <th className="p-2 py-3">Customer</th>
-              <th className="p-2 py-3">Qty (KG)</th>
-              <th className="p-2 py-3">Qty (Box)</th>
-              <th className="p-2 py-3">Total</th>
+        <table className="w-full text-sm border rounded-md overflow-hidden mt-[6%] ">
+          <thead className="bg-[#F9FAFB] border-b border-gray-200">
+            <tr className="text-indigo-950 text-xl font-bold ">
+              <th className="text-start p-3">No.</th>
+              <th className="text-start p-3">Customer</th>
+              <th className="text-start  p-3">Qty (KG)</th>
+              <th className="text-start p-3">Qty (Box)</th>
+              <th className="text-start  p-3">Total</th>
             </tr>
           </thead>
           <tbody>
@@ -161,14 +167,14 @@ function LocalsalesReport() {
               </tr>
             ) : (
               salesData?.map((i, index) => (
-                <tr key={i.id} className="border-t border-t-[#E8E8ED] ">
-                  <td className="p-2 py-3 ">
+                <tr key={i.id} className="border-b border-gray-200 text-xl text-slate-900">
+                  <td className=" p-3 ">
                     {index + 1 + (currentPage - 1) * limit}
                   </td>
-                  <td className="p-2 py-3">{i?.customerName}</td>
-                  <td className="p-2 py-3">{i?.totalKg}</td>
-                  <td className="p-2 py-3">{i?.totalBox}</td>
-                  <td className="p-2 py-3">{i?.totalAmount?.toFixed(2)}</td>
+                  <td className=" p-3">{i?.customerName}</td>
+                  <td className=" p-3">{i?.totalKg}</td>
+                  <td className=" p-3">{i?.totalBox}</td>
+                  <td className=" p-3">₹{i?.totalAmount?.toFixed(2)}</td>
                 </tr>
               ))
             )}
@@ -177,38 +183,31 @@ function LocalsalesReport() {
 
         {salesData?.length > 0 && (
           <>
-            <div className="flex items-center justify-between mt-4 text-sm">
-              <span className="text-[#0E0F3C]">
+            <div className="flex justify-between items-center pt-6">
+              <span className="text-xl text-slate-900">
                 Page {currentPage} of {totalPages}
               </span>
-              <div className="space-x-4 mr-[7%]">
+              <div className="flex gap-4">
                 <button
-                  className={`${
-                    currentPage === 1
-                      ? "text-gray-400 cursor-not-allowed"
-                      : "text-[#4079ED]"
-                  } px-4 py-3 rounded border bg-gray-100`}
+                  className={`px-6 py-3 rounded-xl border ${currentPage === 1
+                    ? "opacity-30 cursor-not-allowed" : "hover:bg-gray-100"}`}
                   onClick={handlePrevious}
                   disabled={currentPage === 1}
                 >
-                  Previous
+             <span className="text-gray-600 text-lg font-semibold">Previous</span>
                 </button>
                 <button
-                  className={`${
-                    currentPage === totalPages
-                      ? "text-gray-400 cursor-not-allowed"
-                      : "text-[#4079ED]"
-                  } px-4 py-3 rounded border bg-gray-100`}
+                                className={`px-6 py-3 rounded-xl border ${currentPage === totalPages ? "opacity-30 cursor-not-allowed" : "hover:bg-gray-100"}`}
                   onClick={handleNext}
                   disabled={currentPage === totalPages}
                 >
-                  Next
+                 <span className="text-blue-800 text-lg font-semibold">Next</span>
                 </button>
               </div>
             </div>
 
-            <div className="mt-4 text-right bg-green-50 text-[#0E0F3C] px-6 py-3 rounded-md font-semibold text-lg">
-              Grand Total: {garndTotal?.toFixed(2)}
+            <div className="bg-[#F0FDFA] px-6 py-4 rounded-xl flex flex-wrap justify-between mt-8 border border-gray-200">
+              Grand Total: ₹{garndTotal?.toFixed(2)}
             </div>
           </>
         )}

@@ -228,7 +228,7 @@ function PurchaseReport() {
         </div>
   
         {/* Totals Row */}
-        <div className="w-full  px-6 py-4 bg-teal-50 border-b border-gray-200 flex flex-wrap justify-between items-center text-xl font-['Urbanist'] text-slate-500/40">
+        <div className="bg-[#F0FDFA] px-6 py-4 rounded-xl flex flex-wrap justify-between mt-8 border border-gray-200">
           <div className="w-full sm:w-auto font-normal">Total</div>
           <div className="text-slate-900 font-bold"> ₹{totalStats?.netTotalAmount?.toFixed(2)}</div>
         </div>

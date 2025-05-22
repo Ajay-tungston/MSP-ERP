@@ -185,13 +185,13 @@ function Employee() {
                       {employee?.whatsapp}
                     </td>
                     <td className="max-w-20 px-4 py-3 truncate overflow-hidden whitespace-nowrap">
-                      {employee?.openingBalance}
+                    ₹ {employee?.openingBalance}
                     </td>
                     <td className="max-w-32 px-4 py-3 truncate overflow-hidden whitespace-nowrap">
                       {format(parseISO(employee?.joiningDate), "dd/MM/yyyy")}
                     </td>
 
-                    <td className="min-w-32 px-4 py-3">{employee?.salary}</td>
+                    <td className="min-w-32 px-4 py-3">₹{employee?.salary}</td>
 
                     <td className="min-w-4 px-4 py-3 text-blue-600">
                       <LuPencilLine

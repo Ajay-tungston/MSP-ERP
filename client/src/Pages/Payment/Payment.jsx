@@ -135,7 +135,7 @@ function Payment() {
                   <td className="p-3">
                     {format(new Date(row.date), "dd/MM/yyyy")}
                   </td>
-                  <td className="p-3">{row.amount}</td>
+                  <td className="p-3">₹{row.amount}</td>
                   <td className="p-3 text-indigo-600">
                     <PiPrinterLight
                       className="w-5 h-5 cursor-pointer"

@@ -194,7 +194,7 @@ const AddCustomerModal = ({ onClose, setPopup }) => {
               Opening Balance
             </label>
             <div className="w-[300px] flex items-center px-4 py-3 bg-gray-50 rounded-xl">
-              <span className="mr-2 font-bold">$</span>
+              <span className="mr-2 font-bold">₹</span>
               <input
                 type="number"
                 value={formData.balance}

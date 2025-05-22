@@ -78,12 +78,24 @@ function AddSupplier({setPopup,fetchSuppliers}) {
     if (!formData.supplierCode.trim()) {
       newErrors.supplierCode = "Supplier Code is required.";
     }
-    // ... (rest of your validation logic)
-
+    if (!formData.supplierName.trim()) {
+      newErrors.supplierName = "Supplier Name is required.";
+    }
+    if (!formData.phone.trim()) {
+      newErrors.phone = "Phone is required.";
+    }
+    if (!formData.commission.trim()) {
+      newErrors.commission = "Commission is required.";
+    }
+    if (!formData.marketFee.trim()) {
+      newErrors.marketFee = "Market Fee is required.";
+    }
+    
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
+    
 
     try {
       const response = await axiosPrivate.post("/admin/supplier/add", formData);
@@ -139,7 +151,8 @@ function AddSupplier({setPopup,fetchSuppliers}) {
       supplierCode: "",
       supplierName: "",
       phone: "",
-      whatsapp: "",
+     commission:"",
+     marketFee:"",
       requiredFields: "",
     });
     setSameAsPhone(false);
@@ -290,7 +303,7 @@ function AddSupplier({setPopup,fetchSuppliers}) {
           </div>
 
           {/* Advance */}
-          <div className="flex items-center">
+          {/* <div className="flex items-center">
             <label className="w-[172px] text-[#737791]">Advance</label>
             <input
               name="advance"
@@ -299,10 +312,10 @@ function AddSupplier({setPopup,fetchSuppliers}) {
               onChange={handleChange}
               className="w-full sm:w-[350px] px-6 py-4 bg-gray-50 rounded-xl outline-none"
             />
-          </div>
+          </div> */}
 
           {/* Advance Deducted */}
-          <div className="flex items-center">
+          {/* <div className="flex items-center">
             <label className="w-[172px] text-[#737791]">
               Advance Deducted
             </label>
@@ -313,37 +326,57 @@ function AddSupplier({setPopup,fetchSuppliers}) {
               onChange={handleChange}
               className="w-full sm:w-[350px] px-6 py-4 bg-gray-50 rounded-xl outline-none"
             />
-          </div>
+          </div> */}
 
           {/* Commission */}
-          <div className="flex items-center">
-            <label className="w-[172px] text-[#737791]">Commission</label>
-            <input
-              name="commission"
-              type="text"
-              value={formData.commission}
-              onChange={handleChange}
-              className="w-full sm:w-[350px] px-6 py-4 bg-gray-50 rounded-xl outline-none"
-            />
-          </div>
-          <div className="flex justify-start items-center gap-6 sm:gap-12">
-            <label
-              className="min-w-[120px] sm:min-w-[172px] text-[#737791] text-xl font-normal font-['Urbanist']"
-              htmlFor="marketFee"
-            >
-              marketFee 
-            </label>
-            <input
-              id="marketFee"
-              name="marketFee"
-              placeholder="for 1 box"
-              type="number"
-              className={`w-full sm:w-[350px] px-6 py-4 bg-gray-50 rounded-xl text-xl font-normal font-['Urbanist'] ${errors.marketFee ? "border-red-500" : ""
-                }`}
-              value={formData.marketFee}
-              onChange={handleChange}
-            />
-          </div>
+          <div className="flex flex-col">
+  {errors.commission && (
+    <p className="text-red-500 mb-1">{errors.commission}</p>
+  )}
+  <div className="flex items-center">
+    <label className="w-[172px] text-[#737791]">
+      Commission <span className="text-red-500">*</span>
+    </label>
+    <input
+      name="commission"
+      type="text"
+      placeholder="0%"
+      value={formData.commission}
+      onChange={handleChange}
+      className={`w-full sm:w-[350px] px-6 py-4 bg-gray-50 rounded-xl outline-none ${
+        errors.commission ? "border border-red-500" : ""
+      }`}
+    />
+  </div>
+</div>
+
+
+  {/* marketfee */}
+<div className="flex flex-col">
+  {errors.marketFee && (
+    <p className="text-red-500 mb-1">{errors.marketFee}</p>
+  )}
+  <div className="flex items-center">
+    <label
+      className="w-[172px] text-[#737791]"
+      htmlFor="marketFee"
+    >
+      Market Fee <span className="text-red-500">*</span>
+    </label>
+    <input
+      id="marketFee"
+      name="marketFee"
+      placeholder="for 1 box"
+      type="number"
+      className={`w-full sm:w-[350px] px-6 py-4 bg-gray-50 rounded-xl outline-none ${
+        errors.marketFee ? "border border-red-500" : ""
+      }`}
+      value={formData.marketFee}
+      onChange={handleChange}
+    />
+  </div>
+</div>
+
 
           {/* Required-fields error */}
           {errors.requiredFields && (

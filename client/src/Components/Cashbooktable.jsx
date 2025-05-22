@@ -86,9 +86,9 @@ const TransactionTable = ({
       ...item,
       balance: runningBalance,
       formattedDate: new Date(item.date).toLocaleDateString('en-GB'),
-      formattedDebit: item.debit ? `$${item.debit.toFixed(2)}` : '-',
-      formattedCredit: item.credit ? `$${item.credit.toFixed(2)}` : '-',
-      formattedBalance: `$${runningBalance.toFixed(2)}`
+      formattedDebit: item.debit ? `₹${item.debit.toFixed(2)}` : '-',
+      formattedCredit: item.credit ? `₹${item.credit.toFixed(2)}` : '-',
+      formattedBalance: `₹${runningBalance.toFixed(2)}`
     };
   });
 
@@ -105,9 +105,9 @@ const TransactionTable = ({
             <tr>
               <th className="p-4">Date</th>
               <th className="p-4">Description</th>
-              <th className="p-4 text-right">Debit ($)</th>
-              <th className="p-4 text-right">Credit ($)</th>
-              <th className="p-4 text-right">Balance ($)</th>
+              <th className="p-4 text-right">Debit (₹)</th>
+              <th className="p-4 text-right">Credit (₹)</th>
+              <th className="p-4 text-right">Balance (₹)</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-100">
@@ -131,7 +131,7 @@ const TransactionTable = ({
                   <td className="p-4">Opening Balance</td>
                   <td className="p-4 text-right">-</td>
                   <td className="p-4 text-right">-</td>
-                  <td className="p-4 text-right">${openingBalance.toFixed(2)}</td>
+                  <td className="p-4 text-right">₹{openingBalance.toFixed(2)}</td>
                 </tr>
                 
                 {/* Transaction Rows */}
@@ -148,9 +148,9 @@ const TransactionTable = ({
                 {/* Totals Row */}
                 <tr className="bg-green-50 font-semibold text-gray-700">
   <td className="p-4" colSpan="2">Period Totals</td>
-  <td className="p-4 text-right">${summary.totalDebit.toFixed(2)}</td>
-  <td className="p-4 text-right">${summary.totalCredit.toFixed(2)}</td>
-  <td className="p-4 text-right">${summary.closingBalance.toFixed(2)}</td>
+  <td className="p-4 text-right">₹{summary.totalDebit.toFixed(2)}</td>
+  <td className="p-4 text-right">₹{summary.totalCredit.toFixed(2)}</td>
+  <td className="p-4 text-right">₹{summary.closingBalance.toFixed(2)}</td>
 </tr>
 
               </>

@@ -112,6 +112,7 @@ function Item() {
           <input
             type="text"
             value={search}
+              autoComplete="off"
             onChange={(e) => {
               setCurrentPage(1);
               setSearch(e.target.value);

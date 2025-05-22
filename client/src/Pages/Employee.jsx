@@ -110,6 +110,7 @@ function Employee() {
           <input
             type="text"
             value={search}
+              autoComplete="off"
             onChange={(e) => {
               setSearch(e.target.value);
               setCurrentPage(1);

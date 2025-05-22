@@ -98,6 +98,7 @@ export default function CustomerHeader() {
           <input
             type="text"
             value={search}
+              autoComplete="off"
             onChange={(e)=>{
               setCurrentPage(1)
               setSearch(e.target.value)}}

@@ -126,7 +126,7 @@ const FinancialDashboard = () => {
           <h2 className="text-lg font-semibold text-black mb-4">Financial Overview</h2>
           <hr className="mb-4 border-gray-700" />
           <div className="flex justify-center">
-            <PieChart width={700} height={350}>
+            <PieChart width={700} height={300}>
               <Pie
                 data={data}
                 cx="50%"
@@ -173,7 +173,7 @@ const FinancialDashboard = () => {
         {/* Expense Summary */}
         <div className="bg-white shadow-xl rounded-2xl p-4">
       <h2 className="text-xl font-bold text-gray-800 mb-4">Expense Summary</h2>
-      <ResponsiveContainer width="100%" height={300}>
+      <ResponsiveContainer width="100%" height={200}>
         <PieChart>
           <Pie
             data={expenseData}
@@ -188,7 +188,7 @@ const FinancialDashboard = () => {
           </Pie>
         </PieChart>
       </ResponsiveContainer>
-      <div className="text-3xl font-bold text-center -mt-28 mb-4 text-indigo-900">
+      <div className="text-3xl font-bold text-center  text-indigo-900  ">
         ${totalExpense}
       </div>
       <div className="mt-4 space-y-2 text-sm">

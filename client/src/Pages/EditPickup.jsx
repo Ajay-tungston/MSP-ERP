@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { XCircleIcon, PlusCircleIcon } from "@heroicons/react/24/outline";
+import { XCircleIcon, CheckCircleIcon } from "@heroicons/react/24/outline";
 import useAxiosPrivate from "../hooks/useAxiosPrivate";
 import Swal from "sweetalert2";
 
@@ -7,14 +7,9 @@ function EditPickup({ setPopup, fetchPickups, pickupToEdit }) {
   const axiosPrivate = useAxiosPrivate();
 
   const [formData, setFormData] = useState({
-    name: "",
-    route: "",
-    phone: "",
-    date: "",
-    address: "",
+    vehicleName: "",
     vehicleNo: "",
-    licenseNo: "",
-    rate: "",
+    rcNo: "",
   });
 
   const [errors, setErrors] = useState({});
@@ -23,14 +18,9 @@ function EditPickup({ setPopup, fetchPickups, pickupToEdit }) {
   useEffect(() => {
     if (pickupToEdit) {
       setFormData({
-        name: pickupToEdit.name || "",
-        route: pickupToEdit.route || "",
-        phone: pickupToEdit.phone || "",
-        date: pickupToEdit.date ? pickupToEdit.date.slice(0, 10) : "",
-        address: pickupToEdit.address || "",
+        vehicleName: pickupToEdit.vehicleName || "",
         vehicleNo: pickupToEdit.vehicleNo || "",
-        licenseNo: pickupToEdit.licenseNo || "",
-        rate: pickupToEdit.rate || "",
+        rcNo: pickupToEdit.rcNo || "",
       });
     }
   }, [pickupToEdit]);
@@ -53,13 +43,9 @@ function EditPickup({ setPopup, fetchPickups, pickupToEdit }) {
     e.preventDefault();
 
     const newErrors = {};
-    if (!formData.name.trim()) newErrors.name = "Name is required.";
-    if (!formData.route.trim()) newErrors.route = "Route is required.";
-    if (!formData.phone.trim()) newErrors.phone = "Phone is required.";
-    if (!formData.date.trim()) newErrors.date = "Date is required.";
+    if (!formData.vehicleName.trim()) newErrors.vehicleName = "Vehicle Name is required.";
     if (!formData.vehicleNo.trim()) newErrors.vehicleNo = "Vehicle No. is required.";
-    if (!formData.licenseNo.trim()) newErrors.licenseNo = "License No. is required.";
-    if (!String(formData.rate).trim()) newErrors.rate = "Rate is required.";
+    if (!formData.rcNo.trim()) newErrors.rcNo = "RC No. is required.";
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -67,7 +53,10 @@ function EditPickup({ setPopup, fetchPickups, pickupToEdit }) {
     }
 
     try {
-      const response = await axiosPrivate.put(`/admin/pickup/update/${pickupToEdit._id}`, formData);
+      const response = await axiosPrivate.put(
+        `/admin/pickup/update/${pickupToEdit._id}`,
+        formData
+      );
       if (response.status === 200) {
         Swal.fire("Success", "Pickup updated successfully", "success");
         fetchPickups();
@@ -88,43 +77,38 @@ function EditPickup({ setPopup, fetchPickups, pickupToEdit }) {
         className="bg-white shadow-lg"
         style={{
           width: "100%",
-          maxWidth: "1280px",
-          padding: "48px",
-          borderRadius: "24px",
+          maxWidth: "600px",
+          padding: "40px",
+          borderRadius: "20px",
         }}
       >
-        <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-gray-900">
+        <h2 className="text-xl font-semibold text-gray-900 mb-4">
           Edit Pickup
         </h2>
-        <hr className="my-3 border-gray-300" />
+        <hr className="mb-4 border-gray-300" />
 
         {responseError && (
           <p className="text-red-600 font-semibold mb-4">{responseError}</p>
         )}
 
         <form onSubmit={handleSubmit}>
-          <div className="grid gap-[44px] grid-cols-1 sm:grid-cols-2">
+          <div className="grid gap-6 grid-cols-1">
             {[
-              { label: "Name", name: "name", required: true },
-              { label: "Route", name: "route", required: true },
-              { label: "Phone", name: "phone", type: "number", required: true },
-              { label: "Date", name: "date", type: "date", required: true },
-              { label: "Address", name: "address" },
-              { label: "Vehicle No.", name: "vehicleNo", required: true },
-              { label: "License No.", name: "licenseNo", required: true },
-              { label: "Rate", name: "rate", type: "number", required: true },
+              { label: "Vehicle Name", name: "vehicleName" },
+              { label: "Vehicle No.", name: "vehicleNo" },
+              { label: "RC No.", name: "rcNo" },
             ].map((field) => (
               <div className="flex items-center gap-4" key={field.name}>
-                <label className="min-w-[150px] text-[#737791] text-xl font-normal">
-                  {field.label} {field.required && <span className="text-red-500">*</span>}
+                <label className="min-w-[140px] text-[#737791] text-base font-medium">
+                  {field.label} <span className="text-red-500">*</span>
                 </label>
                 <input
-                  type={field.type || "text"}
+                  type="text"
                   name={field.name}
                   placeholder={`Enter ${field.label.toLowerCase()}`}
                   value={formData[field.name]}
                   onChange={handleChange}
-                  className={`w-full sm:w-[350px] h-[56px] rounded-[12px] pt-4 pr-6 pb-4 pl-6 border ${
+                  className={`w-full h-[50px] rounded-lg px-4 border ${
                     errors[field.name] ? "border-red-500" : "border-gray-300"
                   } focus:outline-none focus:ring-2 focus:ring-blue-500`}
                 />
@@ -147,7 +131,7 @@ function EditPickup({ setPopup, fetchPickups, pickupToEdit }) {
               type="submit"
               className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
             >
-              <PlusCircleIcon className="w-5 h-5" />
+              <CheckCircleIcon className="w-5 h-5" />
               Update
             </button>
           </div>

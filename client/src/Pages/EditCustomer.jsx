@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import {useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import useAxiosPrivate from "../hooks/useAxiosPrivate";
-import { XCircleIcon, PlusCircleIcon } from "@heroicons/react/24/solid";
+import { XCircleIcon, CheckCircleIcon } from "@heroicons/react/24/solid";
 const EditCustomerPage = ({customerId,setEditPopup}) => {
   const axiosInstance = useAxiosPrivate();
   const navigate = useNavigate();
@@ -246,8 +246,8 @@ const EditCustomerPage = ({customerId,setEditPopup}) => {
                 onClick={handleSubmit}
                 className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
               >
-                <PlusCircleIcon className="w-5 h-5" />
-                Save
+                <CheckCircleIcon className="w-5 h-5" />
+               Update
               </button>
             </div>
           </div>

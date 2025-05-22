@@ -125,6 +125,7 @@ export default function CustomerHeader() {
   type="text"
   placeholder="Search here..."
   value={search}
+    autoComplete="off"
   onChange={(e) => {
     const value = e.target.value;
     setSearch(value);
@@ -186,7 +187,7 @@ export default function CustomerHeader() {
                     <td className="p-2">{customer.discount}%</td>
 
                     <td className="p-2">
-                      ${customer.openingBalance.toFixed(2)}
+                    ₹{customer.openingBalance.toFixed(2)}
                     </td>
                     <td className="p-2 flex items-center gap-8 ">
                       {customer.routeCustomer ? "Yes" : "No"}

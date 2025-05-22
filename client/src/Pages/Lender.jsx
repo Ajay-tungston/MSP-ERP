@@ -94,6 +94,7 @@ setTotalPages(res.data.totalPages || 1);
 <input
   type="text"
   value={search}
+    autoComplete="off"
   onChange={(e) => {
     setSearch(e.target.value);
     setCurrentPage(1); // reset to first page on new search

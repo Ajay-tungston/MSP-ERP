@@ -6,9 +6,10 @@ import { openSalesRegisterPrintPage } from "../utils/totalSaleReport";
 import Swal from "sweetalert2";
 
 function LocalsalesReport() {
+  const getToday = () => new Date().toISOString().split("T")[0]; // YYYY-MM-DD format
   const [salesData, setSalesData] = useState([]);
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const [startDate, setStartDate] = useState(getToday());
+  const [endDate, setEndDate] = useState(getToday());
   const [loading, setLoading] = useState(false);
   const limit = 10;
   const [currentPage, setCurrentPage] = useState(1);
@@ -113,24 +114,24 @@ function LocalsalesReport() {
             <span className="font-medium text-[#0E0F3C]">Print</span>
           </button>
         </div>}
-        <div className="flex items-center gap-2 text-sm text-gray-500 float-right ">
-          <span>Date Range</span>
-          <input
-            type="date"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-            placeholder="DD/MM/YYYY"
-            className="px-5 py-3  rounded-md text-sm text-gray-500  bg-[#F9FAFB]"
-          />
-          <span>to</span>
-          <input
-            type="date"
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-            placeholder="DD/MM/YYYY"
-            className="px-5 py-3 rounded-md text-sm text-gray-500  bg-[#F9FAFB]"
-          />
-        </div>
+        <div className="flex items-center gap-2 text-sm text-gray-500 float-right">
+      <span>Date Range</span>
+      <input
+        type="date"
+        value={startDate}
+        onChange={(e) => setStartDate(e.target.value || getToday())}
+        placeholder="DD/MM/YYYY"
+        className="px-5 py-3 rounded-md text-sm text-gray-500 bg-[#F9FAFB]"
+      />
+      <span>to</span>
+      <input
+        type="date"
+        value={endDate}
+        onChange={(e) => setEndDate(e.target.value || getToday())}
+        placeholder="DD/MM/YYYY"
+        className="px-5 py-3 rounded-md text-sm text-gray-500 bg-[#F9FAFB]"
+      />
+    </div>
 
         <table className="w-full text-sm border rounded-md overflow-hidden mt-[7%]  ">
           <thead className="bg-[#F9FAFB] text-[#0E0F3C] text-left ">

@@ -26,6 +26,7 @@ const addPayment = async (req, res) => {
       paymentMode,
       date,
       note,
+      purpose
     } = req.body;
 
     let entity;
@@ -105,6 +106,13 @@ const addPayment = async (req, res) => {
       }
     }
 
+    if (
+      purpose &&
+      !['salary', 'other'].includes(purpose)
+    ) {
+      return res.status(400).json({ message: "Invalid purpose type." });
+    }
+
     if (category === "company") {
       if (!company || !isValidObjectId(company)) {
         return res
@@ -172,6 +180,7 @@ const addPayment = async (req, res) => {
       paymentMode,
       date: paymentDate,
       note,
+      purpose: category === "employee" ? purpose : undefined,
     });
 
     await newPayment.save();

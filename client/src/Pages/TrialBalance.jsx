@@ -27,6 +27,16 @@ export default function TrialBalance() {
   const [receivables, setReceivables] = useState({ total: 0, rows: [] });
   const [openReceivableSection, setOpenReceivableSection] = useState(false);
 
+  const [expense, setExpense] = useState({
+    totalExpenses: 0,
+    breakdown: [],
+  });
+  const [openExpenseSection, setOpenExpenseSection] = useState(false);
+  const [expenseLoading, setExpenseLoading] = useState(false);
+  const [expenseError, setExpenseError] = useState(null);
+
+  const [salaryOpen, setSalaryOpen] = useState(false);
+
   // Data state for payables
   const [openPayables, setOpenPayables] = useState({});
 
@@ -45,8 +55,10 @@ export default function TrialBalance() {
   const [employeeReceivables, setEmployeeReceivables] = useState({
     total: 0,
     rows: [],
+    totalSalaries: 0,
+    salaryBreakdown: [],
   });
-
+console.log("eifgfbhewufh",employeeReceivables)
   const [openStockSection, setOpenStockSection] = useState(false);
   const [stockData, setStockData] = useState({ total: 0, rows: [] });
   const [loadingStock, setLoadingStock] = useState(true);
@@ -158,6 +170,7 @@ export default function TrialBalance() {
     fetchPayablesToSuppliers();
     fetchStockData();
     fetchProfitLossData();
+    fetchExpenseData();
   }, [
     // startDate, endDate,
     selectedMonth,
@@ -173,15 +186,17 @@ export default function TrialBalance() {
         // { params: { startDate, endDate } } // Optionally pass date range if required
       );
       console.log("employee", response);
-      const { totalReceivables, breakdown } = response.data;
+      const { totalReceivables, breakdown, totalSalaries, salaryBreakdown } =
+        response.data;
 
       setEmployeeReceivables({
         total: totalReceivables,
         rows: breakdown.map((item) => ({
           label: item.employeeName, // Employee name from backend
-
           amount: item.balance, // Balance for the employee
         })),
+        totalSalaries,
+          salaryBreakdown,
       });
     } catch (err) {
       console.error("Failed to load employee receivables:", err);
@@ -374,13 +389,30 @@ export default function TrialBalance() {
     }
   };
 
+  const fetchExpenseData = async () => {
+    setExpenseLoading(true);
+    try {
+      const response = await axiosPrivate.get(
+        `/admin/trialBalance/expense?month=${selectedMonth}`
+      );
+      setExpense(response?.data);
+    } catch (err) {
+      setExpenseError("Failed to fetch expense");
+      console.log(err);
+    } finally {
+      setExpenseLoading(false);
+    }
+  };
+
   const totalReceivablesSum =
     (receivables?.total || 0) +
     (supplierReceivables?.total || 0) +
     (stockData?.total || 0) +
     (profitLossData?.totalLoss || 0) +
     (employeeReceivables?.total || 0) +
-    (cashBalance?.total || 0);
+    (cashBalance?.total || 0) +
+    (expense?.totalExpenses || 0) +
+    (employeeReceivables?.totalSalaries || 0);
 
   const totalPayablesSum =
     (commissions?.total || 0) +
@@ -746,6 +778,111 @@ export default function TrialBalance() {
                 {loadingCashBalance && <p className="p-4">Loading...</p>}
                 {errorCashBalance && (
                   <p className="p-4 text-red-500">{errorCashBalance}</p>
+                )}
+              </>
+            )}
+          </div>
+
+          <div className="rounded-b-lg">
+            <div
+              className="flex justify-between bg-[#F0F9FF] px-6 py-3 cursor-pointer"
+              onClick={() => setOpenExpenseSection((prev) => !prev)}
+            >
+              <div className="flex items-center gap-2">
+                {openReceivableSection ? (
+                  <ChevronUp size={18} />
+                ) : (
+                  <ChevronDown size={18} />
+                )}
+                <span className="font-semibold text-[#05004E]">Expense</span>
+              </div>
+              <span className="font-semibold text-[#05004E]">
+                ₹{expense?.totalExpenses?.toFixed(2)}
+              </span>
+            </div>
+
+            {openExpenseSection && (
+              <>
+                {expenseLoading && <p className="p-4">Loading...</p>}
+                {expenseError && (
+                  <p className="p-4 text-red-500">{expenseError}</p>
+                )}
+                {!expenseLoading &&
+                  !error &&
+                  expense?.breakdown?.length > 0 && (
+                    <table className="w-full">
+                      <thead className="bg-[#F9FAFB] text-left text-sm text-[#05004E] uppercase border-b border-gray-200">
+                        <tr>
+                          <th className="px-6 py-2 w-4/12">Type</th>
+                          <th className="px-6 py-2 w-4/12">Amount</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {expense?.breakdown?.map((row, idx) => (
+                          <tr
+                            key={idx}
+                            className="border-b border-gray-200 hover:bg-gray-50"
+                          >
+                            <td className="px-6 py-2">{row?.expenseName}</td>
+                            <td className="px-6 py-2">
+                              ₹{row?.totalAmount?.toFixed(2)}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
+              </>
+            )}
+          </div>
+
+          {/* salary section */}
+          <div className="rounded-b-lg">
+            <div
+              className="flex justify-between bg-[#F0F9FF] px-6 py-3 cursor-pointer"
+              onClick={() => setSalaryOpen((prev) => !prev)}
+            >
+              <div className="flex items-center gap-2">
+                {salaryOpen ? (
+                  <ChevronUp size={18} />
+                ) : (
+                  <ChevronDown size={18} />
+                )}
+                <span className="font-semibold text-[#05004E]">
+                  Salary
+                </span>
+              </div>
+              <span className="font-semibold text-[#05004E]">
+                ₹{employeeReceivables?.totalSalaries?.toFixed(2)}
+              </span>
+            </div>
+
+            {salaryOpen && (
+              <>
+                {loading && <p className="p-4">Loading...</p>}
+                {error && <p className="p-4 text-red-500">{error}</p>}
+                {!loading && !error && (
+                  <table className="w-full">
+                    <thead className="bg-[#F9FAFB] text-left text-sm text-[#05004E] uppercase border-b border-gray-200">
+                      <tr>
+                        <th className="px-6 py-2 w-5/12">Employee</th>
+                        <th className="px-6 py-2 w-3/12">Amount</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {employeeReceivables?.salaryBreakdown?.map((row, idx) => (
+                        <tr
+                          key={idx}
+                          className="border-b border-gray-200 hover:bg-gray-50"
+                        >
+                          <td className="px-6 py-2">{row?.employeeName}</td>
+                          <td className="px-6 py-2">
+                            ₹{row?.totalSalary?.toFixed(2)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 )}
               </>
             )}

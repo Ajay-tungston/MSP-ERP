@@ -19,7 +19,6 @@ function AddPayment({ setPopup, fetchData, type }) {
   const [errors, setErrors] = useState({});
   const [nameList, setNameList] = useState([]);
   const [sellectedData, setselectedData] = useState(null);
-  console.log(sellectedData);
   const [purpose, setPurpose] = useState("salary");
   const axiosInstance = useAxiosPrivate();
 
@@ -93,6 +92,7 @@ function AddPayment({ setPopup, fetchData, type }) {
             break;
           case "employee":
             payload.employee = sellectedData?._id;
+            payload.purpose = type === "PaymentOut" ? purpose : "other";
             break;
           case "customer":
             payload.customer = sellectedData?.id;
@@ -145,17 +145,17 @@ function AddPayment({ setPopup, fetchData, type }) {
     setPopup("");
   };
   useEffect(() => {
-    if (category !== "employee") return;
+    if (category !== "employee" ||type === "PaymentIn"||purpose==="other") return;
     setAmount(sellectedData?.salary);
-  }, [sellectedData]);
+  }, [sellectedData,purpose]);
   useEffect(() => {
-    setselectedData(null)
+    setselectedData(null);
     setDate("");
     setName("");
     setName2("");
     setAmount("");
     setErrors({});
-    setnote("")
+    setnote("");
   }, [category]);
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75">
@@ -216,7 +216,7 @@ function AddPayment({ setPopup, fetchData, type }) {
                   />
                 </div>
               </div>
-              {category === "employee" && (
+              {type === "PaymentOut" && category === "employee" && (
                 <div className="px-6 py-4 bg-gray-50 rounded-xl rounded-tr-xl flex justify-between items-center">
                   <div className="text-slate-500 text-xl font-normal font-['Urbanist']">
                     Select Purpose

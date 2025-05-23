@@ -41,6 +41,10 @@ const paymentSchema = new mongoose.Schema({
     ref: 'Expense',
     default: null,
   },
+  purpose:{
+    type:String,
+    enum: ['salary', 'other']
+  },
   otherPartyName: {
     type: String,
     default: null,

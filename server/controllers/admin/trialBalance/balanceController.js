@@ -125,50 +125,82 @@ const getReceivablesFromEmployees = async (req, res) => {
     const year = parseInt(yearStr);
     const month = parseInt(monthStr);
 
-    // Define start and end of month
     const startOfMonth = new Date(year, month - 1, 1);
     const endOfMonth = new Date(year, month, 0, 23, 59, 59, 999);
 
-    // Fetch payments made to employees in the selected month
-    const payments = await Payment.find({
-      paymentType: "PaymentOut",
+    // 1. Fetch "other" payments (for receivables)
+    const otherPayments = await Payment.find({
       category: "employee",
-      date: { $gte: startOfMonth, $lte: endOfMonth }, // Apply date range filter
+      purpose: "other",
+      date: { $gte: startOfMonth, $lte: endOfMonth },
     })
       .populate("employee", "employeeName")
       .lean();
 
-    if (!payments.length) {
-      return res.json({ totalReceivables: 0, breakdown: [] });
-    }
-
     const employeeMap = {};
-
-    payments.forEach((payment) => {
-      const eid = payment.employee?._id.toString();
+    otherPayments.forEach((payment) => {
+      const eid = payment.employee?._id?.toString();
       if (!eid) return;
 
       if (!employeeMap[eid]) {
         employeeMap[eid] = {
-          balance: 0,
           employeeName: payment.employee.employeeName,
+          balance: 0,
         };
       }
 
-      employeeMap[eid].balance += payment.amount;
+      if (payment.paymentType === "PaymentOut") {
+        employeeMap[eid].balance += payment.amount;
+      } else if (payment.paymentType === "PaymentIn") {
+        employeeMap[eid].balance -= payment.amount;
+      }
     });
 
-    const breakdown = Object.values(employeeMap);
+    const breakdown = Object.values(employeeMap).filter(e => e.balance !== 0);
     const totalReceivables = breakdown.reduce((sum, e) => sum + e.balance, 0);
 
-    res.json({ month: selectedMonth, totalReceivables, breakdown });
+    // 2. Fetch "salary" payments
+    const salaryPayments = await Payment.find({
+      category: "employee",
+      purpose: "salary",
+      paymentType: "PaymentOut",
+      date: { $gte: startOfMonth, $lte: endOfMonth },
+    })
+      .populate("employee", "employeeName")
+      .lean();
+
+    const salaryMap = {};
+    salaryPayments.forEach((payment) => {
+      const eid = payment.employee?._id?.toString();
+      if (!eid) return;
+
+      if (!salaryMap[eid]) {
+        salaryMap[eid] = {
+          employeeName: payment.employee.employeeName,
+          totalSalary: 0,
+        };
+      }
+
+      salaryMap[eid].totalSalary += payment.amount;
+    });
+
+    const salaryBreakdown = Object.values(salaryMap);
+    const totalSalaries = salaryBreakdown.reduce((sum, e) => sum + e.totalSalary, 0);
+
+    // 3. Return combined response
+    res.json({
+      month: selectedMonth,
+      totalReceivables,
+      breakdown,
+      totalSalaries,
+      salaryBreakdown,
+    });
   } catch (err) {
-    console.error("Error fetching employee receivables:", err);
-    res
-      .status(500)
-      .json({ message: "Failed to fetch receivables from employees." });
+    console.error("Error fetching employee receivables/salaries:", err);
+    res.status(500).json({ message: "Failed to fetch employee data." });
   }
 };
+
 
 // ========== 3. Receivables from market ==========
 //no idea
@@ -767,6 +799,73 @@ const getDetailedProfitAndLoss = async (req, res) => {
   }
 };
 
+
+const getExpensePaymentsByMonth = async (req, res) => {
+  try {
+    const selectedMonth = req.query.month; // e.g., "2025-05"
+
+    if (!selectedMonth || !/^\d{4}-\d{2}$/.test(selectedMonth)) {
+      return res
+        .status(400)
+        .json({ message: "Invalid month format. Use YYYY-MM" });
+    }
+
+    const [yearStr, monthStr] = selectedMonth.split("-");
+    const year = parseInt(yearStr);
+    const month = parseInt(monthStr);
+
+    const startOfMonth = new Date(year, month - 1, 1);
+    const endOfMonth = new Date(year, month, 0, 23, 59, 59, 999);
+
+    const results = await Payment.aggregate([
+      {
+        $match: {
+          category: "expense",
+          paymentType: "PaymentOut",
+          date: { $gte: startOfMonth, $lte: endOfMonth },
+        },
+      },
+      {
+        $group: {
+          _id: "$expense", // group by expense ID
+          totalAmount: { $sum: "$amount" },
+        },
+      },
+      {
+        $lookup: {
+          from: "expenses",
+          localField: "_id",
+          foreignField: "_id",
+          as: "expenseInfo",
+        },
+      },
+      {
+        $unwind: "$expenseInfo",
+      },
+      {
+        $project: {
+          _id: 0,
+          expenseId: "$_id",
+          expenseName: "$expenseInfo.expense",
+          totalAmount: 1,
+        },
+      },
+    ]);
+
+    const totalExpenses = results.reduce((sum, r) => sum + r.totalAmount, 0);
+
+    res.json({
+      month: selectedMonth,
+      totalExpenses,
+      breakdown: results,
+    });
+  } catch (err) {
+    console.error("Error fetching grouped expense payments:", err);
+    res.status(500).json({ message: "Failed to fetch expense payments." });
+  }
+};
+
+
 module.exports = {
   getReceivablesFromCustomers,
   // getSupplierPayables,
@@ -780,4 +879,5 @@ module.exports = {
   getSupplierBalances,
   getStockInHand,
   getDetailedProfitAndLoss,
+  getExpensePaymentsByMonth
 };

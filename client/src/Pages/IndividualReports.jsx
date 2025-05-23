@@ -464,7 +464,7 @@ const IndividualReports = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse font-['Urbanist']">
             <thead className="bg-[#F9FAFB] border-b border-gray-200">
-              <tr className="text-indigo-950 text-xl font-bold">
+              <tr className="text-indigo-950 text-lg font-bold">
                 <th className="py-3 px-4">No.</th>
                 <th className="py-3 px-4">Date</th>
                 <th className="py-3 px-4">Qty (KG)</th>
@@ -487,7 +487,7 @@ const IndividualReports = () => {
                 </tr>
               ) : reportsData?.length === 0 ? (
                 <tr>
-                  <td colSpan="11" className="text-center py-10 text-gray-500 font-bold text-xl">
+                  <td colSpan="11" className="text-center py-10 text-gray-500 font-bold text-lg">
                     No reports available for the selected date range.
                   </td>
                 </tr>

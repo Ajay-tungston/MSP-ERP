@@ -159,7 +159,7 @@ function PurchaseReport() {
         <div className="overflow-x-auto">
           <table className="min-w-[1000px] w-full table-auto">
             <thead>
-              <tr className="bg-gray-50 border-b border-gray-200">
+              <tr className="bg-gray-50 border-b border-gray-200 text-lg">
                 {[
                   "No.",
                   "Date",
@@ -196,7 +196,7 @@ function PurchaseReport() {
                 purchaseData?.purchaseEntries?.map((i, index) => (
                   <tr
                     key={i?._id}
-                    className="bg-white border-b border-gray-200"
+                    className="bg-white border-b border-gray-200 text-lg"
                   >
                     <td className="px-4 py-2 text-slate-900 text-xl font-normal font-['Urbanist']">{index + 1 + (currentPage - 1) * limit}</td>
                     <td className="px-4 py-2 text-slate-900 text-xl font-normal font-['Urbanist']">

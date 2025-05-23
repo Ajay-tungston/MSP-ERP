@@ -132,7 +132,7 @@ function Employee() {
         <div className="mt-10 bg-white">
           <table className="w-full border-collapse text-gray-900">
             <thead>
-              <tr className="text-left text-gray-900 font-bold border-b-2 border-gray-200 bg-[#F9FAFB]">
+              <tr className="text-left text-gray-900 font-bold border-b-2 border-gray-200 bg-[#F9FAFB] text-lg">
                 <th className="max-w-5 px-4 py-2">No.</th>
                 <th className="max-w-20 px-4 py-2">Name</th>
                 <th className="max-w-30 px-4 py-2">Address</th>
@@ -167,7 +167,7 @@ function Employee() {
                 employee?.employees?.map((employee, index) => (
                   <tr
                     key={employee._id}
-                    className="bg-white border-b border-gray-200 hover:bg-gray-50 font-['Urbanist'] "
+                    className="bg-white border-b border-gray-200 hover:bg-gray-50 font-['Urbanist'] text-lg "
                   >
                     <td className="max-w-5 px-4 py-3">
                       {index + 1 + (currentPage - 1) * limit}

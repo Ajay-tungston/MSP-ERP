@@ -49,10 +49,9 @@ import EditSupplier from "./Pages/EditSupplier";
 import Lender from "./Pages/Lender";
 
 import AddPickup from "./Pages/AddPickup";
-
+import Report from "./Pages/Report";
 import Vehicle from "./Pages/Vehicle";
-import MoneyIn from "./Pages/MoneyIn";
-import MoneyOut from "./Pages/MoneyOut";
+
 
 function App() {
   return (
@@ -93,8 +92,7 @@ function App() {
               <Route path="/trail" element={<TrialBalance />} />
               <Route path="/individualsales" element={<IndividualSales />} />
               <Route path="/vehicle" element={<Vehicle />} />
-              <Route path="/money-in" element={<MoneyIn />} />
-              <Route path="/money-out" element={<MoneyOut />} />
+              <Route path="/report" element={<Report />} />
 
               {/* <Route path='/whatsapp' element={<Whatsapp />} /> */}
 

@@ -141,7 +141,7 @@ function LocalsalesReport() {
 
         <table className="w-full text-sm border rounded-md overflow-hidden mt-[6%] ">
           <thead className="bg-[#F9FAFB] border-b border-gray-200">
-            <tr className="text-indigo-950 text-xl font-bold ">
+            <tr className="text-indigo-950 text-lg font-bold ">
               <th className="text-start p-3">No.</th>
               <th className="text-start p-3">Customer</th>
               <th className="text-start  p-3">Qty (KG)</th>
@@ -160,7 +160,7 @@ function LocalsalesReport() {
               <tr>
                 <td
                   colSpan="8"
-                  className="text-center py-10 text-xl font-bold text-gray-400"
+                  className="text-center py-10 text-lg font-bold text-gray-400"
                 >
                   No more reports available for the selected date range.
                 </td>

@@ -8,7 +8,7 @@ const paymentSchema = new mongoose.Schema({
   },
   category: {
     type: String,
-    enum: ['supplier', 'customer', 'Bank', 'employee','company', 'Other' ,'lender'],
+    enum: ['supplier', 'customer', 'Bank', 'employee','company', 'Other' ,'lender','vehicle'],
     required: true,
   },
   supplier: {
@@ -36,6 +36,13 @@ const paymentSchema = new mongoose.Schema({
     ref: 'Company',
     default: null,
   },
+
+  vehicle: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Pickup",
+    default: null
+  },
+  
   otherPartyName: {
     type: String,
     default: null,

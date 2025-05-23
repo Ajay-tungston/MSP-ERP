@@ -308,7 +308,7 @@ export default function IndividualSales() {
             {tableRows.map((row) => (
               <div
                 key={row.key}
-                className="flex items-center text-xl py-3 border-b last:border-none border-gray-200 "
+                className="flex items-center text-lg py-3 border-b last:border-none border-gray-200 "
               >
                 <div className="min-w-[152px]">{row.code}</div>
                 <div className="min-w-[152px]">{row.item}</div>
@@ -322,7 +322,7 @@ export default function IndividualSales() {
 
             {/* Grand Total */}
             {tableRows.length > 0 && (
-              <div className=" bg-[#F0FDFA] flex items-center text-xl py-3 border-t border-gray-300 font-semibold">
+              <div className=" bg-[#F0FDFA] flex items-center text-lg py-3 border-t border-gray-300 font-semibold">
                 <div className="min-w-[152px]"></div>
                 <div className="min-w-[152px]"></div>
                 <div className="min-w-[152px]"></div>

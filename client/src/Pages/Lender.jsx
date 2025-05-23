@@ -131,7 +131,7 @@ export default function Lender() {
         <div className="mt-10 px-4">
           <table className="w-full border-collapse text-gray-900">
             <thead>
-              <tr className="bg-gray-100 border-b-2 border-gray-200 text-left">
+              <tr className="bg-gray-100 border-b-2 border-gray-200 text-left text-lg">
                 <th className="p-3">No.</th>
                 <th className="p-3">Lender Name</th>
                 <th className="p-3">Phone Number</th>
@@ -158,7 +158,7 @@ export default function Lender() {
                 lenders.map((lender, index) => (
                   <tr
                     key={lender._id}
-                    className={`border-b border-gray-200 hover:bg-gray-50 ${selectedRows.includes(lender._id) ? "bg-gray-50" : ""
+                    className={`border-b border-gray-200 hover:bg-gray-50 text-lg ${selectedRows.includes(lender._id) ? "bg-gray-50" : ""
                       }`}
                   >
                     <td className="p-3">{index + 1 + (currentPage - 1) * limit}</td>

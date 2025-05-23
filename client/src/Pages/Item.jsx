@@ -133,7 +133,7 @@ function Item() {
         <div className="mt-10 bg-white">
           <table className="w-full border-collapse text-gray-900">
             <thead>
-              <tr className="text-left text-gray-900 font-bold border-b-2 border-gray-200 bg-[#F9FAFB]">
+              <tr className="text-left text-gray-900 font-bold border-b-2 border-gray-200 bg-[#F9FAFB] text-lg">
                 <th className="p-3">No.</th>
                 <th className="p-3">Item Code</th>
                 <th className="p-3">Item Name</th>
@@ -158,7 +158,7 @@ function Item() {
                 items.map((item, index) => (
                   <tr
                     key={item.id}
-                    className="border-b border-gray-200 hover:bg-gray-50 bg-white"
+                    className="border-b border-gray-200 hover:bg-gray-50 bg-white text-lg"
                   >
                     <td className="p-3">
                       {index + 1 + (currentPage - 1) * limit}

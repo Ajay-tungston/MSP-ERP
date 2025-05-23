@@ -33,7 +33,7 @@ function AddPayment({ setPopup, fetchData, type }) {
         category === "customer"
           ? setNameList(response?.data?.customers)
           : setNameList(response?.data);
-          console.log(response)
+        console.log(response)
       } catch (error) {
         console.log(error);
       }
@@ -67,8 +67,8 @@ function AddPayment({ setPopup, fetchData, type }) {
     } else if (parseFloat(amount) <= 0) {
       newErrors.amount = "Amount is invalid";
     }
-    if(note&&note.length>100){
-      newErrors.note="Max length is 100 characters."
+    if (note && note.length > 100) {
+      newErrors.note = "Max length is 100 characters."
     }
 
     // Set the errors state
@@ -108,6 +108,10 @@ function AddPayment({ setPopup, fetchData, type }) {
           case "lender":
             payload.lender = sellectedData?._id;
             break;
+          case "vehicle":
+            payload.vehicle = sellectedData?._id;
+            break;
+
           case "Other":
             payload.otherPartyName = name2;
             break;
@@ -117,7 +121,9 @@ function AddPayment({ setPopup, fetchData, type }) {
         const response = await axiosInstance.post(
           `/admin/payment/add`,
           payload
+     
         );
+        console.log(response)
         fetchData();
         Swal.fire({
           title: "Payment added successfully!",
@@ -178,6 +184,8 @@ function AddPayment({ setPopup, fetchData, type }) {
                     <option value="supplier">Supplier</option>
                     <option value="company">Company</option>
                     <option value="lender">Lender</option>
+                    <option value="vehicle">Vehicle</option>
+
                     <option value="Other">Others</option>
                   </select>
                 </div>
@@ -230,7 +238,7 @@ function AddPayment({ setPopup, fetchData, type }) {
                     <Combobox
                       value={sellectedData}
                       onChange={setselectedData}
-                      // onClose={() => setselectedData("")}
+                    // onClose={() => setselectedData("")}
                     >
                       <ComboboxInput
                         aria-label="Name"
@@ -241,6 +249,7 @@ function AddPayment({ setPopup, fetchData, type }) {
                           if (category === "company") return item.companyName;
                           if (category === "customer") return item.name;
                           if (category === "lender") return item.name;
+                          if (category === "vehicle") return item.vehicleName;
                           return "";
                         }}
                         onChange={(e) => setName(e.target.value)}
@@ -261,14 +270,17 @@ function AddPayment({ setPopup, fetchData, type }) {
                               {category === "supplier"
                                 ? item?.supplierName
                                 : category === "employee"
-                                ? item?.employeeName
-                                : category === "company"
-                                ? item?.companyName
-                                : category === "customer"
-                                ? item.name
-                                :category === "lender"
-                                ? item.name
-                                : ""}
+                                  ? item?.employeeName
+                                  : category === "company"
+                                    ? item?.companyName
+                                    : category === "customer"
+                                      ? item.name
+                                      : category === "lender"
+                                        ? item.name
+                                        : category === "vehicle"
+                                          ? item.vehicleName // Add this line
+                                          : ""}
+
                             </ComboboxOption>
                           ))}
                         </ComboboxOptions>
@@ -305,7 +317,9 @@ function AddPayment({ setPopup, fetchData, type }) {
             {(category === "supplier" ||
               category === "employee" ||
               category === "customer" ||
-            category === "Lender") && 
+              category === "lender" ||
+              category === "vehicle") && // Add here
+
               sellectedData && (
                 <div className="mb-4">
                   <label className="text-slate-500 text-xl font-normal font-['Urbanist'] pl-6 ">
@@ -321,15 +335,15 @@ function AddPayment({ setPopup, fetchData, type }) {
                 </div>
               )}
             <div>
-           
+
               <label className="text-slate-500 text-xl font-normal font-['Urbanist'] pl-6">
                 Note:
               </label>
               {errors.note && (
-                  <span className="text-red-600 text-sm ml-6">
-                    {errors.note}
-                  </span>
-                )}
+                <span className="text-red-600 text-sm ml-6">
+                  {errors.note}
+                </span>
+              )}
               <div className="px-6 py-4 mt-2 bg-gray-50 rounded-2xl">
                 <textarea
                   value={note}

@@ -476,7 +476,7 @@ function Purchasetransaction() {
               </div>
 
               {/* Table Header */}
-              <div className="w-full grid grid-cols-12 gap-4 bg-gray-50 px-6 py-4 font-bold text-indigo-950 text-xl border-b">
+              <div className="w-full grid grid-cols-12 gap-4 bg-gray-50 px-6 py-4 font-bold text-indigo-950  border-b text-lg">
                 <div className="col-span-1">No.</div>
                 <div className="col-span-3">Item Name</div>
                 <div className="col-span-2">Qty (KG)</div>
@@ -489,7 +489,7 @@ function Purchasetransaction() {
               {items.map((item, index) => (
                 <div
                   key={index}
-                  className="relative w-full grid grid-cols-12 gap-4  px-6 py-4 text-xl border-b  group"
+                  className="relative w-full grid grid-cols-12 gap-4  px-6 py-4 text-lg border-b  group"
                 >
                   {/* No. */}
                   <input

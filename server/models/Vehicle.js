@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const pickupSchema = new mongoose.Schema({
+const vehicleSchema = new mongoose.Schema({
   vehicleName: {
     type: String,
     required: true,
@@ -17,4 +17,4 @@ const pickupSchema = new mongoose.Schema({
   },
 }, { timestamps: true });
 
-module.exports = mongoose.model("Pickup", pickupSchema);
+module.exports = mongoose.model("Pickup", vehicleSchema);

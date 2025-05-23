@@ -89,7 +89,7 @@ function Payment() {
       <div className="mt-4 bg-white">
         <table className="w-full border-collapse text-gray-900">
           <thead>
-            <tr className="text-left text-gray-900 font-bold border-b-2 border-gray-200 bg-[#F9FAFB]">
+            <tr className="text-left text-gray-900 font-bold border-b-2 border-gray-200 bg-[#F9FAFB] text-lg">
               <th className="p-3">Category</th>
               <th className="p-3">Name</th>
               <th className="p-3">Date</th>
@@ -114,7 +114,7 @@ function Payment() {
               paymentIndata?.map((row, index) => (
                 <tr
                   key={index}
-                  className="border-b border-gray-200 hover:bg-gray-50 bg-white"
+                  className="border-b border-gray-200 hover:bg-gray-50 bg-white text-lg"
                 >
                   <td className="p-3">{row.category}</td>
                   <td className="p-3">
@@ -132,12 +132,14 @@ function Payment() {
                       ? row?.lender?.name
                       : row.category === "expense"
                       ? row?.expense?.expense
+                      : row.category === "vehicle"
+                      ? row?.vehicle?.vehicleName  // or vehicleName if applicable
                       : "N/A"}
                   </td>
                   <td className="p-3">
                     {format(new Date(row.date), "dd/MM/yyyy")}
                   </td>
-                  <td className="p-3">{row.amount}</td>
+                  <td className="p-3">₹{row.amount}</td>
                   <td className="p-3 text-indigo-600">
                     <PiPrinterLight
                       className="w-5 h-5 cursor-pointer"
@@ -145,6 +147,8 @@ function Payment() {
                     />
                   </td>
                 </tr>
+
+
               ))
             )}
           </tbody>

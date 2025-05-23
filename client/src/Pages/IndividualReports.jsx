@@ -351,227 +351,227 @@ const IndividualReports = () => {
       <span className="text-slate-900 text-xl font-bold">{value || "0.00"}</span>
     </div>
   );
-  
+
 
   return (
     <>
-    {/* Loading Overlays */}
-    {watsappLoading && (
-      <div className="fixed inset-0 bg-white/60 backdrop-blur-sm z-50 flex items-center justify-center">
-        <div className="flex flex-col items-center">
-          <div className="w-10 h-10 border-4 border-green-500 border-t-transparent rounded-full animate-spin mb-3"></div>
-          <p className="text-gray-700 text-sm font-medium">Sending via WhatsApp...</p>
-        </div>
-      </div>
-    )}
-    {printLoading && (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/50 backdrop-blur-sm">
-        <OvalSpinner />
-      </div>
-    )}
-  
-    <div className="p-9 bg-white rounded-3xl mt-10 shadow-md space-y-6">
-      {/* Breadcrumb & Heading */}
-      <div className="space-y-2">
-        <div className="flex items-center gap-2 text-gray-500 text-xl ">
-          Reports <FaChevronRight /> Individual Purchase Report
-        </div>
-        <div className="pt-5  text-3xl font-bold text-indigo-950">Individual Purchase Report</div>
-      </div>
-  
-      {/* Actions */}
-    
-      {/* Filters */}
-      <div className="flex flex-wrap  justify-between  ">
-        {/* Supplier Search */}
-        <Combobox
-          value={selectedSupplier}
-          onChange={(value) => {
-            setSearchTeam(value.supplierName);
-            setSelectedSupplier(value);
-            setCurrentPage(1);
-          }}
-        >
-          <div className="relative w-64 bg-gray-50 rounded-2xl px-3 flex items-center h-14">
-            <BsSearch className="text-gray-500" />
-            <ComboboxInput
-              displayValue={(supplier) => supplier?.supplierName || searchTerm}
-              onChange={(e) => {
-                setSearchTeam(e.target.value);
-                setSelectedSupplier(null);
-              }}
-              onFocus={() => setShowDropdown(true)}
-              onBlur={() => setTimeout(() => setShowDropdown(false), 100)}
-              placeholder="Search Supplier..."
-              className="w-full bg-transparent pl-2 text-xl text-slate-500 outline-none"
-            />
-            {showDropdown && suggestions.length > 0 && (
-              <ComboboxOptions className="absolute z-10 top-full left-0 w-full bg-white rounded-b-2xl shadow max-h-60 overflow-y-auto">
-                {suggestions.map((supplier) => (
-                  <ComboboxOption
-                    key={supplier._id}
-                    value={supplier}
-                    className={({ active }) =>
-                      `px-4 py-2 text-base cursor-pointer text-slate-600 ${active ? "bg-gray-100" : ""}`
-                    }
-                  >
-                    {supplier.supplierName}
-                  </ComboboxOption>
-                ))}
-              </ComboboxOptions>
-            )}
+      {/* Loading Overlays */}
+      {watsappLoading && (
+        <div className="fixed inset-0 bg-white/60 backdrop-blur-sm z-50 flex items-center justify-center">
+          <div className="flex flex-col items-center">
+            <div className="w-10 h-10 border-4 border-green-500 border-t-transparent rounded-full animate-spin mb-3"></div>
+            <p className="text-gray-700 text-sm font-medium">Sending via WhatsApp...</p>
           </div>
-        </Combobox>
-  
-        {/* Date Pickers */}
-        <div className="flex gap-4 items-center">
-        {reportsData?.length > 0 && (
-        <div className="flex justify-end">
-          <button
-            onClick={fetchPrintData}
-            className="bg-gray-100 hover:bg-gray-200 px-6 py-3 rounded-xl flex items-center gap-3"
-          >
-            <BsPrinter className="text-2xl text-indigo-950" />
-            <span className="text-indigo-950 text-xl font-bold">Print</span>
-          </button>
         </div>
       )}
-  
-          <label className="text-slate-500 text-xl">From</label>
-          <input
-            type="date"
-            value={startDate}
-            onChange={(e) => {
-              setStartDate(e.target.value);
-              setCurrentPage(1);
-            }}
-            className="w-52 px-4 py-3 bg-gray-50 rounded-xl text-zinc-700 text-xl outline-none"
-          />
-          <label className="text-slate-500 text-xl">To</label>
-          <input
-            type="date"
-            value={endDate}
-            onChange={(e) => {
-              setEndDate(e.target.value);
-              setCurrentPage(1);
-            }}
-            className="w-52 px-4 py-3 bg-gray-50 rounded-xl text-zinc-700 text-xl outline-none"
-          />
+      {printLoading && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/50 backdrop-blur-sm">
+          <OvalSpinner />
         </div>
-      </div>
-  
-      {/* Data Table */}
-      <div className="overflow-x-auto">
-        <table className="w-full text-left border-collapse font-['Urbanist']">
-          <thead className="bg-gray-50 border-b border-gray-200">
-            <tr className="text-indigo-950 text-xl font-bold">
-              <th className="py-3 px-4">No.</th>
-              <th className="py-3 px-4">Date</th>
-              <th className="py-3 px-4">Qty (KG)</th>
-              <th className="py-3 px-4">Qty (Box)</th>
-              <th className="py-3 px-4">Commission</th>
-              <th className="py-3 px-4">Gross</th>
-              <th className="py-3 px-4">Expenses</th>
-              <th className="py-3 px-4">Total</th>
-              <th className="py-3 px-4 "></th>
-              <th className="py-3 px-4"></th>
-              <th className="py-3 px-4"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr>
-                <td colSpan="11" className="text-center py-10">
-                  <OvalSpinner />
-                </td>
-              </tr>
-            ) : reportsData?.length === 0 ? (
-              <tr>
-                <td colSpan="11" className="text-center py-10 text-gray-500 font-bold text-xl">
-                  No reports available for the selected date range.
-                </td>
-              </tr>
-            ) : (
-              reportsData.map((entry, index) => {
-                const transaction = {
-                  selectedSupplier,
-                  purchaseCount: entry?.purchaseNumber,
-                  dateOfPurchase: entry?.dateOfPurchase,
-                  items: entry?.items?.map((i) => ({
-                    name: "name1",
-                    price: i?.unitPrice,
-                    kg: i?.quantityType === "kg" ? i?.quantity : "",
-                    box: i?.quantityType === "box" ? i?.quantity : "",
-                    total: i.totalCost,
-                  })),
-                  totalQuantityInBox: entry?.totalBox,
-                  totalQuantityInKg: entry?.totalKg,
-                  totalPrice: entry?.grossTotalAmount,
-                  commission: entry?.commissionPaid,
-                  marketFee: entry?.marketFee,
-                  totalDeduction: entry?.commissionPaid + entry?.marketFee,
-                };
-  
-                return (
-                  <tr key={entry._id} className="border-b border-gray-200 text-xl text-slate-900">
-                    <td className="py-3 px-4">{index + 1}</td>
-                    <td className="py-3 px-4">{new Date(entry.dateOfPurchase).toLocaleDateString("en-GB")}</td>
-                    <td className="py-3 px-4">{entry.totalKg}</td>
-                    <td className="py-3 px-4">{entry.totalBox}</td>
-                    <td className="py-3 px-4">₹{entry.commissionPaid?.toFixed(2)}</td>
-                    <td className="py-3 px-4">₹{entry.grossTotalAmount?.toFixed(2)}</td>
-                    <td className="py-3 px-4">₹{entry.marketFee?.toFixed(2) || "0.00"}</td>
-                    <td className="py-3 px-4">₹{entry.netTotalAmount?.toFixed(2)}</td>
-                    <td className="py-3 px-4 cursor-pointer " onClick={() => handlePurchasePrint(transaction)}>
-                      <BsPrinter />
-                    </td>
-                    <td className="py-3 px-4 cursor-pointer text-blue-700" onClick={() => navigate(`/edit-puchase/${entry?._id}`)}>
-                      <TbPencilMinus />
-                    </td>
-                    <td className="py-3 px-4 cursor-pointer text-green-600" onClick={() => handleSendViaWhatsApp(transaction, selectedSupplier, entry?.dateOfPurchase)}>
-                      <FaWhatsapp />
-                    </td>
-                  </tr>
-                );
-              })
+      )}
+
+      <div className="p-9 bg-white rounded-3xl mt-10 shadow-md space-y-6">
+        {/* Breadcrumb & Heading */}
+        <div className="space-y-2">
+          <div className="flex items-center gap-2 text-gray-500 text-xl ">
+            Reports <FaChevronRight /> Individual Purchase Report
+          </div>
+          <div className="pt-5  text-3xl font-bold text-indigo-950">Individual Purchase Report</div>
+        </div>
+
+        {/* Actions */}
+
+        {/* Filters */}
+        <div className="flex flex-wrap  justify-between  ">
+          {/* Supplier Search */}
+          <Combobox
+            value={selectedSupplier}
+            onChange={(value) => {
+              setSearchTeam(value.supplierName);
+              setSelectedSupplier(value);
+              setCurrentPage(1);
+            }}
+          >
+            <div className="relative w-64 bg-gray-50 rounded-2xl px-3 flex items-center h-14">
+              <BsSearch className="text-gray-500" />
+              <ComboboxInput
+                displayValue={(supplier) => supplier?.supplierName || searchTerm}
+                onChange={(e) => {
+                  setSearchTeam(e.target.value);
+                  setSelectedSupplier(null);
+                }}
+                onFocus={() => setShowDropdown(true)}
+                onBlur={() => setTimeout(() => setShowDropdown(false), 100)}
+                placeholder="Search Supplier..."
+                className="w-full bg-transparent pl-2 text-xl text-slate-500 outline-none"
+              />
+              {showDropdown && suggestions.length > 0 && (
+                <ComboboxOptions className="absolute z-10 top-full left-0 w-full bg-white rounded-b-2xl shadow max-h-60 overflow-y-auto">
+                  {suggestions.map((supplier) => (
+                    <ComboboxOption
+                      key={supplier._id}
+                      value={supplier}
+                      className={({ active }) =>
+                        `px-4 py-2 text-base cursor-pointer text-slate-600 ${active ? "bg-gray-100" : ""}`
+                      }
+                    >
+                      {supplier.supplierName}
+                    </ComboboxOption>
+                  ))}
+                </ComboboxOptions>
+              )}
+            </div>
+          </Combobox>
+
+          {/* Date Pickers */}
+          <div className="flex gap-4 items-center">
+            {reportsData?.length > 0 && (
+              <div className="flex justify-end">
+                <button
+                  onClick={fetchPrintData}
+                  className="bg-gray-100 hover:bg-gray-200 px-6 py-3 rounded-xl flex items-center gap-3"
+                >
+                  <BsPrinter className="text-2xl text-indigo-950" />
+                  <span className="text-indigo-950 text-xl font-bold">Print</span>
+                </button>
+              </div>
             )}
-          </tbody>
-        </table>
-      </div>
-  
-      {/* Pagination */}
-      <div className="flex justify-between items-center pt-6">
-        <span className="text-xl text-slate-900">Page {currentPage} of {totalPages}</span>
-        <div className="flex gap-4">
-          <button
-            onClick={goToPreviousPage}
-            className={`px-6 py-3 rounded-xl border ${currentPage === 1 ? "opacity-30 cursor-not-allowed" : "hover:bg-gray-100"}`}
-            disabled={currentPage === 1}
-          >
-            <span className="text-gray-600 text-lg font-semibold">Previous</span>
-          </button>
-          <button
-            onClick={goToNextPage}
-            className={`px-6 py-3 rounded-xl border ${currentPage === totalPages ? "opacity-30 cursor-not-allowed" : "hover:bg-gray-100"}`}
-            disabled={currentPage === totalPages}
-          >
-            <span className="text-blue-800 text-lg font-semibold">Next</span>
-          </button>
+
+            <label className="text-slate-500 text-xl">From</label>
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => {
+                setStartDate(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="w-52 px-4 py-3 bg-gray-50 rounded-xl text-zinc-700 text-xl outline-none"
+            />
+            <label className="text-slate-500 text-xl">To</label>
+            <input
+              type="date"
+              value={endDate}
+              onChange={(e) => {
+                setEndDate(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="w-52 px-4 py-3 bg-gray-50 rounded-xl text-zinc-700 text-xl outline-none"
+            />
+          </div>
+        </div>
+
+        {/* Data Table */}
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse font-['Urbanist']">
+            <thead className="bg-[#F9FAFB] border-b border-gray-200">
+              <tr className="text-indigo-950 text-lg font-bold">
+                <th className="py-3 px-4">No.</th>
+                <th className="py-3 px-4">Date</th>
+                <th className="py-3 px-4">Qty (KG)</th>
+                <th className="py-3 px-4">Qty (Box)</th>
+                <th className="py-3 px-4">Commission</th>
+                <th className="py-3 px-4">Gross</th>
+                <th className="py-3 px-4">Expenses</th>
+                <th className="py-3 px-4">Total</th>
+                <th className="py-3 px-4 "></th>
+                <th className="py-3 px-4"></th>
+                <th className="py-3 px-4"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr>
+                  <td colSpan="11" className="text-center py-10">
+                    <OvalSpinner />
+                  </td>
+                </tr>
+              ) : reportsData?.length === 0 ? (
+                <tr>
+                  <td colSpan="11" className="text-center py-10 text-gray-500 font-bold text-lg">
+                    No reports available for the selected date range.
+                  </td>
+                </tr>
+              ) : (
+                reportsData.map((entry, index) => {
+                  const transaction = {
+                    selectedSupplier,
+                    purchaseCount: entry?.purchaseNumber,
+                    dateOfPurchase: entry?.dateOfPurchase,
+                    items: entry?.items?.map((i) => ({
+                      name: "name1",
+                      price: i?.unitPrice,
+                      kg: i?.quantityType === "kg" ? i?.quantity : "",
+                      box: i?.quantityType === "box" ? i?.quantity : "",
+                      total: i.totalCost,
+                    })),
+                    totalQuantityInBox: entry?.totalBox,
+                    totalQuantityInKg: entry?.totalKg,
+                    totalPrice: entry?.grossTotalAmount,
+                    commission: entry?.commissionPaid,
+                    marketFee: entry?.marketFee,
+                    totalDeduction: entry?.commissionPaid + entry?.marketFee,
+                  };
+
+                  return (
+                    <tr key={entry._id} className="border-b border-gray-200 text-xl text-slate-900">
+                      <td className="py-3 px-4">{index + 1}</td>
+                      <td className="py-3 px-4">{new Date(entry.dateOfPurchase).toLocaleDateString("en-GB")}</td>
+                      <td className="py-3 px-4">{entry.totalKg}</td>
+                      <td className="py-3 px-4">{entry.totalBox}</td>
+                      <td className="py-3 px-4">₹{entry.commissionPaid?.toFixed(2)}</td>
+                      <td className="py-3 px-4">₹{entry.grossTotalAmount?.toFixed(2)}</td>
+                      <td className="py-3 px-4">₹{entry.marketFee?.toFixed(2) || "0.00"}</td>
+                      <td className="py-3 px-4">₹{entry.netTotalAmount?.toFixed(2)}</td>
+                      <td className="py-3 px-4 cursor-pointer " onClick={() => handlePurchasePrint(transaction)}>
+                        <BsPrinter />
+                      </td>
+                      <td className="py-3 px-4 cursor-pointer text-blue-700" onClick={() => navigate(`/edit-puchase/${entry?._id}`)}>
+                        <TbPencilMinus />
+                      </td>
+                      <td className="py-3 px-4 cursor-pointer text-green-600" onClick={() => handleSendViaWhatsApp(transaction, selectedSupplier, entry?.dateOfPurchase)}>
+                        <FaWhatsapp />
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Pagination */}
+        <div className="flex justify-between items-center pt-6">
+          <span className="text-xl text-slate-900">Page {currentPage} of {totalPages}</span>
+          <div className="flex gap-4">
+            <button
+              onClick={goToPreviousPage}
+              className={`px-6 py-3 rounded-xl border ${currentPage === 1 ? "opacity-30 cursor-not-allowed" : "hover:bg-gray-100"}`}
+              disabled={currentPage === 1}
+            >
+              <span className="text-gray-600 text-lg font-semibold">Previous</span>
+            </button>
+            <button
+              onClick={goToNextPage}
+              className={`px-6 py-3 rounded-xl border ${currentPage === totalPages ? "opacity-30 cursor-not-allowed" : "hover:bg-gray-100"}`}
+              disabled={currentPage === totalPages}
+            >
+              <span className="text-blue-800 text-lg font-semibold">Next</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Stats */}
+        <div className="bg-[#F0FDFA] px-6 py-4 rounded-xl flex flex-wrap justify-between mt-8 border border-gray-200">
+          <Stat label="Total" value={totalStats?.netTotalAmount?.toFixed(2)} />
+          <Stat label="Commission" value={totalStats?.totalCommission?.toFixed(2)} />
+          <Stat label="Qty (Kg)" value={totalStats?.totalKg} />
+          <Stat label="Qty (Box)" value={totalStats?.totalBox} />
+          <Stat label="Expenses" value={totalStats?.totalMarketFee?.toFixed(2)} />
+          <Stat label="Gross Total" value={totalStats?.grossTotalAmount?.toFixed(2)} />
         </div>
       </div>
-  
-      {/* Stats */}
-      <div className="bg-teal-50 px-6 py-4 rounded-xl flex flex-wrap justify-between mt-8 border border-gray-200">
-        <Stat label="Total" value={totalStats?.netTotalAmount?.toFixed(2)} />
-        <Stat label="Commission" value={totalStats?.totalCommission?.toFixed(2)} />
-        <Stat label="Qty (Kg)" value={totalStats?.totalKg} />
-        <Stat label="Qty (Box)" value={totalStats?.totalBox} />
-        <Stat label="Expenses" value={totalStats?.totalMarketFee?.toFixed(2)} />
-        <Stat label="Gross Total" value={totalStats?.grossTotalAmount?.toFixed(2)} />
-      </div>
-    </div>
-  </>
-  
+    </>
+
   );
 };
 

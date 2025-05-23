@@ -1,7 +1,7 @@
 import { format } from "date-fns";
 
 export const openPaymentPrintPage = (payment) => {
-  const newWindow = window.open('', '', 'width=800,height=600');
+  const newWindow = window.open("", "", "width=800,height=600");
 
   const printContent = `
     <html>
@@ -56,6 +56,10 @@ export const openPaymentPrintPage = (payment) => {
                   ? payment?.employee?.employeeName
                   : payment.category === "company"
                   ? payment?.company?.companyName
+                  : payment.category === "expense"
+                  ? payment?.expense?.expense
+                  : payment.category === "vehicle"
+                  ? payment?.vehicle?.vehicleName
                   : payment?.otherPartyName || "N/A"
               }
             </td>

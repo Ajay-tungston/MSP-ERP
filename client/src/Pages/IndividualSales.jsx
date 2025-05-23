@@ -196,7 +196,7 @@ export default function IndividualSales() {
       )}
 
       {/* <div className="p-4 sm:p-6 bg-[#235a9291] min-h-screen font-[Urbanist]"> */}
-         <div className="bg-white rounded-2xl p-6 sm:p-12 shadow-md relative mt-10">
+      <div className="bg-white rounded-2xl p-6 sm:p-12 shadow-md relative mt-10">
         {/* Breadcrumb */}
         <div className="flex items-center gap-x-2 text-gray-500 mb-4 text-[20px]">
           <span>Print</span>
@@ -210,11 +210,11 @@ export default function IndividualSales() {
             <h1 className="text-2xl sm:text-3xl font-bold leading-tight">Individual Sales</h1>
 
             <div className="relative flex items-center gap-4 w-full max-w-xl" ref={suggRef}>
-              <label className="text-[18px] text-gray-500 min-w-fit">Customer</label>
+              <label className="text-[18px] text-gray-500 min-w-fit">Customer:</label>
               <div className="relative w-full">
                 <input
                   type="text"
-                  className="w-full rounded-md px-4 py-2 bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  className="w-full rounded-md px-4 py-2 bg-gray-50 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400"
                   value={customerName}
                   onChange={(e) => {
                     setCustomerName(e.target.value);
@@ -272,7 +272,7 @@ export default function IndividualSales() {
               <label>Date</label>
               <input
                 type="date"
-                className="bg-gray-50 rounded-md px-4 py-2 text-sm text-gray-700 w-full sm:w-[200px] outline-none"
+                className="w-52 px-4 py-3 bg-gray-50 rounded-xl text-zinc-700 text-xl outline-none"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
               />
@@ -282,8 +282,8 @@ export default function IndividualSales() {
 
         {/* Customer Info */}
         {customerId && (
-          <div className="bg-[#F0F9FF] px-6 py-2 font-semibold text-sm text-gray-700 flex gap-4 mb-2">
-            <span>Customer</span>
+          <div className="bg-[#F0F9FF] px-6 py-2 font-semibold text-xl text-gray-700 flex gap-4 mb-2">
+            <span>Customer:</span>
             <span className="font-bold text-black">{customerName}</span>
           </div>
         )}
@@ -291,7 +291,7 @@ export default function IndividualSales() {
         {/* Table */}
         <div className="overflow-x-auto">
           {/* Header */}
-          <div className="bg-[#F9FAFB] px-6 py-2 min-w-[900px] flex items-center border-b border-gray-200">
+          <div className="bg-[#F9FAFB] px-8 py-2 w-full flex items-center border-b border-gray-200">
             {["No.", "Item", "Supplier", "Qty (KG)", "Qty (Box)", "Unit Price", "Price"].map((h, i) => (
               <div
                 key={i}
@@ -304,30 +304,30 @@ export default function IndividualSales() {
           </div>
 
           {/* Body */}
-          <div className="bg-white px-6 min-w-[900px]">
+          <div className="bg-white px-8 ">
             {tableRows.map((row) => (
               <div
                 key={row.key}
-                className="flex items-center text-sm py-3 border-b last:border-none border-gray-200"
+                className="flex items-center text-lg py-3 border-b last:border-none border-gray-200 "
               >
                 <div className="min-w-[152px]">{row.code}</div>
                 <div className="min-w-[152px]">{row.item}</div>
                 <div className="min-w-[152px]">{row.supplier}</div>
                 <div className="min-w-[152px]">{row.qtyKg}</div>
                 <div className="min-w-[152px]">{row.qtyBox}</div>
-                <div className="min-w-[152px]">{row.price.toFixed(2)}</div>
-                <div className="min-w-[152px] font-semibold">${row.total.toFixed(2)}</div>
+                <div className="min-w-[152px]">₹{row.price.toFixed(2)}</div>
+                <div className="min-w-[152px] font-semibold">₹{row.total.toFixed(2)}</div>
               </div>
             ))}
 
             {/* Grand Total */}
             {tableRows.length > 0 && (
-              <div className="flex items-center text-sm py-3 border-t border-gray-300 font-semibold">
+              <div className=" bg-[#F0FDFA] flex items-center text-lg py-3 border-t border-gray-300 font-semibold">
                 <div className="min-w-[152px]"></div>
                 <div className="min-w-[152px]"></div>
                 <div className="min-w-[152px]"></div>
-                <div className="min-w-[152px] text-black">Grand Total</div>
-                <div className="min-w-[152px] text-black">${grandTotal.toFixed(2)}</div>
+                <div className="min-w-[152px] text-black">Grand Total:</div>
+                <div className="min-w-[152px] text-black">₹{grandTotal.toFixed(2)}</div>
               </div>
             )}
 
@@ -339,8 +339,8 @@ export default function IndividualSales() {
           </div>
         </div>
       </div>
-    {/* </div > */}
-  </>
-  
+      {/* </div > */}
+    </>
+
   );
 }

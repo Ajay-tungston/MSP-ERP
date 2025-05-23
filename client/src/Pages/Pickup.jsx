@@ -24,7 +24,7 @@ export default function Pickup() {
     const fetchPickups = async () => {
         try {
             setIsLoading(true);
-            const res = await axiosInstance.get(`/admin/pickup/get?page=${currentPage}&limit=${limit}&search=${search}`);
+            const res = await axiosInstance.get(`/admin/vehicle/get?page=${currentPage}&limit=${limit}&search=${search}`);
             console.log("Fetched pickups:", res.data.pickups);
             setPickups(res.data.pickups);
             setCurrentPage(res.data.currentPage || 1);
@@ -58,7 +58,7 @@ export default function Pickup() {
 
     const deletePickup = async (id) => {
         try {
-            await axiosInstance.delete(`/admin/pickup/delete/${id}`);
+            await axiosInstance.delete(`/admin/vehicle/delete/${id}`);
             fetchPickups();
         } catch (err) {
             console.error("Failed to delete pickUp", err);

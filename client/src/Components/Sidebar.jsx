@@ -63,8 +63,8 @@ export default function Sidebar() {
 
   const vehicleItemRoutes = {
     "Vehicle": "/vehicle",
-    "Money-in":"/money-in",
-    "Money-Out": "/money-out",
+    "Report":"/report",
+
   };
 
   const navigate = useNavigate();

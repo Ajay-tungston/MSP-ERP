@@ -205,7 +205,7 @@ const AddEmployeeModal = ({ onClose ,setPopup,fetchEmployee}) => {
           <div className="flex items-center">
             <label className="w-[172px] text-[#737791]">Opening Balance</label>
             <div className="w-[300px] flex items-center px-4 py-3 bg-gray-50 rounded-xl">
-              <span className="mr-2 font-bold text-[#05004e]">$</span>
+              <span className="mr-2 font-bold text-[#05004e]">₹</span>
               <input
                 value={openingBalance}
                 onChange={(e) => setOpeningBalance(e.target.value)}
@@ -235,7 +235,7 @@ const AddEmployeeModal = ({ onClose ,setPopup,fetchEmployee}) => {
             <div className="flex items-center">
               <label className="w-[172px] text-[#737791]">Salary <span className="text-red-500">*</span></label>
               <div className="w-[300px] flex items-center px-4 py-3 bg-gray-50 rounded-xl gap-3">
-                <span className="font-bold text-[#05004e]">$</span>
+                <span className="font-bold text-[#05004e]">₹</span>
                 <input
                   value={salary}
                   onChange={(e) => setSalary(e.target.value)}

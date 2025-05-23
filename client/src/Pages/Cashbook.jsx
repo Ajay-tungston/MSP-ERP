@@ -3,6 +3,7 @@ import { FaPrint } from "react-icons/fa";
 import Cashbooktable from "../Components/Cashbooktable";
 import { FaChevronRight } from "react-icons/fa6";
 import useAxiosPrivate from "../hooks/useAxiosPrivate";
+import { BsPrinter } from "react-icons/bs";
 
 const CashbookHeader = () => {
   const getToday = () => new Date().toISOString().split("T")[0]; 
@@ -106,7 +107,7 @@ const CashbookHeader = () => {
         {/* Print + Date */}
         <div className="flex flex-col items-center gap-8">
           <button className="flex items-center gap-2 px-4 py-2 bg-gray-50 hover:bg-gray-100 text-sm text-gray-900 font-medium rounded-md shadow border border-gray-200">
-            <FaPrint className="text-lg" />
+            <BsPrinter className="text-lg" />
             Print
           </button>
           <div className="flex items-center gap-2">

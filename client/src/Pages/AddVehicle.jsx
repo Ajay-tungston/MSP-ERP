@@ -3,7 +3,7 @@ import { XCircleIcon, PlusCircleIcon } from "@heroicons/react/24/outline";
 import useAxiosPrivate from "../hooks/useAxiosPrivate";
 import Swal from "sweetalert2";
 
-function AddPickup({ setPopup, fetchVehicles }) {
+function AddVehicle({ setPopup, fetchVehicles }) {
   const axiosPrivate = useAxiosPrivate();
 
   const [formData, setFormData] = useState({
@@ -50,7 +50,7 @@ function AddPickup({ setPopup, fetchVehicles }) {
     try {
       const response = await axiosPrivate.post("/admin/vehicle/add", formData);
       if (response.status === 201) {
-        Swal.fire("Success", "vehicle added successfully", "success");
+        Swal.fire("Success", "Vehicle added successfully", "success");
         setFormData({
           vehicleName: "",
           vehicleNo: "",
@@ -61,7 +61,8 @@ function AddPickup({ setPopup, fetchVehicles }) {
         setPopup(false);
       }
     } catch (error) {
-      console.log(error)
+       
+      console.error(error);
       if (error?.response?.status === 400) {
         setResponseError(error.response.data.message);
       } else {
@@ -75,8 +76,6 @@ function AddPickup({ setPopup, fetchVehicles }) {
       <div
         className="bg-white shadow-lg"
         style={{
-          
-        
           padding: "48px",
           borderRadius: "24px",
         }}
@@ -140,4 +139,4 @@ function AddPickup({ setPopup, fetchVehicles }) {
   );
 }
 
-export default AddPickup;
+export default AddVehicle;

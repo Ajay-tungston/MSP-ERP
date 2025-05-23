@@ -4,43 +4,40 @@ import { FaChevronRight } from "react-icons/fa6";
 import { TbPencilMinus } from "react-icons/tb";
 import { FaTrashAlt } from "react-icons/fa";
 import useAxiosPrivate from "../hooks/useAxiosPrivate";
-import AddPickup from "./AddPickup";
-import EditPickup from "./EditPickup";
+import AddVehicle from "./AddVehicle";
+// import EditVehicle from "./EditVehicle";
 
 export default function Vehicle() {
-    const [pickups, setPickups] = useState([]);
-    console.log(pickups)
+    const [vehicles, setVehicles] = useState([]);
     const [selectedRows, setSelectedRows] = useState([]);
     const [popup, setPopup] = useState();
     const [isLoading, setIsLoading] = useState(false);
     const [search, setSearch] = useState("");
-    const [selectedPickup, setSelectedPickup] = useState(null);
+
+    const [selectedVehicle, setSelectedVehicle] = useState(null);
     const [currentPage, setCurrentPage] = useState(1);
     const [limit] = useState(8);
     const [totalPages, setTotalPages] = useState(1);
 
     const axiosInstance = useAxiosPrivate();
 
-    // Fetch pickups from backend
-    const fetchPickups = async () => {
+    // Fetch vehicles from backend
+    const fetchVehicles = async () => {
         try {
             setIsLoading(true);
-            const res = await axiosInstance.get(`/admin/pickup/get?page=${currentPage}&limit=${limit}&search=${search}`);
-            console.log(res)
-            console.log("Fetched pickups:", res.data);
-            setPickups(res.data);
+            const res = await axiosInstance.get(`/admin/vehicle/get?page=${currentPage}&limit=${limit}&search=${search}`);
+            setVehicles(res.data);
             setCurrentPage(res.data.currentPage || 1);
             setTotalPages(res.data.totalPages || 1);
-        
         } catch (error) {
-            console.error("Failed to fetch pickups:", error);
+            console.error("Failed to fetch vehicles:", error);
         } finally {
             setIsLoading(false);
         }
     };
 
     useEffect(() => {
-        fetchPickups();
+        fetchVehicles();
     }, [search, currentPage]);
 
     const toggleRowSelection = (id) => {
@@ -50,19 +47,19 @@ export default function Vehicle() {
     };
 
     const toggleAllRows = () => {
-        if (selectedRows.length === pickups.length) {
+        if (selectedRows.length === vehicles.length) {
             setSelectedRows([]);
         } else {
-            setSelectedRows(pickups.map((p) => p._id));
+            setSelectedRows(vehicles.map((v) => v._id));
         }
     };
 
-    const deletePickup = async (id) => {
+    const deleteVehicle = async (id) => {
         try {
-            await axiosInstance.delete(`/admin/pickup/delete/${id}`);
-            fetchPickups();
+            await axiosInstance.delete(`/admin/vehicle/delete/${id}`);
+            fetchVehicles();
         } catch (err) {
-            console.error("Failed to delete pickUp", err);
+            console.error("Failed to delete vehicle", err);
         }
     };
 
@@ -77,7 +74,7 @@ export default function Vehicle() {
                 {/* Breadcrumb */}
                 <nav className="flex items-center text-[20px] text-gray-500 mb-2 px-4 mt-10">
                     <span>Master</span> <FaChevronRight className="mx-2" />
-                    <span className="text-gray-700">vehicle</span>
+                    <span className="text-gray-700">Vehicle</span>
                 </nav>
 
                 {/* Header & Buttons */}
@@ -86,6 +83,7 @@ export default function Vehicle() {
                     <input
                         type="text"
                         value={search}
+                        autoComplete="off"
                         onChange={(e) => {
                             setCurrentPage(1);
                             setSearch(e.target.value);
@@ -106,36 +104,34 @@ export default function Vehicle() {
                 <div className="mt-10 bg-white">
                     <table className="w-full border-collapse text-gray-900">
                         <thead>
-                            <tr className="text-left text-gray-900 font-bold border-b-2 border-gray-200 bg-[#F9FAFB]">
+                            <tr className="text-left text-gray-900 font-bold border-b-2 border-gray-200 bg-[#F9FAFB] text-lg">
                                 <th className="p-3">No.</th>
                                 <th className="p-3">Vehicle Name</th>
                                 <th className="p-3">Vehicle No.</th>
                                 <th className="p-3">RC No.</th>
                                 <th className="p-3"></th>
                                 <th className="p-3"></th>
-                                <th className="p-3"></th>
                             </tr>
                         </thead>
                         <tbody>
-                            {Array.isArray(pickups) &&
-                                pickups.map((pickup, index) => (
+                            {Array.isArray(vehicles) &&
+                                vehicles.map((vehicle, index) => (
                                     <tr
-                                        key={pickup._id}
-                                        className="border-b border-gray-200 hover:bg-gray-50 bg-white"
+                                        key={vehicle._id}
+                                        className="border-b border-gray-200 hover:bg-gray-50 bg-white text-lg"
                                     >
                                         <td className="p-3">{(currentPage - 1) * limit + index + 1}</td>
-                                        <td className="p-3">{pickup.vehicleName}</td>
-                                        <td className="p-3">{pickup.vehicleNo}</td>
-                                        <td className="p-3">{pickup.rcNo}</td>
-                                     
+                                        <td className="p-3">{vehicle.vehicleName}</td>
+                                        <td className="p-3">{vehicle.vehicleNo}</td>
+                                        <td className="p-3">{vehicle.rcNo}</td>
                                         <td className="p-3 text-blue-800 cursor-pointer" onClick={() => {
-                                            setSelectedPickup(pickup);
+                                            setSelectedVehicle(vehicle);
                                             setPopup("edit");
                                         }}>
                                             <TbPencilMinus />
                                         </td>
                                         <td className="p-3 text-red-600 cursor-pointer">
-                                            <FaTrashAlt onClick={() => deletePickup(pickup._id)} />
+                                            <FaTrashAlt onClick={() => deleteVehicle(vehicle._id)} />
                                         </td>
                                     </tr>
                                 ))}
@@ -148,7 +144,7 @@ export default function Vehicle() {
                     <span>Page {currentPage} of {totalPages}</span>
                     <div className="flex space-x-2 pr-10">
                         <button
-                            className={`px-4 py-2 text-gray-400 border border-gray-300 rounded-lg ${currentPage === 1 ? "cursor-not-allowed text-gray-400" : ""}`}
+                            className={`px-4 py-2 text-gray-400 border border-gray-300 rounded-lg ${currentPage === 1 ? "cursor-not-allowed" : ""}`}
                             disabled={currentPage === 1}
                             onClick={() => handlePageChange(currentPage - 1)}
                         >
@@ -166,14 +162,14 @@ export default function Vehicle() {
             </div>
 
             {popup === true && (
-                <AddPickup setPopup={setPopup} fetchPickups={fetchPickups} />
+                <AddVehicle setPopup={setPopup} fetchVehicles={fetchVehicles} />
             )}
 
-            {popup === "edit" && selectedPickup && (
-                <EditPickup
+            {popup === "edit" && selectedVehicle && (
+                <EditVehicle
                     setPopup={setPopup}
-                    fetchPickups={fetchPickups}
-                    pickupToEdit={selectedPickup}
+                    fetchVehicles={fetchVehicles}
+                    vehicleToEdit={selectedVehicle}
                 />
             )}
         </>

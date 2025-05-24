@@ -91,14 +91,14 @@ export default function Sidebar() {
       <div className="flex flex-col min-h-screen w-full lg:w-[313px] bg-white shadow-lg rounded-[24px] p-4 lg:p-6 overflow-hidden">
         {/* Logo */}
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 rounded-lg overflow-hidden flex items-center justify-center">
+          <div className="w-18 h-18 rounded-lg overflow-hidden flex items-center justify-center">
             <img
-              src="/images/logo.jpg"
+              src="images/msplogo 1.png"
               alt="Company Logo"
               className="w-full h-full object-cover"
             />
           </div>
-          <span className="text-lg font-semibold">Company Name</span>
+          <span className="text-2xl font-semibold">MSP</span>
         </div>
 
         {/* Dashboard */}

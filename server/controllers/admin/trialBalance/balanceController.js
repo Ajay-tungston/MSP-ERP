@@ -772,6 +772,115 @@ const getExpensePaymentsByMonth = async (req, res) => {
   }
 };
 
+const getVehicleTrialBalanceByType = async (req, res) => {
+  try {
+    const result = await Payment.aggregate([
+      {
+        $match: {
+          category: "vehicle",
+          vehicle: { $ne: null }
+        }
+      },
+      {
+        $group: {
+          _id: {
+            vehicle: "$vehicle",
+            paymentType: "$paymentType"
+          },
+          total: { $sum: "$amount" }
+        }
+      },
+      {
+        $group: {
+          _id: "$_id.vehicle",
+          payments: {
+            $push: {
+              type: "$_id.paymentType",
+              total: "$total"
+            }
+          }
+        }
+      },
+      {
+        $lookup: {
+          from: "pickups", // vehicle collection
+          localField: "_id",
+          foreignField: "_id",
+          as: "vehicle"
+        }
+      },
+      {
+        $unwind: "$vehicle"
+      },
+      {
+        $project: {
+          vehicleId: "$vehicle._id",
+          vehicleName: "$vehicle.vehicleName",
+          vehicleNo: "$vehicle.vehicleNo",
+          payments: 1
+        }
+      }
+    ]);
+
+    let incomeVehicles = [];
+    let expenseVehicles = [];
+
+    let incomeTotals = { totalIn: 0, totalOut: 0, netBalance: 0 };
+    let expenseTotals = { totalIn: 0, totalOut: 0, netBalance: 0 };
+
+    for (const v of result) {
+      let totalIn = 0;
+      let totalOut = 0;
+
+      for (const p of v.payments) {
+        if (p.type === "PaymentIn") totalIn += p.total;
+        if (p.type === "PaymentOut") totalOut += p.total;
+      }
+
+      const net = totalIn - totalOut;
+
+      const vehicleData = {
+        vehicleId: v.vehicleId,
+        vehicleName: v.vehicleName,
+        vehicleNo: v.vehicleNo,
+        totalIn,
+        totalOut,
+        netBalance: Math.abs(net) // Will be overridden below for expense if needed
+      };
+
+      if (net >= 0) { 
+        incomeVehicles.push(vehicleData);
+        incomeTotals.totalIn += totalIn;
+        incomeTotals.totalOut += totalOut;
+        incomeTotals.netBalance += net;
+      } else {
+        expenseVehicles.push({
+          ...vehicleData,
+          netBalance: Math.abs(net) // Show as positive
+        });
+        expenseTotals.totalIn += totalIn;
+        expenseTotals.totalOut += totalOut;
+        expenseTotals.netBalance += Math.abs(net); // Keep positive
+      }
+    }
+
+    res.json({
+      income: {
+        ...incomeTotals,
+        vehicles: incomeVehicles
+      },
+      expense: {
+        ...expenseTotals,
+        vehicles: expenseVehicles
+      }
+    });
+
+  } catch (error) {
+    console.error("Error in getVehicleTrialBalanceByType:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
 module.exports = {
   getReceivablesFromCustomers,
   // getSupplierPayables,
@@ -786,4 +895,5 @@ module.exports = {
   getStockInHand,
   getDetailedProfitAndLoss,
   getExpensePaymentsByMonth,
+  getVehicleTrialBalanceByType
 };

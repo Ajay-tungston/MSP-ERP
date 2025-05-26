@@ -3,6 +3,7 @@ import { Outlet } from "react-router-dom";
 import { useSelector } from "react-redux";
 // import { MutatingDots } from "react-loader-spinner";
 import useRefreshTocken from "../hooks/useRefreshToken";
+import OvalSpinner from "./spinners/OvalSpinner";
 
 const PersistLogin = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -25,7 +26,8 @@ const PersistLogin = () => {
 
   return isLoading ? (
     <div className="h-screen flex items-center justify-center bg-gray-100">
-      loading...
+      <OvalSpinner/>
+      {/* loading... */}
       {/* <MutatingDots
         visible={true}
         height="100"

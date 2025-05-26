@@ -1,32 +1,32 @@
 const Sale = require("../../../models/SalesEntry");
 const Purchase = require("../../../models/PurchaseEntry");
 const Expense = require("../../../models/Expense");
-const Supplier = require("../../../models/Supplier")
+const Supplier = require("../../../models/Supplier");
+const Payment = require("../../../models/Payment");
 // Unified recent transactions
 const getRecentTransactions = async (req, res) => {
   try {
     const sales = await Sale.find().sort({ dateOfSale: -1 }).limit(2);
     const purchases = await Purchase.find().sort({ dateOfPurchase: -1 }).limit(2);
-    const expenses = await Expense.find().sort({ date: -1 }).limit(2);
-
+    const expenses = await Payment.find({category:"expense"}).populate("expense").sort({ date: -1 }).limit(2);
     const formattedSales = sales.map((s) => ({
       date: s.dateOfSale,
       module: "Sales",
-      desc: s.description || s.customerName || "Sale",
+      // desc: s.description || s.customerName || "Sale",
       amount: s.totalAmount || 0,
     }));
 
     const formattedPurchases = purchases.map((p) => ({
       date: p.dateOfPurchase,
       module: "Purchase",
-      desc: p.description || p.vendorName || "Purchase",
+      // desc: p.description || p.vendorName || "Purchase",
       amount: p.grossTotalAmount || 0,
     }));
 
     const formattedExpenses = expenses.map((e) => ({
       date: e.date,
       module: "Expense",
-      desc: e.note || e.category || "Expense",
+      // desc: e.note || e.category || "Expense",
       amount: e.amount || 0,
     }));
 

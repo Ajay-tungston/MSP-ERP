@@ -30,6 +30,15 @@ export default function TrialBalance() {
 
   const [salaryOpen, setSalaryOpen] = useState(false);
 
+  const [vehicleData, setVehicleData] = useState({
+    income: { netBalance: 0, vehicles: [] },
+    expense: { netBalance: 0, vehicles: [] },
+  });
+  const [openVehicleReceivableSection, setOpenVehicleReceivableSection] = useState(false);
+  const [openVehiclePayableSection, setOpenVehiclePayableSection] = useState(false);
+  const [vehicleLoading, setVehicleLoading] = useState(false);
+  const [vehicleError, setVehicleError] = useState(null);
+
   // Data state for payables
   const [openPayables, setOpenPayables] = useState({});
 
@@ -51,7 +60,7 @@ export default function TrialBalance() {
     totalSalaries: 0,
     salaryBreakdown: [],
   });
-  console.log(employeeReceivables)
+  console.log(employeeReceivables);
   const [openStockSection, setOpenStockSection] = useState(false);
   const [stockData, setStockData] = useState({ total: 0, rows: [] });
   const [loadingStock, setLoadingStock] = useState(true);
@@ -141,6 +150,7 @@ export default function TrialBalance() {
     fetchStockData();
     fetchProfitLossData();
     fetchExpenseData();
+    fetchVehicleData();
   }, [
     // startDate, endDate,
     selectedMonth,
@@ -157,13 +167,13 @@ export default function TrialBalance() {
       );
       const { totalReceivables, breakdown, totalSalaries, salaryBreakdown } =
         response.data;
-console.log(response)
+      console.log(response);
       setEmployeeReceivables({
         total: totalReceivables,
         rows: breakdown.map((item) => ({
           label: item.employeeName, // Employee name from backend
           amount: item.balance, // Balance for the employee
-          openingbalance:item.openingBalance
+          openingbalance: item.openingBalance,
         })),
         totalSalaries,
         salaryBreakdown,
@@ -373,6 +383,20 @@ console.log(response)
     }
   };
 
+  const fetchVehicleData = async () => {
+    setVehicleLoading(true);
+    try {
+      const response = await axiosPrivate.get(`/admin/trialBalance/vehicle`);
+      console.log("vehicel=", response);
+      setVehicleData(response?.data);
+    } catch (err) {
+      setVehicleError("Failed to fetch vehicle");
+      console.log(err);
+    } finally {
+      setVehicleLoading(false);
+    }
+  };
+
   const totalReceivablesSum =
     (receivables?.total || 0) +
     (supplierReceivables?.total || 0) +
@@ -381,14 +405,16 @@ console.log(response)
     (employeeReceivables?.total || 0) +
     (cashBalance?.total || 0) +
     (expense?.totalExpenses || 0) +
-    (employeeReceivables?.totalSalaries || 0);
+    (employeeReceivables?.totalSalaries || 0) +
+    vehicleData?.expense?.netBalance;
 
   const totalPayablesSum =
     (commissions?.total || 0) +
     (coolieCharges?.total || 0) +
     (supplierPayables?.total || 0) +
     (profitLossData?.totalProfit || 0) +
-    (lenderPayables?.total || 0);
+    (lenderPayables?.total || 0) +
+    vehicleData?.income?.netBalance;
 
   return (
     <div className="p-4 bg-white min-h-screen mt-10 rounded-xl">
@@ -412,10 +438,10 @@ console.log(response)
         {/* Receivables Section (Customers) */}
         <div className="flex-1">
           <div className="flex justify-between bg-[#F0FDFA] px-6 py-4">
-            <span className="font-bold text-[#27AE60] uppercase text-[24px]">
+            <span className="font-bold text-[#27AE60] uppercase text-xl">
               Receivables
             </span>
-            <span className="font-bold text-[#2E7D32] text-lg">
+            <span className="font-bold text-[#27AE60] text-xl">
               ₹{totalReceivablesSum.toFixed(2)}
             </span>
           </div>
@@ -572,6 +598,59 @@ console.log(response)
                           </td>
                           <td className="px-6 py-2">
                             ₹{row?.amount?.toFixed(2)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </>
+            )}
+          </div>
+
+
+          {/* vehicle Receivables section */}
+          <div className="rounded-b-lg mt-5">
+            <div
+              className="flex justify-between bg-[#F0F9FF] px-6 py-3 cursor-pointer"
+              onClick={() => setOpenVehicleReceivableSection((prev) => !prev)}
+            >
+              <div className="flex items-center gap-2">
+                {openVehicleReceivableSection ? (
+                  <ChevronUp size={18} />
+                ) : (
+                  <ChevronDown size={18} />
+                )}
+                <span className="font-semibold text-[#05004E]">
+                  Receivables from vehicles
+                </span>
+              </div>
+              <span className="font-semibold text-[#05004E]">
+                ₹{vehicleData?.expense?.netBalance?.toFixed(2)}
+              </span>
+            </div>
+
+            {openVehicleReceivableSection && (
+              <>
+                {vehicleLoading && <p className="p-4">Loading...</p>}
+                {vehicleError && <p className="p-4 text-red-500">{vehicleError}</p>}
+                {!vehicleLoading && !vehicleError && (
+                  <table className="w-full">
+                    <thead className="bg-[#F9FAFB] text-left text-sm text-[#05004E] uppercase border-b border-gray-200">
+                      <tr>
+                        <th className="px-6 py-2 w-5/12">Vehicle</th>
+                        <th className="px-6 py-2 w-3/12">Amount</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {vehicleData?.expense?.vehicles?.map((row, idx) => (
+                        <tr
+                          key={idx}
+                          className="border-b border-gray-200 hover:bg-gray-50"
+                        >
+                          <td className="px-6 py-2">{row?.vehicleName}</td>
+                          <td className="px-6 py-2">
+                            ₹{row?.netBalance?.toFixed(2)}
                           </td>
                         </tr>
                       ))}
@@ -794,11 +873,11 @@ console.log(response)
         {/* Payables Section */}
         <div className="flex-1">
           <div className="flex justify-between bg-[#FEF2F2] px-6 py-4">
-            <span className="font-bold text-[#EB5757] uppercase text-[24px]">
+            <span className="font-bold text-[#EB5757] uppercase text-xl">
               Payables
             </span>
-            <span className="font-bold text-[#EB5757] text-[20px]">
-              Total: ₹{totalPayablesSum.toFixed(2)}
+            <span className="font-bold text-[#EB5757] text-xl">
+              ₹{totalPayablesSum.toFixed(2)}
             </span>
           </div>
           {/* Receivables Section (commission) */}
@@ -1031,6 +1110,58 @@ console.log(response)
                           <td className="px-6 py-2">{row.lenderName}</td>
                           <td className="px-6 py-2">
                             ₹{Number(row.amount).toFixed(2)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </>
+            )}
+          </div>
+
+          {/* vehicle payable section */}
+          <div className="rounded-b-lg mt-5">
+            <div
+              className="flex justify-between bg-[#F0F9FF] px-6 py-3 cursor-pointer"
+              onClick={() => setOpenVehiclePayableSection((prev) => !prev)}
+            >
+              <div className="flex items-center gap-2">
+                {openVehiclePayableSection ? (
+                  <ChevronUp size={18} />
+                ) : (
+                  <ChevronDown size={18} />
+                )}
+                <span className="font-semibold text-[#05004E]">
+                  Payables to vehicles
+                </span>
+              </div>
+              <span className="font-semibold text-[#05004E]">
+                ₹{vehicleData?.income?.netBalance?.toFixed(2)}
+              </span>
+            </div>
+
+            {openVehiclePayableSection && (
+              <>
+                {vehicleLoading && <p className="p-4">Loading...</p>}
+                {vehicleError && <p className="p-4 text-red-500">{vehicleError}</p>}
+                {!vehicleLoading && !vehicleError && (
+                  <table className="w-full">
+                    <thead className="bg-[#F9FAFB] text-left text-sm text-[#05004E] uppercase border-b border-gray-200">
+                      <tr>
+                        <th className="px-6 py-2 w-5/12">Vehicle</th>
+                        <th className="px-6 py-2 w-3/12">Amount</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {vehicleData?.income?.vehicles?.map((row, idx) => (
+                        <tr
+                          key={idx}
+                          className="border-b border-gray-200 hover:bg-gray-50"
+                        >
+                          <td className="px-6 py-2">{row?.vehicleName}</td>
+                          <td className="px-6 py-2">
+                            ₹{row?.netBalance?.toFixed(2)}
                           </td>
                         </tr>
                       ))}

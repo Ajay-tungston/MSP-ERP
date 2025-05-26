@@ -13,6 +13,7 @@ import {
   LabelList,
 } from "recharts";
 import useAxiosPrivate from "../hooks/useAxiosPrivate";
+import { format } from "date-fns";
 const kpiData = [
   { day: "Mon", NetReceivables: 400, TotalCommission: 780 },
   { day: "Tue", NetReceivables: 700, TotalCommission: 780 },
@@ -120,34 +121,54 @@ const FinancialDashboard = () => {
 
   return (
     <div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 ">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-6 p-4 ">
         {/* Financial Overview */}
-        <div className="bg-white rounded-2xl shadow-md p-6 w-full">
+        <div className="bg-white rounded-2xl shadow-md p-6 w-full col-span-2 overflow-visible">
           <h2 className="text-lg font-semibold text-black mb-4">Financial Overview</h2>
           <hr className="mb-4 border-gray-700" />
-          <div className="flex justify-center">
-            <PieChart width={700} height={300}>
-              <Pie
-                data={data}
-                cx="50%"
-                cy="50%"
-                innerRadius={0}
-                outerRadius={100}
-                paddingAngle={1}
-                dataKey="value"
-                label={({ name, value }) => `${name}\n$${value.toLocaleString()}`}
+          <div className="flex justify-center overflow-visible">
+      <PieChart width={450} height={320}>
+        <Pie
+          data={data}
+          cx="50%"
+          cy="50%"
+          outerRadius={150}
+          innerRadius={0}
+          dataKey="value"
+          labelLine={false}
+
+          label={({ cx, cy, midAngle, innerRadius, outerRadius, name, value }) => {
+            const RADIAN = Math.PI / 180;
+            const radius = innerRadius + (outerRadius - innerRadius) * 0.6;
+            const x = cx + radius * Math.cos(-midAngle * RADIAN);
+            const y = cy + radius * Math.sin(-midAngle * RADIAN);
+
+            return (
+              <text
+                x={x}
+                y={y}
+                fill="white"
+                textAnchor="middle"
+                dominantBaseline="central"
+                style={{ fontSize: '12px', fontWeight: 'bold' }}
               >
-                {data.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index]} stroke="white" strokeWidth={2} />
-                ))}
-              </Pie>
-              <Tooltip formatter={(value) => `$${value.toLocaleString()}`} />
-            </PieChart>
-          </div>
+                {name}
+                <tspan x={x} dy="1.2em">₹{value.toLocaleString()}</tspan>
+              </text>
+            );
+          }}
+        >
+          {data.map((entry, index) => (
+            <Cell key={`cell-${index}`} fill={COLORS[index]} stroke="white" strokeWidth={2} />
+          ))}
+        </Pie>
+        <Tooltip formatter={(value) => `₹${value.toLocaleString()}`} />
+      </PieChart>
+    </div>
         </div>
 
         {/* Net Profit */}
-        <div className="bg-white shadow-xl rounded-2xl p-4 w-full ">
+        <div className="bg-white shadow-xl rounded-2xl p-4 w-full col-span-3">
           <div className="flex justify-between items-center mb-4 w-full overflow-visible">
             <h2 className="text-xl font-bold text-gray-800 ">Net Profit</h2>
             {/* <span className="text-green-600 font-bold text-lg ">
@@ -189,7 +210,7 @@ const FinancialDashboard = () => {
         </PieChart>
       </ResponsiveContainer>
       <div className="text-3xl font-bold text-center  text-indigo-900  ">
-        ${totalExpense}
+      ₹{totalExpense}
       </div>
       <div className="mt-4 space-y-2 text-sm">
         {expenseData.map((item, idx) => (
@@ -202,7 +223,7 @@ const FinancialDashboard = () => {
               {item.name}
             </span>
             <span className="font-semibold" style={{ color: item.color }}>
-              ${item.value} ({((item.value / totalExpense) * 100).toFixed(2)}%)
+            ₹{item.value} ({((item.value / totalExpense) * 100).toFixed(2)}%)
             </span>
           </div>
         ))}
@@ -218,17 +239,17 @@ const FinancialDashboard = () => {
                 <tr>
                   <th className="py-2 px-4">Date</th>
                   <th className="py-2 px-4">Module</th>
-                  <th className="py-2 px-4">Description</th>
+                  {/* <th className="py-2 px-4">Description</th> */}
                   <th className="py-2 px-4 text-right">Amount</th>
                 </tr>
               </thead>
               <tbody>
                 {recentTransactions.map((tx, idx) => (
                   <tr key={idx} className="border-b">
-                    <td className="py-2 px-4">{new Date(tx.date).toLocaleDateString()}</td>
+                    <td className="py-2 px-4">{format(new Date((tx.date)), 'dd/MM/yyyy')}</td>
                     <td className="py-2 px-4">{tx.module}</td>
-                    <td className="py-2 px-4">{tx.desc}</td>
-                    <td className="py-2 px-4 text-right font-semibold">${tx.amount.toFixed(2)}</td>
+                    {/* <td className="py-2 px-4">{tx.desc}</td> */}
+                    <td className="py-2 px-4 text-right font-semibold">₹{tx.amount.toFixed(2)}</td>
                   </tr>
                 ))}
               </tbody>

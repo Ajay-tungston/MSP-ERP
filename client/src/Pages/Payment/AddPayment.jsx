@@ -21,7 +21,7 @@ function AddPayment({ setPopup, fetchData, type }) {
   const [sellectedData, setselectedData] = useState(null);
   const [purpose, setPurpose] = useState("salary");
   const axiosInstance = useAxiosPrivate();
-
+console.log("dsfibdf",date)
   useEffect(() => {
     const fetchName = async () => {
       const qry =
@@ -156,7 +156,6 @@ function AddPayment({ setPopup, fetchData, type }) {
   }, [sellectedData, purpose]);
   useEffect(() => {
     setselectedData(null);
-    setDate("");
     setName("");
     setName2("");
     setAmount("");

@@ -10,51 +10,20 @@ const Lender = require("../../../models/Lender");
 const MonthlyClosure = require("../../../models/MonthlyClosure");
 
 // ========== 1. Receivables from Customers ==========
-// done
 const getReceivablesFromCustomers = async (req, res) => {
   try {
-    const selectedMonth = req.query.month; // format: "YYYY-MM"
-    if (!selectedMonth || !/^\d{4}-\d{2}$/.test(selectedMonth)) {
-      return res
-        .status(400)
-        .json({ message: "Invalid month format. Use YYYY-MM" });
-    }
+    // Step 1: Get all customers
+    const customers = await Customer.find().lean();
 
-    const [yearStr, monthStr] = selectedMonth.split("-");
-    const year = parseInt(yearStr);
-    const month = parseInt(monthStr);
-
-    const startOfMonth = new Date(year, month - 1, 1);
-    const endOfMonth = new Date(year, month, 0, 23, 59, 59, 999);
-
-    // ✅ Filter customers who existed before or during the selected month
-    const customers = await Customer.find({
-      createdAt: { $lte: endOfMonth },
-    }).lean();
-
-    // Step 1: Load previous month's customer closing balances
-    const prevMonth = month === 1 ? 12 : month - 1;
-    const prevYear = month === 1 ? year - 1 : year;
-    const prevMonthKey = `${prevYear}-${String(prevMonth).padStart(2, "0")}`;
-    const previousClosure = await MonthlyClosure.findOne({
-      month: prevMonthKey,
-    });
-
-    const prevCustomerBalances = previousClosure?.customerBalances || new Map();
-
-    // Step 2: Set initial balance from previous month's closing or customer's opening balance
+    // Step 2: Initialize map with opening balances
     const receivableMap = {};
     customers.forEach((customer) => {
       const cid = customer._id.toString();
-      receivableMap[cid] =
-        prevCustomerBalances.get?.(cid) ?? customer.openingBalance ?? 0;
+      receivableMap[cid] = customer.openingBalance ?? 0;
     });
 
-    // Step 3: Add sales in the selected month
-    const sales = await SalesEntry.find({
-      dateOfSale: { $gte: startOfMonth, $lte: endOfMonth },
-    }).lean();
-
+    // Step 3: Add total sales per customer (no date filter)
+    const sales = await SalesEntry.find().lean();
     sales.forEach((sale) => {
       sale.customers.forEach((custSale) => {
         const cid = custSale.customer.toString();
@@ -63,11 +32,10 @@ const getReceivablesFromCustomers = async (req, res) => {
       });
     });
 
-    // Step 4: Subtract payments in the selected month
+    // Step 4: Subtract total payments per customer (no date filter)
     const payments = await Payment.find({
       paymentType: "PaymentIn",
       category: "customer",
-      date: { $gte: startOfMonth, $lte: endOfMonth },
     }).lean();
 
     payments.forEach((payment) => {
@@ -89,32 +57,75 @@ const getReceivablesFromCustomers = async (req, res) => {
         const balance = receivableMap[cid] || 0;
         return {
           customerName: c.customerName,
-          openingBalance:
-            prevCustomerBalances.get?.(cid) ?? c.openingBalance ?? 0,
+          openingBalance: c.openingBalance ?? 0,
           balance,
         };
       })
       .filter((c) => c.balance > 0);
 
     res.json({
-      month: selectedMonth,
       totalReceivables,
       breakdown,
-      previousMonthSummary: previousClosure?.totals || {},
     });
   } catch (err) {
     console.error("Error calculating receivables:", err);
-    res
-      .status(500)
-      .json({ message: "Failed to calculate receivables from customers." });
+    res.status(500).json({
+      message: "Failed to calculate receivables from customers.",
+    });
   }
 };
 
 // ========== 2. Receivables from Employees ==========
-//done
 const getReceivablesFromEmployees = async (req, res) => {
   try {
-    const selectedMonth = req.query.month; // Expected format: "YYYY-MM"
+    // Step 1: Get all employees
+    const employees = await Employee.find().lean();
+
+    // Step 2: Initialize map with opening balances
+    const receivableMap = {};
+    employees.forEach((emp) => {
+      const eid = emp._id.toString();
+      receivableMap[eid] = emp.openingBalance ?? 0;
+    });
+
+    // Step 3: Add/subtract "other" payments (not salary)
+    const otherPayments = await Payment.find({
+      category: "employee",
+      purpose: "other",
+    })
+      .populate("employee", "employeeName")
+      .lean();
+
+    otherPayments.forEach((payment) => {
+      const eid = payment.employee?._id?.toString();
+      if (!eid) return;
+
+      if (!receivableMap[eid]) receivableMap[eid] = 0;
+
+      if (payment.paymentType === "PaymentOut") {
+        receivableMap[eid] += payment.amount; // we paid = they owe us
+      } else if (payment.paymentType === "PaymentIn") {
+        receivableMap[eid] -= payment.amount; // they paid us
+      }
+    });
+
+    // Step 4: Format receivable breakdown
+    const breakdown = employees
+      .map((emp) => {
+        const eid = emp._id.toString();
+        const balance = receivableMap[eid] || 0;
+        return {
+          employeeName: emp.employeeName,
+          openingBalance: emp.openingBalance ?? 0,
+          balance,
+        };
+      })
+      .filter((e) => e.balance > 0);
+
+    const totalReceivables = breakdown.reduce((sum, e) => sum + e.balance, 0);
+
+    // Step 5: Also fetch salaries for the selected month
+    const selectedMonth = req.query.month;
     if (!selectedMonth || !/^\d{4}-\d{2}$/.test(selectedMonth)) {
       return res
         .status(400)
@@ -128,38 +139,6 @@ const getReceivablesFromEmployees = async (req, res) => {
     const startOfMonth = new Date(year, month - 1, 1);
     const endOfMonth = new Date(year, month, 0, 23, 59, 59, 999);
 
-    // 1. Fetch "other" payments (for receivables)
-    const otherPayments = await Payment.find({
-      category: "employee",
-      purpose: "other",
-      date: { $gte: startOfMonth, $lte: endOfMonth },
-    })
-      .populate("employee", "employeeName")
-      .lean();
-
-    const employeeMap = {};
-    otherPayments.forEach((payment) => {
-      const eid = payment.employee?._id?.toString();
-      if (!eid) return;
-
-      if (!employeeMap[eid]) {
-        employeeMap[eid] = {
-          employeeName: payment.employee.employeeName,
-          balance: 0,
-        };
-      }
-
-      if (payment.paymentType === "PaymentOut") {
-        employeeMap[eid].balance += payment.amount;
-      } else if (payment.paymentType === "PaymentIn") {
-        employeeMap[eid].balance -= payment.amount;
-      }
-    });
-
-    const breakdown = Object.values(employeeMap).filter(e => e.balance !== 0);
-    const totalReceivables = breakdown.reduce((sum, e) => sum + e.balance, 0);
-
-    // 2. Fetch "salary" payments
     const salaryPayments = await Payment.find({
       category: "employee",
       purpose: "salary",
@@ -185,9 +164,12 @@ const getReceivablesFromEmployees = async (req, res) => {
     });
 
     const salaryBreakdown = Object.values(salaryMap);
-    const totalSalaries = salaryBreakdown.reduce((sum, e) => sum + e.totalSalary, 0);
+    const totalSalaries = salaryBreakdown.reduce(
+      (sum, e) => sum + e.totalSalary,
+      0
+    );
 
-    // 3. Return combined response
+    // Step 6: Final response
     res.json({
       month: selectedMonth,
       totalReceivables,
@@ -196,11 +178,12 @@ const getReceivablesFromEmployees = async (req, res) => {
       salaryBreakdown,
     });
   } catch (err) {
-    console.error("Error fetching employee receivables/salaries:", err);
-    res.status(500).json({ message: "Failed to fetch employee data." });
+    console.error("Error calculating receivables from employees:", err);
+    res.status(500).json({
+      message: "Failed to calculate receivables from employees.",
+    });
   }
 };
-
 
 // ========== 3. Receivables from market ==========
 //no idea
@@ -252,27 +235,9 @@ const getMarketFeesFromSuppliers = async (req, res) => {
 };
 
 // ========== 4. Receivables from stock in hand ==========
-//done
 const getStockInHand = async (req, res) => {
   try {
-    const selectedMonth = req.query.month; // e.g., "2025-05"
-    if (!selectedMonth || !/^\d{4}-\d{2}$/.test(selectedMonth)) {
-      return res
-        .status(400)
-        .json({ message: "Invalid month format. Use YYYY-MM" });
-    }
-
-    const [yearStr, monthStr] = selectedMonth.split("-");
-    const year = parseInt(yearStr);
-    const month = parseInt(monthStr);
-
-    const startOfMonth = new Date(year, month - 1, 1);
-    const endOfMonth = new Date(year, month, 0, 23, 59, 59, 999);
-
-    // Fetch purchases only in the selected month
-    const purchases = await PurchaseEntry.find({
-      dateOfPurchase: { $gte: startOfMonth, $lte: endOfMonth },
-    })
+    const purchases = await PurchaseEntry.find()
       .populate("items.item", "itemName")
       .lean();
 
@@ -286,7 +251,6 @@ const getStockInHand = async (req, res) => {
         if (!itemId || !itemName) continue;
 
         const remainingQty = purchaseItem.remainingQuantity || 0;
-
         if (remainingQty <= 0) continue;
 
         const unitPrice = purchaseItem.unitPrice || 0;
@@ -313,7 +277,6 @@ const getStockInHand = async (req, res) => {
     );
 
     return res.json({
-      month: selectedMonth,
       totalStockValue,
       breakdown,
     });
@@ -324,28 +287,10 @@ const getStockInHand = async (req, res) => {
 };
 
 // ========== 5. Receivables from cashbalance ==========
-//done
 const getCashBalance = async (req, res) => {
   try {
-    const selectedMonth = req.query.month; // Expected format: "YYYY-MM"
-    if (!selectedMonth || !/^\d{4}-\d{2}$/.test(selectedMonth)) {
-      return res
-        .status(400)
-        .json({ message: "Invalid month format. Use YYYY-MM" });
-    }
-
-    const [yearStr, monthStr] = selectedMonth.split("-");
-    const year = parseInt(yearStr);
-    const month = parseInt(monthStr);
-
-    // Get start and end of the selected month
-    const startOfMonth = new Date(year, month - 1, 1);
-    const endOfMonth = new Date(year, month, 0, 23, 59, 59, 999);
-
-    // Fetch cash payments within the selected month
     const payments = await Payment.find({
       paymentMode: "Cash",
-      date: { $gte: startOfMonth, $lte: endOfMonth },
     }).lean();
 
     let totalPaymentsIn = 0;
@@ -361,7 +306,7 @@ const getCashBalance = async (req, res) => {
 
     const cashBalance = totalPaymentsIn - totalPaymentsOut;
 
-    res.json({ month: selectedMonth, cashBalance });
+    res.json({ cashBalance });
   } catch (error) {
     console.error("Error calculating cash balance:", error);
     res.status(500).json({ message: "Failed to calculate cash balance" });
@@ -369,10 +314,9 @@ const getCashBalance = async (req, res) => {
 };
 
 // ========== 6. Receivables from commission==========
-//done
 const getCommissionsFromSuppliers = async (req, res) => {
   try {
-    const selectedMonth = req.query.month; // Example: "2025-05"
+    const selectedMonth = req.query.month; // e.g., "2025-05"
     if (!selectedMonth || !/^\d{4}-\d{2}$/.test(selectedMonth)) {
       return res
         .status(400)
@@ -384,13 +328,11 @@ const getCommissionsFromSuppliers = async (req, res) => {
     const month = parseInt(monthStr);
 
     const startOfMonth = new Date(year, month - 1, 1);
-    const endOfMonth = new Date(year, month, 0, 23, 59, 59, 999);
 
-    // Aggregate commissionPaid by supplier for the selected month
+    // 1. Total commissionPaid from all time
     const commissions = await PurchaseEntry.aggregate([
       {
         $match: {
-          dateOfPurchase: { $gte: startOfMonth, $lte: endOfMonth },
           commissionPaid: { $gt: 0 },
         },
       },
@@ -402,15 +344,13 @@ const getCommissionsFromSuppliers = async (req, res) => {
       },
       {
         $lookup: {
-          from: "suppliers", // collection name
+          from: "suppliers",
           localField: "_id",
           foreignField: "_id",
           as: "supplierDetails",
         },
       },
-      {
-        $unwind: "$supplierDetails",
-      },
+      { $unwind: "$supplierDetails" },
       {
         $project: {
           supplierName: "$supplierDetails.supplierName",
@@ -424,45 +364,69 @@ const getCommissionsFromSuppliers = async (req, res) => {
       0
     );
 
+    // 2. Total salary (up to previous month)
+    const pastSalaries = await Payment.aggregate([
+      {
+        $match: {
+          category: "employee",
+          purpose: "salary",
+          paymentType: "PaymentOut",
+          date: { $lt: startOfMonth },
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          totalSalary: { $sum: "$amount" },
+        },
+      },
+    ]);
+    const salaryTotal = pastSalaries[0]?.totalSalary || 0;
+
+    // 3. Total expenses (up to previous month)
+    const pastExpenses = await Payment.aggregate([
+      {
+        $match: {
+          category: "expense",
+          paymentType: "PaymentOut",
+          date: { $lt: startOfMonth },
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          totalExpense: { $sum: "$amount" },
+        },
+      },
+    ]);
+    const expenseTotal = pastExpenses[0]?.totalExpense || 0;
+
+    // 4. Final net commission
+    const netCommission = totalCommission - (salaryTotal + expenseTotal);
+
     res.json({
       month: selectedMonth,
       totalCommission,
+      pastSalaries: salaryTotal,
+      pastExpenses: expenseTotal,
+      netAfterDeductions: netCommission,
       breakdown: commissions.map((entry) => ({
         supplierName: entry.supplierName,
         commission: entry.totalCommission,
       })),
     });
   } catch (err) {
-    console.error("Error fetching supplier commissions from purchases:", err);
-    res
-      .status(500)
-      .json({ message: "Failed to fetch commissions from purchase entries." });
+    console.error("Error fetching commissions:", err);
+    res.status(500).json({ message: "Failed to calculate commissions." });
   }
 };
 
 // ========== 7. Receivables from coolie ==========
-
-//done
 const getCoolieFromSuppliers = async (req, res) => {
   try {
-    const selectedMonth = req.query.month; // Expected format: "YYYY-MM"
-    if (!selectedMonth || !/^\d{4}-\d{2}$/.test(selectedMonth)) {
-      return res
-        .status(400)
-        .json({ message: "Invalid month format. Use YYYY-MM" });
-    }
-
-    const [yearStr, monthStr] = selectedMonth.split("-");
-    const year = parseInt(yearStr);
-    const month = parseInt(monthStr);
-
-    const startOfMonth = new Date(year, month - 1, 1);
-    const endOfMonth = new Date(year, month, 0, 23, 59, 59, 999);
-
     const coolies = await PurchaseEntry.aggregate([
       {
         $match: {
-          dateOfPurchase: { $gte: startOfMonth, $lte: endOfMonth },
           marketFee: { $gt: 0 },
         },
       },
@@ -474,7 +438,7 @@ const getCoolieFromSuppliers = async (req, res) => {
       },
       {
         $lookup: {
-          from: "suppliers", // collection name in MongoDB
+          from: "suppliers",
           localField: "_id",
           foreignField: "_id",
           as: "supplierDetails",
@@ -497,7 +461,6 @@ const getCoolieFromSuppliers = async (req, res) => {
     );
 
     res.json({
-      month: selectedMonth,
       totalCoolie,
       breakdown: coolies.map((entry) => ({
         supplierName: entry.supplierName,
@@ -510,42 +473,26 @@ const getCoolieFromSuppliers = async (req, res) => {
   }
 };
 
+
 // ========== 8. Receivables from lender ==========
-//done
 const getLenderPayables = async (req, res) => {
   try {
-    const selectedMonth = req.query.month; // e.g., "2025-05"
-    if (!selectedMonth || !/^\d{4}-\d{2}$/.test(selectedMonth)) {
-      return res
-        .status(400)
-        .json({ message: "Invalid month format. Use YYYY-MM" });
-    }
-
-    const [yearStr, monthStr] = selectedMonth.split("-");
-    const year = parseInt(yearStr);
-    const month = parseInt(monthStr);
-
-    const startOfMonth = new Date(year, month - 1, 1);
-    const endOfMonth = new Date(year, month, 0, 23, 59, 59, 999);
-
-    // Fetch lenders
     const lenders = await Lender.find({}).lean();
 
-    // Fetch payments to/from lenders in the selected month
     const payments = await Payment.find({
       category: "lender",
-      date: { $gte: startOfMonth, $lte: endOfMonth },
     }).lean();
 
     const lenderPayables = {};
 
     lenders.forEach((lender) => {
       lenderPayables[lender._id.toString()] = {
-        lenderName: lender.name, // Adjust based on your schema
+        lenderName: lender.name,
         payable: 0,
       };
     });
 
+    // Calculate payable amounts
     payments.forEach((payment) => {
       const lid = payment.lender?.toString();
       if (!lid) return;
@@ -569,7 +516,7 @@ const getLenderPayables = async (req, res) => {
     );
     const totalPayables = breakdown.reduce((sum, l) => sum + l.payable, 0);
 
-    res.json({ month: selectedMonth, totalPayables, breakdown });
+    res.json({ totalPayables, breakdown });
   } catch (err) {
     console.error("Error calculating lender payables:", err);
     res.status(500).json({ message: "Failed to fetch lender payables." });
@@ -577,34 +524,15 @@ const getLenderPayables = async (req, res) => {
 };
 
 // ========== 9. Receivables from supplier ==========
-//done
 const getSupplierBalances = async (req, res) => {
   try {
-    const selectedMonth = req.query.month; // Example: "2025-05"
-    if (!selectedMonth || !/^\d{4}-\d{2}$/.test(selectedMonth)) {
-      return res
-        .status(400)
-        .json({ message: "Invalid month format. Use YYYY-MM" });
-    }
-
-    const [yearStr, monthStr] = selectedMonth.split("-");
-    const year = parseInt(yearStr);
-    const month = parseInt(monthStr);
-
-    const startOfMonth = new Date(year, month - 1, 1);
-    const endOfMonth = new Date(year, month, 0, 23, 59, 59, 999);
-
-    // Fetch data
     const suppliers = await Supplier.find({});
 
-    const purchases = await PurchaseEntry.find({
-      dateOfPurchase: { $gte: startOfMonth, $lte: endOfMonth },
-    }).lean();
+    const purchases = await PurchaseEntry.find({}).lean();
 
     const payments = await Payment.find({
       paymentType: { $in: ["PaymentOut", "PaymentIn"] },
       category: "supplier",
-      date: { $gte: startOfMonth, $lte: endOfMonth },
     }).lean();
 
     const balancesMap = {};
@@ -661,7 +589,6 @@ const getSupplierBalances = async (req, res) => {
     });
 
     res.json({
-      month: selectedMonth,
       payables,
       receivables,
     });
@@ -672,29 +599,10 @@ const getSupplierBalances = async (req, res) => {
 };
 
 // ========== 10. Receivables from profit and loss ==========
-// done
 const getDetailedProfitAndLoss = async (req, res) => {
   try {
-    // 1. Get and validate `month` query param
-    const selectedMonth = req.query.month; // Format: "YYYY-MM"
-    if (!selectedMonth || !/^\d{4}-\d{2}$/.test(selectedMonth)) {
-      return res
-        .status(400)
-        .json({ message: "Invalid month format. Use YYYY-MM" });
-    }
-
-    const [yearStr, monthStr] = selectedMonth.split("-");
-    const year = parseInt(yearStr);
-    const month = parseInt(monthStr);
-
-    // 2. Calculate start and end of the selected month
-    const startOfMonth = new Date(year, month - 1, 1); // e.g., 2024-04-01
-    const endOfMonth = new Date(year, month, 0, 23, 59, 59, 999); // last day of the month
-
-    // 3. Fetch only sales entries within the month
-    const sales = await SalesEntry.find({
-      dateOfSale: { $gte: startOfMonth, $lte: endOfMonth },
-    })
+    // Fetch ALL sales entries (no date filter)
+    const sales = await SalesEntry.find({})
       .populate({
         path: "customers.items.item",
         model: "Item",
@@ -789,7 +697,6 @@ const getDetailedProfitAndLoss = async (req, res) => {
             : "break-even",
       },
       breakdown: results,
-      month: selectedMonth,
     });
   } catch (err) {
     console.error("Error calculating detailed profit and loss:", err);
@@ -799,7 +706,7 @@ const getDetailedProfitAndLoss = async (req, res) => {
   }
 };
 
-
+// ========== 11. Expense ==========
 const getExpensePaymentsByMonth = async (req, res) => {
   try {
     const selectedMonth = req.query.month; // e.g., "2025-05"
@@ -865,7 +772,6 @@ const getExpensePaymentsByMonth = async (req, res) => {
   }
 };
 
-
 module.exports = {
   getReceivablesFromCustomers,
   // getSupplierPayables,
@@ -879,5 +785,5 @@ module.exports = {
   getSupplierBalances,
   getStockInHand,
   getDetailedProfitAndLoss,
-  getExpensePaymentsByMonth
+  getExpensePaymentsByMonth,
 };

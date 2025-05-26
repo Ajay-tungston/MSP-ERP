@@ -66,12 +66,12 @@ function VehicleReport() {
       <h1 className="text-3xl font-bold text-[#0E0F3C] mb-4 p-2">Vehicle Report</h1>
 
       {/* Print Button */}
-      <div className="flex items-center justify-between mb-4 float-right -mt-[5%] mr-[5%]">
+      {/* <div className="flex items-center justify-between mb-4 float-right -mt-[5%] mr-[5%]">
         <button className="flex items-center gap-1 px-4 py-2 rounded-md bg-[#F9FAFB]">
           <Printer size={16} />
           <span className="font-medium text-[#0E0F3C]">Print</span>
         </button>
-      </div>
+      </div> */}
 
       {/* Date Range Inputs */}
       <div className="flex items-center gap-2 text-sm text-gray-500 float-right">

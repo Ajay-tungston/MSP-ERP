@@ -13,7 +13,7 @@ function Expenses() {
     const [expenses, setExpenses] = useState([]);
     const [popup, setPopup] = useState(false);
 
-    const [editData, setEditData] = useState(null); // 👈 store expense to edit
+    const [editData, setEditData] = useState(null); 
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [isLoading, setIsLoading] = useState(false);
@@ -57,15 +57,15 @@ function Expenses() {
         <>
             <div className={`p-4 rounded-lg shadow-sm h-[800px] bg-white mt-5 ${popup ? 'backdrop-blur-xl' : ''}`}>
                 {/* Breadcrumb */}
-                <nav className="text-sm text-gray-500 mb-2 mt-10">
+                <nav className="text-[20px] text-gray-500 mb-2 mt-10">
                     <span>Master</span>
                     <span className="mx-1"><FaChevronRight className="inline-block" /></span>
-                    <span className="text-gray-700">Expense</span>
+                    <span className="text-gray-500">Expense</span>
                 </nav>
 
                 {/* Header */}
                 <div className="flex justify-between items-center">
-                    <h1 className="text-2xl font-bold text-gray-900">Expense</h1>
+                    <h1 className="text-3xl font-bold text-gray-900">Expense</h1>
                     <div className="flex space-x-3 -mt-10 mr-10" onClick={() => { setPopup(true);; }}>
                         <button className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-2 rounded-lg flex items-center gap-2">
                             <CiCirclePlus className="text-xl" /> Add New Expense
@@ -77,11 +77,11 @@ function Expenses() {
                 <div className="mt-20 bg-white overflow-x-auto">
                     <table className="w-full border-collapse text-gray-900">
                         <thead>
-                            <tr className="text-left font-bold border-b-2 border-gray-200 bg-[#F9FAFB]">
+                            <tr className="text-left font-bold border-b-2 border-gray-200 bg-[#F9FAFB] text-lg">
                                 <th className="p-3">No.</th>
                                 <th className="p-3">Expense Type</th>
                                 <th className="p-3">Amount</th>
-                                <th className="p-3">Date</th>
+                                {/* <th className="p-3">Date</th> */}
                                 <th className="p-3"></th>
                                 <th className="p-3"></th>
                             </tr>
@@ -93,11 +93,11 @@ function Expenses() {
                                 <tr><td colSpan="6" className="p-3 text-center">No expenses found.</td></tr>
                             ) : (
                                 expenses.map((expense, index) => (
-                                    <tr key={expense._id} className="border-b border-gray-200 hover:bg-gray-50">
+                                    <tr key={expense._id} className="border-b border-gray-200 hover:bg-gray-50 text-lg">
                                         <td className="p-3">{(currentPage - 1) * itemsPerPage + index + 1}</td>
                                         <td className="p-3">{expense.expense}</td>
                                         <td className="p-3">{expense.amount}</td>
-                                        <td className="p-3">{new Date(expense.date).toLocaleDateString()}</td>
+                                        {/* <td className="p-3">{new Date(expense.date).toLocaleDateString()}</td> */}
                                         <td className="p-3 text-blue-800 cursor-pointer" >
                                             <TbPencilMinus
                                                 size={20}

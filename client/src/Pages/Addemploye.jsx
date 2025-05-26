@@ -141,6 +141,7 @@ const AddEmployeeModal = ({ onClose ,setPopup,fetchEmployee}) => {
               <label className="w-[172px] text-[#737791]">Employee Name <span className="text-red-500">*</span></label>
               <input
                 value={employeeName}
+                     autoComplete="off"
                 onChange={(e) => setEmployeeName(e.target.value)}
                 placeholder="Enter here"
                 className="w-[300px] px-4 py-3 bg-gray-50 rounded-xl outline-none "
@@ -155,6 +156,7 @@ const AddEmployeeModal = ({ onClose ,setPopup,fetchEmployee}) => {
               <label className="w-[172px] text-[#737791]">Address</label>
               <input
                 value={address}
+                     autoComplete="off"
                 onChange={(e) => setAddress(e.target.value)}
                 placeholder="Enter here"
                 className="w-[300px] px-4 py-3 bg-gray-50 rounded-xl outline-none "
@@ -169,6 +171,7 @@ const AddEmployeeModal = ({ onClose ,setPopup,fetchEmployee}) => {
               <label className="w-[172px] text-[#737791]">Phone <span className="text-red-500">*</span></label>
               <input
                 value={phone}
+                     autoComplete="off"
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="Enter here"
                 className="w-[300px] px-4 py-3 bg-gray-50 rounded-xl outline-none "
@@ -208,6 +211,7 @@ const AddEmployeeModal = ({ onClose ,setPopup,fetchEmployee}) => {
               <span className="mr-2 font-bold text-[#05004e]">₹</span>
               <input
                 value={openingBalance}
+                     autoComplete="off"
                 onChange={(e) => setOpeningBalance(e.target.value)}
                 placeholder="Enter here"
                 className="w-full bg-transparent outline-none "
@@ -238,6 +242,7 @@ const AddEmployeeModal = ({ onClose ,setPopup,fetchEmployee}) => {
                 <span className="font-bold text-[#05004e]">₹</span>
                 <input
                   value={salary}
+                       autoComplete="off"
                   onChange={(e) => setSalary(e.target.value)}
                   placeholder="Enter here"
                   className="w-full outline-none "

@@ -5,7 +5,7 @@ import useAxiosPrivate from "../hooks/useAxiosPrivate";
 
 const AddCustomerModal = ({ onClose, setPopup }) => {
   const axiosInstance = useAxiosPrivate();
-  const safeOnClose = typeof onClose === "function" ? onClose : () => {};
+  const safeOnClose = typeof onClose === "function" ? onClose : () => { };
 
   const [formData, setFormData] = useState({
     name: "",
@@ -113,6 +113,7 @@ const AddCustomerModal = ({ onClose, setPopup }) => {
             </label>
             <input
               type="text"
+              autoComplete="off"
               value={formData.name}
               onChange={(e) => handleChange("name", e.target.value)}
               placeholder="Enter here"
@@ -125,6 +126,7 @@ const AddCustomerModal = ({ onClose, setPopup }) => {
             <label className="w-[172px] text-[#737791]">Address</label>
             <input
               type="text"
+                   autoComplete="off"
               value={formData.address}
               onChange={(e) => handleChange("address", e.target.value)}
               placeholder="Enter here"
@@ -134,17 +136,18 @@ const AddCustomerModal = ({ onClose, setPopup }) => {
 
           {/* Phone */}
           <div className="flex items-center">
-  <label className="w-[172px] text-[#737791]">
-    Phone <span className="text-red-500">*</span>
-  </label>
-  <input
-    type="number"
-    value={formData.phone}
-    onChange={(e) => handleChange("phone", e.target.value)}
-    placeholder="Enter here"
-    className="w-[300px] px-4 py-3 bg-gray-50 rounded-xl outline-none"
-  />
-</div>
+            <label className="w-[172px] text-[#737791]">
+              Phone <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="number"
+                   autoComplete="off"
+              value={formData.phone}
+              onChange={(e) => handleChange("phone", e.target.value)}
+              placeholder="Enter here"
+              className="w-[300px] px-4 py-3 bg-gray-50 rounded-xl outline-none"
+            />
+          </div>
 
 
           {/* WhatsApp */}
@@ -181,6 +184,7 @@ const AddCustomerModal = ({ onClose, setPopup }) => {
             <label className="w-[172px] text-[#737791]">Discount %</label>
             <input
               type="number"
+                   autoComplete="off"
               value={formData.discount}
               onChange={(e) => handleChange("discount", e.target.value)}
               placeholder="Enter here"
@@ -197,6 +201,7 @@ const AddCustomerModal = ({ onClose, setPopup }) => {
               <span className="mr-2 font-bold">₹</span>
               <input
                 type="number"
+                     autoComplete="off"
                 value={formData.balance}
                 onChange={(e) => handleChange("balance", e.target.value)}
                 placeholder="Enter here"
@@ -214,15 +219,13 @@ const AddCustomerModal = ({ onClose, setPopup }) => {
               <button
                 key={val}
                 onClick={() => handleChange("route", val)}
-                className={`px-6 py-3 ${
-                  formData.route === val
+                className={`px-6 py-3 ${formData.route === val
                     ? "bg-blue-100 text-blue-700 border border-blue-500"
                     : "bg-gray-100 text-gray-500 border border-gray-300"
-                } ${
-                  idx === 0
+                  } ${idx === 0
                     ? "rounded-l-xl border-r-0"
                     : "rounded-r-xl border-l-0"
-                }`}
+                  }`}
               >
                 {val}
               </button>

@@ -87,7 +87,7 @@ export default function Sidebar() {
   const masterItems = Object.keys(masterItemRoutes);
 
   return (
-    <div className="flex h-screen bg-[#F9FAFB]">
+    <div className="flex h-screen bg-[#F9FAFB] pt-0">
       <div className="flex flex-col min-h-screen w-full lg:w-[313px] bg-white shadow-lg rounded-[24px] p-4 lg:p-6 overflow-hidden">
         {/* Logo */}
         <div className="flex items-center gap-3 mb-4">

@@ -27,9 +27,9 @@ exports.getExpenses = async (req, res) => {
 // Add new expense
 exports.createExpense = async (req, res) => {
   try {
-    const { expense, amount, date } = req.body;
+    const { expense, amount } = req.body;
 console.log(req.body)
-    const newExpense = new Expense({ expense, amount, date });
+    const newExpense = new Expense({ expense, amount });
     await newExpense.save();
 
     res.status(201).json(newExpense);

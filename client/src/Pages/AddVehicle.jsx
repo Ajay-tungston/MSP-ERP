@@ -102,6 +102,7 @@ function AddVehicle({ setPopup, fetchVehicles }) {
                 </label>
                 <input
                   type="text"
+                  autoComplete="off"
                   name={field.name}
                   placeholder={`Enter ${field.label.toLowerCase()}`}
                   value={formData[field.name]}

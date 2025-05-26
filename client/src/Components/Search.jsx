@@ -6,7 +6,7 @@ export default function Navbar() {
 
   // Custom titles for specific routes
   const routeTitles = {
-    "/": "Master",
+    "/": "Dashboard",
     "/mastercustomer": "Master",
     "/route-customer": "Master",
     "/supplier":"Master",
@@ -22,6 +22,8 @@ export default function Navbar() {
     "/purchase-report": "Reports",
     "/localsales-report": "Reports",
     "/trialsales-report":"Reports",
+    "/individualsales":"Reports",
+    "/trail": "Reports",
     "/individual-print":"Print",
     "/routeprint":"Print",
     "weeklyprint":"Print",
@@ -29,11 +31,12 @@ export default function Navbar() {
     "/employee":"Master",
     "/individual-report":"Reports",
     "/whatsapp":"Whatsapp",
-    "/paymentin":"Transaction",
+    "/payment/in":"Transaction",
+    "/payment/out":"Transaction",
     "/paymentout":"Transaction",
     "/vehicle":"Vehicle",
-    "/money-in":"Vehicle",
-    "/money-out":"Vehicle"
+    "/report":"Vehicle",
+    
  
   };          
 console.log(location.pathname)

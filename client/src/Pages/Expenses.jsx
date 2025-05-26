@@ -6,6 +6,8 @@ import { FaChevronRight } from "react-icons/fa6";
 import AddExpense from "./AddExpense";
 import useAxiosPrivate from '../hooks/useAxiosPrivate';
 import EditExpenseForm from './EditExpense';
+import Swal from "sweetalert2";
+import OvalSpinner from "../Components/spinners/OvalSpinner";
 
 function Expenses() {
     const axiosInstance = useAxiosPrivate();
@@ -53,6 +55,44 @@ function Expenses() {
     //     setPopup(true);
     // };
 
+    const handleDeleteExpense = async (id) => {
+        const result = await Swal.fire({
+            title: 'Are you sure?',
+            text: "This will permanently delete the expense",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, delete it!'
+        });
+    
+        if (result.isConfirmed) {
+            try {
+                await axiosInstance.delete(`/admin/expense/${id}`);
+                
+                Swal.fire({
+                    title: 'Deleted!',
+                    text: 'Expense has been deleted.',
+                    icon: 'success',
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+    
+                fetchExpenses();
+            } catch (error) {
+                console.error("Delete failed:", error);
+    
+                Swal.fire({
+                    title: 'Error!',
+                    text: error?.response?.data?.message || 'An error occurred while deleting.',
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                });
+            }
+        }
+    };
+    
+    
     return (
         <>
             <div className={`p-4 rounded-lg shadow-sm h-[800px] bg-white mt-5 ${popup ? 'backdrop-blur-xl' : ''}`}>
@@ -87,33 +127,41 @@ function Expenses() {
                             </tr>
                         </thead>
                         <tbody>
-                            {isLoading ? (
-                                <tr><td colSpan="6" className="p-3 text-center">Loading...</td></tr>
-                            ) : expenses.length === 0 ? (
-                                <tr><td colSpan="6" className="p-3 text-center">No expenses found.</td></tr>
-                            ) : (
-                                expenses.map((expense, index) => (
-                                    <tr key={expense._id} className="border-b border-gray-200 hover:bg-gray-50 text-lg">
-                                        <td className="p-3">{(currentPage - 1) * itemsPerPage + index + 1}</td>
-                                        <td className="p-3">{expense.expense}</td>
-                                        <td className="p-3">{expense.amount}</td>
-                                        {/* <td className="p-3">{new Date(expense.date).toLocaleDateString()}</td> */}
-                                        <td className="p-3 text-blue-800 cursor-pointer" >
-                                            <TbPencilMinus
-                                                size={20}
-                                                onClick={() => {
-                                                    setSelectedExpense(expense);
-                                                    setEditPopup(true);
-                                                }}
-                                            />
-                                        </td>
-                                        <td className="p-3 text-red-600 cursor-pointer">
-                                            <FaRegTrashCan size={18} />
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
+  {isLoading ? (
+    <tr>
+      <td colSpan="6" className="text-center p-5">
+        <OvalSpinner />
+      </td>
+    </tr>
+  ) : expenses.length > 0 ? (
+    expenses.map((expense, index) => (
+      <tr key={expense._id} className="border-b border-gray-200 hover:bg-gray-50 text-lg">
+        <td className="p-3">{(currentPage - 1) * itemsPerPage + index + 1}</td>
+        <td className="p-3">{expense.expense}</td>
+        <td className="p-3">{expense.amount}</td>
+        {/* <td className="p-3">{new Date(expense.date).toLocaleDateString()}</td> */}
+        <td className="p-3 text-blue-800 cursor-pointer">
+          <TbPencilMinus
+            size={20}
+            onClick={() => {
+              setSelectedExpense(expense);
+              setEditPopup(true);
+            }}
+          />
+        </td>
+        <td className="p-3 text-red-600 cursor-pointer">
+          <FaRegTrashCan size={18} onClick={() => handleDeleteExpense(expense._id)} />
+        </td>
+      </tr>
+    ))
+  ) : (
+    <tr>
+      <td colSpan="6" className="text-center p-5">
+        No expenses found.
+      </td>
+    </tr>
+  )}
+</tbody>
                     </table>
                 </div>
 

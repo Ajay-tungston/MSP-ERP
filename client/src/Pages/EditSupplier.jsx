@@ -171,7 +171,8 @@ const EditSupplier = ({ supplierId, setEditPopup, fetchSuppliers }) => {
           </div>
 
           {/* Advance */}
-          <div className="flex items-center">
+
+          {/* <div className="flex items-center">
             <label className="w-[172px] text-[#737791]">Advance</label>
             <input
               type="number"
@@ -180,10 +181,11 @@ const EditSupplier = ({ supplierId, setEditPopup, fetchSuppliers }) => {
               onChange={handleChange}
               className="w-full sm:w-[350px] px-6 py-4 bg-gray-50 rounded-xl outline-none"
             />
-          </div>
+          </div> */}
 
           {/* Advance Deducted */}
-          <div className="flex items-center">
+          
+          {/* <div className="flex items-center">
             <label className="w-[172px] text-[#737791]">Advance Deducted</label>
             <input
               type="number"
@@ -192,7 +194,7 @@ const EditSupplier = ({ supplierId, setEditPopup, fetchSuppliers }) => {
               onChange={handleChange}
               className="w-full sm:w-[350px] px-6 py-4 bg-gray-50 rounded-xl outline-none"
             />
-          </div>
+          </div> */}
 
           {/* Commission */}
           <div className="flex items-center">

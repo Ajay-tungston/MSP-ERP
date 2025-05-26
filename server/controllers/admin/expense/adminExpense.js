@@ -1,5 +1,6 @@
 const { response } = require('express');
 const Expense = require('../../../models/Expense');
+const Payment = require('../../../models/Payment');
 
 // Get expenses with pagination
 exports.getExpenses = async (req, res) => {
@@ -57,10 +58,27 @@ exports.updateExpense = async (req, res) => {
 // Delete expense
 exports.deleteExpense = async (req, res) => {
   try {
-    const deleted = await Expense.findByIdAndDelete(req.params.id);
-    if (!deleted) return res.status(404).json({ message: 'Expense not found' });
-    res.json({ message: 'Expense deleted' });
+    const expenseId = req.params.id;
+
+    // ✅ Check if any Payment references this expense
+    const existingPayment = await Payment.findOne({ expense: expenseId });
+
+    if (existingPayment) {
+      return res.status(400).json({
+        message: 'Cannot delete expense as it is linked to a payment.',
+      });
+    }
+
+    // Proceed to delete
+    const deleted = await Expense.findByIdAndDelete(expenseId);
+
+    if (!deleted) {
+      return res.status(404).json({ message: 'Expense not found' });
+    }
+
+    res.json({ message: 'Expense deleted successfully' });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ message: 'Server Error' });
   }
 };

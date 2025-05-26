@@ -75,10 +75,10 @@ const AddExpenseForm = ({ setPopup,refreshExpenses }) => {
 
         <div className="grid gap-[44px] grid-cols-1 sm:grid-cols-2 lg:grid-cols-2">
           {/* No. Field (Static for now) */}
-          <div className="flex items-center gap-4">
+          {/* <div className="flex items-center gap-4">
             <label className="min-w-[120px] sm:min-w-[172px] text-[#737791] text-xl font-normal">No.</label>
             <div className="font-bold text-gray-800">001</div>
-          </div>
+          </div> */}
 
           {/* Expense Type */}
           <div className="flex items-center gap-4">

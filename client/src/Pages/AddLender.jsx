@@ -7,7 +7,7 @@ const AddLenderForm = ({ setPopup, refreshLenders }) => {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
-  
+  const [openingBalance, setOpeningBalance] = useState("");
 
   const axiosInstance = useAxiosPrivate();
 
@@ -15,7 +15,7 @@ const AddLenderForm = ({ setPopup, refreshLenders }) => {
     setName("");
     setPhone("");
     setAddress("");
-   
+    setOpeningBalance("");
     setPopup(false);
   };
 
@@ -28,19 +28,20 @@ const AddLenderForm = ({ setPopup, refreshLenders }) => {
       Swal.fire("Validation Error", "Phone number is invalid.", "warning");
       return;
     }
-
+const parsedBalance = parseFloat(openingBalance);
     try {
       await axiosInstance.post("/admin/lender/add", {
         name,
         phone,
         address,
-        
+        openingBalance: isNaN(parsedBalance) ? 0 : parsedBalance,
       });
 
       Swal.fire("Success", "Lender added successfully.", "success");
       refreshLenders?.();
       setPopup(false);
     } catch (error) {
+      console.log(error)
       Swal.fire("Error", "Failed to add lender.", "error");
     }
   };
@@ -99,7 +100,17 @@ const AddLenderForm = ({ setPopup, refreshLenders }) => {
             />
           </div>
 
-         
+            {/* Opening Balance */}
+            <div className="flex items-center gap-4">
+            <label className="w-[150px] text-[#737791] text-xl">Opening Balance</label>
+            <input
+              type="number"
+              placeholder="Enter opening balance"
+              value={openingBalance}
+              onChange={(e) => setOpeningBalance(e.target.value)}
+              className="w-full sm:w-[350px] h-[48px] rounded-lg px-4 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
 
        
          

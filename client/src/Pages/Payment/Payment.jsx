@@ -9,6 +9,8 @@ import OvalSpinner from "../../Components/spinners/OvalSpinner";
 import { openPaymentPrintPage } from "../../utils/openPaymentPrintPage";
 import { FaWhatsapp } from "react-icons/fa";
 import { useParams } from "react-router-dom";
+import { FaTrashAlt } from "react-icons/fa";
+import Swal from "sweetalert2";
 
 function Payment() {
   const [popup, setPopup] = useState(false);
@@ -59,6 +61,29 @@ function Payment() {
       console.log(error);
     }
   };
+
+  const handleDelete = (id) => {
+    Swal.fire({
+      title: "Are you sure?",
+      text: "This payment will be deleted permanently.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, delete it!",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          await axiosInstance.delete(`/admin/payment/delete/${id}`);
+          Swal.fire("Deleted!", "Payment has been deleted.", "success");
+          fetchPaymentData(); // re-fetch data after deletion
+        } catch (error) {
+          console.error("Delete failed:", error);
+          Swal.fire("Error", "Failed to delete payment.", "error");
+        }
+      }
+    });
+  };
   return (
     <>
     <div className="p-4 rounded-lg shadow-sm bg-white mt-10">
@@ -94,6 +119,7 @@ function Payment() {
               <th className="p-3">Name</th>
               <th className="p-3">Date</th>
               <th className="p-3">Amount</th>
+          <th className="p-3"></th>
           <th className="p-3"></th>
             </tr>
           </thead>
@@ -140,6 +166,13 @@ function Payment() {
                     {format(new Date(row.date), "dd/MM/yyyy")}
                   </td>
                   <td className="p-3">₹{row.amount}</td>
+                  <td
+  className="p-3 text-red-500 cursor-pointer hover:text-red-700"
+  onClick={() => handleDelete(row._id)}
+>
+  <FaTrashAlt />
+</td>
+
                   <td className="p-3 text-indigo-600">
                     <PiPrinterLight
                       className="w-5 h-5 cursor-pointer"

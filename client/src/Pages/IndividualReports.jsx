@@ -386,6 +386,7 @@ const IndividualReports = () => {
           {/* Supplier Search */}
           <Combobox
             value={selectedSupplier}
+              autoComplete="off"
             onChange={(value) => {
               setSearchTeam(value.supplierName);
               setSelectedSupplier(value);
@@ -396,6 +397,7 @@ const IndividualReports = () => {
               <BsSearch className="text-gray-500" />
               <ComboboxInput
                 displayValue={(supplier) => supplier?.supplierName || searchTerm}
+                    autoComplete="off"
                 onChange={(e) => {
                   setSearchTeam(e.target.value);
                   setSelectedSupplier(null);
@@ -437,7 +439,7 @@ const IndividualReports = () => {
               </div>
             )}
 
-            <label className="text-slate-500 text-xl">From</label>
+            <label className="text-[#73779166] text-xl">From</label>
             <input
               type="date"
               value={startDate}
@@ -447,7 +449,7 @@ const IndividualReports = () => {
               }}
               className="w-52 px-4 py-3 bg-gray-50 rounded-xl text-zinc-700 text-xl outline-none"
             />
-            <label className="text-slate-500 text-xl">To</label>
+    <label className="text-[#73779166] text-xl">To</label>
             <input
               type="date"
               value={endDate}

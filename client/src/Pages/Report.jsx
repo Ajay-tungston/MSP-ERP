@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { Printer } from "lucide-react";
 import { FaChevronRight } from "react-icons/fa6";
 import useAxiosPrivate from "../hooks/useAxiosPrivate";
+import OvalSpinner from "../Components/spinners/OvalSpinner";
+import Swal from "sweetalert2";
 
 function VehicleReport() {
   const today = new Date().toISOString().split("T")[0];
@@ -9,11 +11,13 @@ function VehicleReport() {
   const [toDate, setToDate] = useState(today);
   const [vehiclePayments, setVehiclePayments] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [loading, setLoading] = useState(false);
   const [totalPages, setTotalPages] = useState(1);
-  const [limit] = useState(8); // items per page
+  const [limit] = useState(8);
   const axiosPrivate = useAxiosPrivate();
 
   const fetchData = async () => {
+    setLoading(true);
     try {
       const params = {
         from: fromDate,
@@ -38,9 +42,16 @@ function VehicleReport() {
       setTotalPages(response.data.totalPages || 1);
     } catch (error) {
       console.error("Failed to fetch vehicle payments:", error);
+      Swal.fire({
+        icon: "error",
+        title: "Failed to Fetch Data",
+        text: error.response?.data?.message || "Something went wrong while fetching vehicle payments.",
+        confirmButtonColor: "#d33",
+      });
+    } finally {
+      setLoading(false);
     }
   };
-
   useEffect(() => {
     fetchData();
   }, [fromDate, toDate, currentPage]);
@@ -112,25 +123,31 @@ function VehicleReport() {
           </tr>
         </thead>
         <tbody>
-          {vehiclePayments.length > 0 ? (
-            vehiclePayments.map((item, index) => (
-              <tr key={item.id} className="border-b border-gray-200 text-lg text-slate-900">
-                <td className="p-3">{(currentPage - 1) * limit + index + 1}</td>
-                <td className="p-3">{item.name}</td>
-                <td className="p-3">{item.number}</td>
-                <td className="p-3">{item.rcNo}</td>
-                <td className="p-3">{item.paymentType}</td>
-                <td className="p-3">₹{item.amount.toFixed(2)}</td>
-              </tr>
-            ))
-          ) : (
-            <tr>
-              <td colSpan="6" className="text-center p-4 text-lg text-gray-500">
-                No vehicle payments found.
-              </td>
-            </tr>
-          )}
-        </tbody>
+  {loading ? (
+    <tr>
+      <td colSpan="6" className="text-center p-5">
+        <OvalSpinner />
+      </td>
+    </tr>
+  ) : vehiclePayments.length > 0 ? (
+    vehiclePayments.map((item, index) => (
+      <tr key={item.id} className="border-b border-gray-200 text-lg text-slate-900">
+        <td className="p-3">{(currentPage - 1) * limit + index + 1}</td>
+        <td className="p-3">{item.name}</td>
+        <td className="p-3">{item.number}</td>
+        <td className="p-3">{item.rcNo}</td>
+        <td className="p-3">{item.paymentType}</td>
+        <td className="p-3">₹{item.amount.toFixed(2)}</td>
+      </tr>
+    ))
+  ) : (
+    <tr>
+      <td colSpan="6" className="text-center p-4 text-lg text-gray-500">
+        No vehicle payments found.
+      </td>
+    </tr>
+  )}
+</tbody>
       </table>
 
       {/* Pagination */}

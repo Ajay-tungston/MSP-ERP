@@ -101,7 +101,7 @@ const TransactionTable = ({
     <div className="p-4">
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200 text-sm">
-          <thead className="bg-gray-100 text-left text-gray-700 font-semibold">
+          <thead className="bg-[#F9FAFB] text-left text-gray-700 font-semibold">
             <tr>
               <th className="p-4">Date</th>
               <th className="p-4">Description</th>
@@ -146,7 +146,7 @@ const TransactionTable = ({
                 ))}
                 
                 {/* Totals Row */}
-                <tr className="bg-green-50 font-semibold text-gray-700">
+                <tr className="bg-[#F0FDFA] font-semibold text-gray-700">
   <td className="p-4" colSpan="2">Period Totals</td>
   <td className="p-4 text-right">₹{summary.totalDebit.toFixed(2)}</td>
   <td className="p-4 text-right">₹{summary.totalCredit.toFixed(2)}</td>

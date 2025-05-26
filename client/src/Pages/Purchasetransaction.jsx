@@ -783,19 +783,19 @@ function Purchasetransaction() {
                 ))}
                 <div className="flex justify-end gap-4 mt-6">
                   <button
-                    className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700"
+                    className="bg-[#4079ED] text-white px-6 py-2 rounded"
                     onClick={() => handleSubmit(false)}
                   >
                     Save
                   </button>
                   <button
-                    className="bg-purple-600 text-white px-6 py-2 rounded hover:bg-purple-700"
+                    className=" text-[#4079ED] px-6 py-2 rounded border border-[#4079ED] bg-blue-50"
                     onClick={() => handleSubmit(true)}
                   >
                     Print
                   </button>
                   <button
-                    className="bg-gray-400 text-white px-6 py-2 rounded hover:bg-gray-500"
+                   className=" text-red-500 px-6 py-2 rounded border border-red-500 bg-red-50"
                     onClick={() => {
                       // You can clear the form or reset states here
                       setItems([
@@ -815,7 +815,7 @@ function Purchasetransaction() {
                       setDateOfPurchase("");
                     }}
                   >
-                    Cancel
+                 Clear
                   </button>
                 </div>
               </div>

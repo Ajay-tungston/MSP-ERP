@@ -1,4 +1,5 @@
 const Lender = require("../../../models/Lender");
+const Payment = require("../../../models/Payment");
 
 // GET /admin/lender
 exports.getLenders = async (req, res) => {
@@ -42,15 +43,24 @@ exports.getLenders = async (req, res) => {
 
 // POST /admin/lender/add
 exports.addLender = async (req, res) => {
-  const { name, phone, address, } = req.body;
-  if (!name || !phone ) {
-    return res.status(400).json({ message: "Name, phone, and address are required." });
+  const { name, phone, address, openingBalance } = req.body;
+
+  if (!name || !phone) {
+    return res.status(400).json({ message: "Name and phone are required." });
   }
+
   try {
-    const newLender = new Lender({ name, phone, address:address || "",});
+    const newLender = new Lender({
+      name,
+      phone,
+      address: address || "",
+      openingBalance: Number(openingBalance) || 0,
+    });
+
     await newLender.save();
     res.status(201).json(newLender);
   } catch (err) {
+    console.error("Error adding lender:", err);
     res.status(500).json({ message: "Failed to add lender." });
   }
 };
@@ -58,34 +68,51 @@ exports.addLender = async (req, res) => {
 // DELETE /admin/lender/:id
 exports.deleteLender = async (req, res) => {
   try {
-    await Lender.findByIdAndDelete(req.params.id);
+    const lenderId = req.params.id;
+
+    // Check if any payment is linked to this lender
+    const linkedPayment = await Payment.findOne({ lender: lenderId });
+
+    if (linkedPayment) {
+      return res.status(400).json({
+        message: "Cannot delete lender as it is linked to a payment.",
+      });
+    }
+
+    // Proceed with deletion if not linked
+    const deleted = await Lender.findByIdAndDelete(lenderId);
+
+    if (!deleted) {
+      return res.status(404).json({ message: "Lender not found." });
+    }
+
     res.status(200).json({ message: "Lender deleted successfully." });
   } catch (err) {
+    console.error("Error deleting lender:", err);
     res.status(500).json({ message: "Failed to delete lender." });
   }
 };
 
 // GET /admin/lender/all
 exports.getAllLendersList = async (req, res) => {
-try {
+  try {
     const search = req.query.search || "";
     const query = search
-  ? { name: { $regex: search, $options: "i" } }
-  : {};
-    const lender = await Lender.find(query)
-    // .select(
-    //   "supplierName supplierCode commission marketFee"
-    // );
-    return res.status(200).json(lender);
+      ? { name: { $regex: search, $options: "i" } }
+      : {};
+
+    const lenders = await Lender.find(query);
+    return res.status(200).json(lenders);
   } catch (error) {
-    console.log(error);
+    console.error("Error getting lenders list:", error);
     return res.status(500).json({ message: "Error getting lender" });
   }
 };
+
 // PUT /admin/lender/update/:id
 exports.updateLender = async (req, res) => {
   const { id } = req.params;
-  const { name, phone, address } = req.body;
+  const { name, phone, address, openingBalance } = req.body;
 
   if (!name || name.trim().length < 3) {
     return res.status(400).json({ message: "Lender name must be at least 3 characters long." });
@@ -102,6 +129,7 @@ exports.updateLender = async (req, res) => {
         name: name.trim(),
         phone: phone.trim(),
         address: address?.trim() || "",
+        openingBalance: Number(openingBalance) || 0,
       },
       { new: true }
     );

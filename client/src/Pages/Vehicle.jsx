@@ -5,15 +5,16 @@ import { TbPencilMinus } from "react-icons/tb";
 import { FaTrashAlt } from "react-icons/fa";
 import useAxiosPrivate from "../hooks/useAxiosPrivate";
 import AddVehicle from "./AddVehicle";
-// import EditVehicle from "./EditVehicle";
+import { debounce } from "lodash";
+import OvalSpinner from "../Components/spinners/OvalSpinner";
 
 export default function Vehicle() {
     const [vehicles, setVehicles] = useState([]);
     const [selectedRows, setSelectedRows] = useState([]);
     const [popup, setPopup] = useState();
-    const [isLoading, setIsLoading] = useState(false);
+    const [loading, setIsLoading] = useState(false);
     const [search, setSearch] = useState("");
-
+console.log(vehicles)
     const [selectedVehicle, setSelectedVehicle] = useState(null);
     const [currentPage, setCurrentPage] = useState(1);
     const [limit] = useState(8);
@@ -22,22 +23,23 @@ export default function Vehicle() {
     const axiosInstance = useAxiosPrivate();
 
     // Fetch vehicles from backend
-    const fetchVehicles = async () => {
+    const fetchVehiclesDebounced = debounce(async () => {
         try {
             setIsLoading(true);
             const res = await axiosInstance.get(`/admin/vehicle/get?page=${currentPage}&limit=${limit}&search=${search}`);
-            setVehicles(res.data);
+            setVehicles(res.data.data);
             setCurrentPage(res.data.currentPage || 1);
             setTotalPages(res.data.totalPages || 1);
         } catch (error) {
+            
             console.error("Failed to fetch vehicles:", error);
         } finally {
             setIsLoading(false);
         }
-    };
+    },300)
 
     useEffect(() => {
-        fetchVehicles();
+        fetchVehiclesDebounced();
     }, [search, currentPage]);
 
     const toggleRowSelection = (id) => {
@@ -86,7 +88,8 @@ export default function Vehicle() {
                         autoComplete="off"
                         onChange={(e) => {
                             setCurrentPage(1);
-                            setSearch(e.target.value);
+                            const value = e.target.value;
+                            setSearch(value);
                         }}
                         placeholder="Search here..."
                         className=" px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -114,7 +117,13 @@ export default function Vehicle() {
                             </tr>
                         </thead>
                         <tbody>
-                            {Array.isArray(vehicles) &&
+                            {loading ? (
+                                <tr>
+                                    <td colSpan="6" className="text-center p-5">
+                                        <OvalSpinner />
+                                    </td>
+                                </tr>
+                            ) : Array.isArray(vehicles) && vehicles.length > 0 ? (
                                 vehicles.map((vehicle, index) => (
                                     <tr
                                         key={vehicle._id}
@@ -124,17 +133,27 @@ export default function Vehicle() {
                                         <td className="p-3">{vehicle.vehicleName}</td>
                                         <td className="p-3">{vehicle.vehicleNo}</td>
                                         <td className="p-3">{vehicle.rcNo}</td>
-                                        <td className="p-3 text-blue-800 cursor-pointer" onClick={() => {
-                                            setSelectedVehicle(vehicle);
-                                            setPopup("edit");
-                                        }}>
+                                        <td
+                                            className="p-3 text-blue-800 cursor-pointer"
+                                            onClick={() => {
+                                                setSelectedVehicle(vehicle);
+                                                setPopup("edit");
+                                            }}
+                                        >
                                             <TbPencilMinus />
                                         </td>
                                         <td className="p-3 text-red-600 cursor-pointer">
                                             <FaTrashAlt onClick={() => deleteVehicle(vehicle._id)} />
                                         </td>
                                     </tr>
-                                ))}
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan="6" className="text-center p-5">
+                                        No vehicles found.
+                                    </td>
+                                </tr>
+                            )}
                         </tbody>
                     </table>
                 </div>

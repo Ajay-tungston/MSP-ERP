@@ -93,7 +93,7 @@ export default function Sidebar() {
         <div className="flex items-center gap-3 mb-4">
           <div className="w-18 h-18 rounded-lg overflow-hidden flex items-center justify-center">
             <img
-              src="images/msplogo 1.png"
+              src="images/msplogo1.png"
               alt="Company Logo"
               className="w-full h-full object-cover"
             />

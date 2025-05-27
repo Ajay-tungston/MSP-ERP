@@ -424,12 +424,32 @@ const getCommissionsFromSuppliers = async (req, res) => {
 // ========== 7. Receivables from coolie ==========
 const getCoolieFromSuppliers = async (req, res) => {
   try {
+    const selectedMonth = req.query.month; // e.g., "2025-05"
+
+    let matchStage = {
+      marketFee: { $gt: 0 },
+    };
+
+    if (selectedMonth) {
+      // Validate month format
+      if (!/^\d{4}-\d{2}$/.test(selectedMonth)) {
+        return res
+          .status(400)
+          .json({ message: "Invalid month format. Use YYYY-MM" });
+      }
+
+      const [yearStr, monthStr] = selectedMonth.split("-");
+      const year = parseInt(yearStr);
+      const month = parseInt(monthStr);
+
+      const startOfMonth = new Date(year, month - 1, 1);
+      const endOfMonth = new Date(year, month, 0, 23, 59, 59, 999);
+
+      matchStage.createdAt = { $gte: startOfMonth, $lte: endOfMonth };
+    }
+
     const coolies = await PurchaseEntry.aggregate([
-      {
-        $match: {
-          marketFee: { $gt: 0 },
-        },
-      },
+      { $match: matchStage },
       {
         $group: {
           _id: "$supplier",
@@ -444,9 +464,7 @@ const getCoolieFromSuppliers = async (req, res) => {
           as: "supplierDetails",
         },
       },
-      {
-        $unwind: "$supplierDetails",
-      },
+      { $unwind: "$supplierDetails" },
       {
         $project: {
           supplierName: "$supplierDetails.supplierName",
@@ -461,6 +479,7 @@ const getCoolieFromSuppliers = async (req, res) => {
     );
 
     res.json({
+      month: selectedMonth || "all",
       totalCoolie,
       breakdown: coolies.map((entry) => ({
         supplierName: entry.supplierName,
@@ -472,6 +491,7 @@ const getCoolieFromSuppliers = async (req, res) => {
     res.status(500).json({ message: "Failed to fetch coolie data." });
   }
 };
+
 
 
 // ========== 8. Receivables from lender ==========
@@ -527,9 +547,7 @@ const getLenderPayables = async (req, res) => {
 const getSupplierBalances = async (req, res) => {
   try {
     const suppliers = await Supplier.find({});
-
     const purchases = await PurchaseEntry.find({}).lean();
-
     const payments = await Payment.find({
       paymentType: { $in: ["PaymentOut", "PaymentIn"] },
       category: "supplier",
@@ -556,7 +574,6 @@ const getSupplierBalances = async (req, res) => {
       const supplierId = payment.supplier?.toString();
       if (supplierId) {
         balancesMap[supplierId] = balancesMap[supplierId] || 0;
-
         if (payment.paymentType === "PaymentOut") {
           balancesMap[supplierId] -= payment.amount;
         } else if (payment.paymentType === "PaymentIn") {
@@ -565,9 +582,11 @@ const getSupplierBalances = async (req, res) => {
       }
     });
 
-    // Prepare results
     const payables = [];
     const receivables = [];
+
+    let totalPayables = 0;
+    let totalReceivables = 0;
 
     suppliers.forEach((s) => {
       const supplierId = s._id.toString();
@@ -579,24 +598,29 @@ const getSupplierBalances = async (req, res) => {
           supplierName: s.supplierName,
           balance: Number(balance.toFixed(2)),
         });
+        totalPayables += balance;
       } else if (balance < 0) {
         receivables.push({
           supplierId,
           supplierName: s.supplierName,
           balance: Number(Math.abs(balance.toFixed(2))),
         });
+        totalReceivables += Math.abs(balance);
       }
     });
 
     res.json({
       payables,
       receivables,
+      totalPayables: Number(totalPayables.toFixed(2)),
+      totalReceivables: Number(totalReceivables.toFixed(2)),
     });
   } catch (err) {
-    console.error("Error fetching supplier balances:", err);
-    res.status(500).json({ message: "Failed to fetch supplier balances." });
+    console.error("Error in getSupplierBalances:", err);
+    res.status(500).json({ message: "Failed to calculate supplier balances." });
   }
 };
+
 
 // ========== 10. Receivables from profit and loss ==========
 const getDetailedProfitAndLoss = async (req, res) => {

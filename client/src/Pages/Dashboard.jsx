@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import {
   PieChart,
@@ -11,56 +10,25 @@ import {
   YAxis,
   Tooltip,
   LabelList,
+  Label,
 } from "recharts";
 import useAxiosPrivate from "../hooks/useAxiosPrivate";
 import { format } from "date-fns";
-const kpiData = [
-  { day: "Mon", NetReceivables: 400, TotalCommission: 780 },
-  { day: "Tue", NetReceivables: 700, TotalCommission: 780 },
-  { day: "Wed", NetReceivables: 900, TotalCommission: 780 },
-  { day: "Thu", NetReceivables: 1100, TotalCommission: 780 },
-  { day: "Fri", NetReceivables: 1600, TotalCommission: 780 },
-  { day: "Sat", NetReceivables: 2000, TotalCommission: 780 },
-];
-
-const salesData = [
-  { name: "Local", value: 1200 },
-  { name: "Route", value: 2400 },
-];
-
-const purchaseData = [
-  { name: "Farm Fresh", value: 1250 },
-  { name: "Green Supply", value: 2000 },
-];
-
-// const expenseData = [
-//   { name: "Coolie/Market Fees", value: 500, color: "#6366F1" },
-//   { name: " Expenses", value: 250, color: "#22C55E" },
-// ];
-
-// const totalExpense = expenseData.reduce((acc, curr) => acc + curr.value, 0);
-
-const data = [
-  { name: "Cash Balance", value: 4140 },
-  { name: "Customer Receivables", value: 5000 },
-  { name: "Supplier Receivables", value: 3000 },
-];
 
 const COLORS = ["#5B61EB", "#F3B700", "#3BB273"];
-
-const barData = [
-  { name: "Sales", value: 3600 },
-  { name: "Purchases", value: 2000 },
-  { name: "Expenses", value: 550 },
-];
-
-const totalProfit = 1050;
 
 const FinancialDashboard = () => {
   const [recentTransactions, setRecentTransactions] = useState([]);
   const axiosInstance = useAxiosPrivate();
-  const [totalExpense, setTotalExpense]=useState(0);
-  const [expenseData , setExpenseData] = useState([]);
+  const [expenseData, setExpenseData] = useState([]);
+  const [totalExpense, setTotalExpense] = useState(0);
+  const [selectedMonth, setSelectedMonth] = useState(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(
+      2,
+      "0"
+    )}`;
+  });
 
   const [summary, setSummary] = useState({
     sales: 0,
@@ -68,6 +36,7 @@ const FinancialDashboard = () => {
     expenses: [],
   });
 
+  ////////////////////////
   useEffect(() => {
     const fetchSummary = async () => {
       try {
@@ -79,15 +48,31 @@ const FinancialDashboard = () => {
     };
     fetchSummary();
   }, [axiosInstance]);
-     
 
+  /////////////////////////////////////////
   useEffect(() => {
     const fetchExpenseSummary = async () => {
       try {
-        const res = await axiosInstance.get("/admin/transaction/summary");
-        setExpenseData(res.data.breakdown);
-        setTotalExpense(res.data.totalExpense);
- 
+        const res = await axiosInstance.get(
+          `/admin/trialBalance/expense${
+            selectedMonth ? `?month=${selectedMonth}` : ""
+          }`
+        );
+        const res2 = await axiosInstance.get(
+          `/admin/trialBalance/coolie${
+            selectedMonth ? `?month=${selectedMonth}` : ""
+          }`
+        );
+
+        const expense = res.data.totalExpenses || 0;
+        const coolie = res2.data.totalCoolie || 0;
+        const chartData = [
+          { name: "Expense", value: expense, color: COLORS[0] },
+          { name: "Coolie / Market Fee", value: coolie, color: COLORS[1] },
+        ];
+
+        setExpenseData(chartData);
+        setTotalExpense(expense + coolie);
       } catch (error) {
         console.error("Failed to fetch expense summary", error);
       }
@@ -96,22 +81,19 @@ const FinancialDashboard = () => {
     fetchExpenseSummary();
   }, []);
 
-
-  
-  const totalProfit =
-    summary.sales - summary.purchases - summary.totalExpense;
-
   const barData = [
     { name: "Sales", value: summary.sales },
     { name: "Purchases", value: summary.purchases },
     { name: "Expenses", value: summary.expenses },
   ];
+
   useEffect(() => {
     const fetchRecentTransactions = async () => {
       try {
         const resp = await axiosInstance.get("/admin/transaction/transactions");
+
         setRecentTransactions(resp.data || []);
-        console.log(resp)
+        console.log(resp);
       } catch (error) {
         console.error("Failed to fetch recent transactions", error);
       }
@@ -119,64 +101,121 @@ const FinancialDashboard = () => {
     fetchRecentTransactions();
   }, [axiosInstance]);
 
+  const [overview, setOverview] = useState([
+    { name: "Cash Balance", value: 0 },
+    { name: "Customer Receivables", value: 0 },
+    { name: "Supplier Receivables", value: 0 },
+  ]);
+
+  useEffect(() => {
+    const fetchOverview = async () => {
+      try {
+        const res1 = await axiosInstance.get("/admin/trialBalance/receivable"); // customer receivables
+        const res2 = await axiosInstance.get(
+          "/admin/trialBalance/supplierbalance"
+        ); // supplier receivables
+        const res3 = await axiosInstance.get("/admin/trialBalance/cashbalance"); // cash balance
+        const data = [
+          { name: "Cash Balance", value: res3.data.cashBalance || 0 },
+          {
+            name: "Customer Receivables",
+            value: res1.data.totalReceivables || 0,
+          },
+          {
+            name: "Supplier Receivables",
+            value: res2.data.totalReceivables || 0,
+          },
+        ];
+
+        setOverview(data);
+      } catch (error) {
+        console.error("Failed to fetch overview", error);
+      }
+    };
+
+    fetchOverview();
+  }, [axiosInstance]);
+
   return (
     <div>
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-6 p-4 ">
+      <div className="grid grid-cols-1 md:grid-cols-6 gap-6 p-4 ">
         {/* Financial Overview */}
         <div className="bg-white rounded-2xl shadow-md p-6 w-full col-span-2 overflow-visible">
-          <h2 className="text-lg font-semibold text-black mb-4">Financial Overview</h2>
-          <hr className="mb-4 border-gray-700" />
+          <h2 className="text-lg font-semibold text-black mb-4">
+            Financial Overview
+          </h2>
+          <hr className="mb-4 border-gray-200" />
           <div className="flex justify-center overflow-visible">
-      <PieChart width={450} height={320}>
-        <Pie
-          data={data}
-          cx="50%"
-          cy="50%"
-          outerRadius={150}
-          innerRadius={0}
-          dataKey="value"
-          labelLine={false}
+            <PieChart width={450} height={320}>
+              <Pie
+                data={overview}
+                cx="50%"
+                cy="50%"
+                outerRadius={150}
+                innerRadius={0}
+                dataKey="value"
+                labelLine={false}
+                paddingAngle={0}
+                label={({
+                  cx,
+                  cy,
+                  midAngle,
+                  innerRadius,
+                  outerRadius,
+                  name,
+                  value,
+                }) => {
+                  const RADIAN = Math.PI / 180;
+                  const radius =
+                    innerRadius + (outerRadius - innerRadius) * 0.6;
+                  const x = cx + radius * Math.cos(-midAngle * RADIAN);
+                  const y = cy + radius * Math.sin(-midAngle * RADIAN);
 
-          label={({ cx, cy, midAngle, innerRadius, outerRadius, name, value }) => {
-            const RADIAN = Math.PI / 180;
-            const radius = innerRadius + (outerRadius - innerRadius) * 0.6;
-            const x = cx + radius * Math.cos(-midAngle * RADIAN);
-            const y = cy + radius * Math.sin(-midAngle * RADIAN);
-
-            return (
-              <text
-                x={x}
-                y={y}
-                fill="white"
-                textAnchor="middle"
-                dominantBaseline="central"
-                style={{ fontSize: '12px', fontWeight: 'bold' }}
+                  return (
+                    <text
+                      x={x}
+                      y={y}
+                      fill="white"
+                      textAnchor="middle"
+                      dominantBaseline="central"
+                      style={{ fontSize: "12px", fontWeight: "bold" }}
+                    >
+                      {name}
+                      <tspan x={x} dy="1.2em">
+                        ₹{value.toLocaleString()}
+                      </tspan>
+                    </text>
+                  );
+                }}
               >
-                {name}
-                <tspan x={x} dy="1.2em">₹{value.toLocaleString()}</tspan>
-              </text>
-            );
-          }}
-        >
-          {data.map((entry, index) => (
-            <Cell key={`cell-${index}`} fill={COLORS[index]} stroke="white" strokeWidth={2} />
-          ))}
-        </Pie>
-        <Tooltip formatter={(value) => `₹${value.toLocaleString()}`} />
-      </PieChart>
-    </div>
+                {overview.map((entry, index) => (
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={COLORS[index]}
+                    // stroke="white"
+                    strokeWidth={0}
+                  />
+                ))}
+              </Pie>
+              <Tooltip formatter={(value) => `₹${value.toLocaleString()}`} />
+            </PieChart>
+          </div>
         </div>
 
         {/* Net Profit */}
-        <div className="bg-white shadow-xl rounded-2xl p-4 w-full col-span-3">
-          <div className="flex justify-between items-center mb-4 w-full overflow-visible">
-            <h2 className="text-xl font-bold text-gray-800 ">Net Profit</h2>
-            {/* <span className="text-green-600 font-bold text-lg ">
+        <div className="bg-white rounded-2xl shadow-md p-6  w-full col-span-4">
+          {/* <div className="flex justify-between items-center mb-4 w-full overflow-visible"> */}
+          <h2 className="text-lg font-semibold text-black mb-4">Net Profit</h2>
+          <hr className="mb-4 border-gray-200" />
+
+          {/* <span className="text-green-600 font-bold text-lg ">
               ${totalProfit.toFixed(2)}
             </span> */}
-          </div>
+          {/* </div> */}
           <ResponsiveContainer width="100%" height={300}>
-            <BarChart layout="vertical" data={barData}
+            <BarChart
+              layout="vertical"
+              data={barData}
               margin={{ top: 20, right: 30, left: 20, bottom: 40 }}
             >
               <XAxis type="number" />
@@ -190,74 +229,121 @@ const FinancialDashboard = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-6 p-4">
         {/* Expense Summary */}
-        <div className="bg-white shadow-xl rounded-2xl p-4">
-      <h2 className="text-xl font-bold text-gray-800 mb-4">Expense Summary</h2>
-      <ResponsiveContainer width="100%" height={200}>
-        <PieChart>
-          <Pie
-            data={expenseData}
-            innerRadius={60}
-            outerRadius={100}
-            paddingAngle={2}
-            dataKey="value"
-          >
-            {expenseData.map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={entry.color} />
-            ))}
-          </Pie>
-        </PieChart>
-      </ResponsiveContainer>
-      <div className="text-3xl font-bold text-center  text-indigo-900  ">
-      ₹{totalExpense}
-      </div>
-      <div className="mt-4 space-y-2 text-sm">
-        {expenseData.map((item, idx) => (
-          <div key={idx} className="flex justify-between items-center">
-            <span className="flex items-center gap-2">
-              <span
-                className="w-3 h-3 rounded-full"
-                style={{ backgroundColor: item.color }}
-              />
-              {item.name}
-            </span>
-            <span className="font-semibold" style={{ color: item.color }}>
-            ₹{item.value} ({((item.value / totalExpense) * 100).toFixed(2)}%)
-            </span>
-          </div>
-        ))}
-      </div>
-    </div>
+
+        <div className="bg-white shadow-xl rounded-2xl p-6 col-span-2">
+          <h2 className="text-lg font-semibold text-black mb-4">
+            Expense Summary
+          </h2>
+          <hr className="mb-4 border-gray-200" />
+
+          {(expenseData[0]?.value || 0) > 0 ||
+          (expenseData[1]?.value || 0) > 0 ? (
+            <ResponsiveContainer width="100%" height={250}>
+              <PieChart>
+                <Pie
+                  data={expenseData}
+                  innerRadius={60}
+                  outerRadius={100}
+                  paddingAngle={2}
+                  dataKey="value"
+                  label={({
+                    cx,
+                    cy,
+                    midAngle,
+                    innerRadius,
+                    outerRadius,
+                    percent,
+                    index,
+                  }) => {
+                    const RADIAN = Math.PI / 180;
+                    const radius = outerRadius + 20;
+                    const x = cx + radius * Math.cos(-midAngle * RADIAN);
+                    const y = cy + radius * Math.sin(-midAngle * RADIAN);
+                    const item = expenseData[index];
+                    return (
+                      <text
+                        x={x}
+                        y={y}
+                        fill={item.color}
+                        textAnchor={x > cx ? "start" : "end"}
+                        dominantBaseline="central"
+                        style={{ fontSize: "12px", fontWeight: 500 }}
+                      >
+                        {item.name} ₹{item.value} ({(percent * 100).toFixed(2)}
+                        %)
+                      </text>
+                    );
+                  }}
+                  labelLine={true}
+                >
+                  {expenseData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                  <Label
+                    value={`₹${totalExpense}`}
+                    position="center"
+                    style={{
+                      fontSize: "24px",
+                      fill: "#1e1b4b",
+                      fontWeight: "bold",
+                    }}
+                  />
+                </Pie>
+              </PieChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="text-center text-gray-500 font-medium h-[250px] flex items-center justify-center">
+              No expense or coolie data available for this period.
+            </div>
+          )}
+        </div>
 
         {/* Recent Transactions */}
-        <div className="bg-white shadow-xl rounded-2xl p-4">
-          <h2 className="text-xl font-bold text-gray-800 mb-4">Recent Transactions</h2>
+        <div className="bg-white shadow-xl rounded-2xl p-6 col-span-3">
+          <h2 className="text-lg font-semibold text-black mb-4">
+            Recent Transactions
+          </h2>
+          <hr className="mb-4 border-gray-200" />
+
           <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left text-gray-700">
-              <thead className="text-xs text-gray-600 border-b">
+            <table className="w-full text-left text-gray-700">
+              <thead className=" text-gray-600 ">
                 <tr>
-                  <th className="py-2 px-4">Date</th>
-                  <th className="py-2 px-4">Module</th>
-                  {/* <th className="py-2 px-4">Description</th> */}
-                  <th className="py-2 px-4 text-right">Amount</th>
+                  <th className="py-2 px-4 text-base font-medium text-gray-800">
+                    Date
+                  </th>
+                  <th className="py-2 px-4 text-base font-medium text-gray-800">
+                    Module
+                  </th>
+                  <th className="py-2 px-4 text-base font-medium text-gray-800">
+                    Description
+                  </th>
+                  <th className="py-2 px-4 text-base font-medium text-gray-800 ">
+                    Amount
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {recentTransactions.map((tx, idx) => (
-                  <tr key={idx} className="border-b">
-                    <td className="py-2 px-4">{format(new Date((tx.date)), 'dd/MM/yyyy')}</td>
+                  <tr key={idx} className=" odd:bg-gray-100">
+                    <td className="py-2 px-4">
+                      {format(new Date(tx.date), "dd/MM/yyyy")}
+                    </td>
                     <td className="py-2 px-4">{tx.module}</td>
-                    {/* <td className="py-2 px-4">{tx.desc}</td> */}
-                    <td className="py-2 px-4 text-right font-semibold">₹{tx.amount.toFixed(2)}</td>
+                    <td className="py-2 px-4">{tx.desc}</td>
+                    <td className="py-2 px-4 ">
+                      ₹{tx.amount.toFixed(2)}
+                    </td>
                   </tr>
                 ))}
               </tbody>
-
             </table>
           </div>
         </div>
       </div>
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-4">
         {/* KPI Chart */}
         {/* <div className="bg-white shadow-xl rounded-2xl p-4">

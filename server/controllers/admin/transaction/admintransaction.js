@@ -7,26 +7,26 @@ const Payment = require("../../../models/Payment");
 const getRecentTransactions = async (req, res) => {
   try {
     const sales = await Sale.find().sort({ dateOfSale: -1 }).limit(2);
-    const purchases = await Purchase.find().sort({ dateOfPurchase: -1 }).limit(2);
+    const purchases = await Purchase.find().sort({ dateOfPurchase: -1 }).limit(2).populate("supplier");
     const expenses = await Payment.find({category:"expense"}).populate("expense").sort({ date: -1 }).limit(2);
     const formattedSales = sales.map((s) => ({
       date: s.dateOfSale,
       module: "Sales",
-      // desc: s.description || s.customerName || "Sale",
+      desc: `bill no: ${s.transactionNumber}` ||  "--",
       amount: s.totalAmount || 0,
     }));
 
     const formattedPurchases = purchases.map((p) => ({
       date: p.dateOfPurchase,
       module: "Purchase",
-      // desc: p.description || p.vendorName || "Purchase",
+      desc: `from ${p.supplier.supplierName}` || "--",
       amount: p.grossTotalAmount || 0,
     }));
 
     const formattedExpenses = expenses.map((e) => ({
       date: e.date,
       module: "Expense",
-      // desc: e.note || e.category || "Expense",
+      desc: `for ${e.expense.expense}` || "--",
       amount: e.amount || 0,
     }));
 
@@ -44,15 +44,46 @@ const getRecentTransactions = async (req, res) => {
 
 const getNetProfit = async (req, res) => {
   try {
-    const totalSales = await Sale.aggregate([{ $group: { _id: null, total: { $sum: "$totalAmount" } } }]);
-    const totalPurchases = await Purchase.aggregate([{ $group: { _id: null, total: { $sum: "$grossTotalAmount" } } }]);
-    const expenses = await Expense.aggregate([{ $group: { _id: "$category", total: { $sum: "$amount" } } },
+    // Total Sales
+    const totalSales = await Sale.aggregate([
+      {
+        $group: {
+          _id: null,
+          total: { $sum: "$totalAmount" },
+        },
+      },
+    ]);
+
+    // Total Purchases
+    const totalPurchases = await Purchase.aggregate([
+      {
+        $group: {
+          _id: null,
+          total: { $sum: "$grossTotalAmount" },
+        },
+      },
+    ]);
+
+    // Total Expenses from Payments collection
+    const expensePayments = await Payment.aggregate([
+      {
+        $match: {
+          category: "expense",
+          paymentType: "PaymentOut",
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          total: { $sum: "$amount" },
+        },
+      },
     ]);
 
     res.json({
       sales: totalSales[0]?.total || 0,
       purchases: totalPurchases[0]?.total || 0,
-      expenses:expenses[0]?.total ||0,
+      expenses: expensePayments[0]?.total || 0,
     });
   } catch (err) {
     console.error("Summary fetch error:", err);
@@ -61,6 +92,7 @@ const getNetProfit = async (req, res) => {
 };
 
 // ✅ New: Expense Summary with Market Fee
+//changed this logic to get the total expenses from the payment collection(and used the controler in trial)
 const getExpenseSummary = async (req, res) => {
   try {
     const suppliers = await Supplier.find({}, "marketFee");

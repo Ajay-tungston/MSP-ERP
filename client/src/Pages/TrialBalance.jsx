@@ -245,8 +245,9 @@ export default function TrialBalance() {
     setErrorCoolie(null);
     try {
       const response = await axiosPrivate.get(
-        `/admin/trialBalance/coolie?month=${selectedMonth}`
+        `/admin/trialBalance/coolie`
       );
+      // `/admin/trialBalance/coolie?month=${selectedMonth}`
       const { totalCoolie, breakdown } = response.data;
       setCoolieCharges({
         total: totalCoolie,

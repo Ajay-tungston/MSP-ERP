@@ -200,7 +200,7 @@ function Payment() {
               disabled={currentPage === 1}
               className={`px-4 py-2 border border-gray-300 rounded-lg ${
                 currentPage === 1
-                  ? "text-gray-400 cursor-not-allowed"
+                  ? "text-gray-300 cursor-not-allowed"
                   : "hover:bg-gray-100"
               }`}
             >
@@ -209,9 +209,9 @@ function Payment() {
             <button
               onClick={handleNext}
               disabled={currentPage === totalPages}
-              className={`px-4 py-2 border border-gray-300 rounded-lg ${
+              className={`px-4 py-2 border border-gray-300 rounded-lg text-[#4079ED]${
                 currentPage === totalPages
-                  ? "text-gray-400 cursor-not-allowed"
+                  ? "cursor-not-allowed text-[#4079ED]"
                   : "hover:bg-gray-100"
               }`}
             >

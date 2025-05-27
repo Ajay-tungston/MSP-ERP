@@ -137,8 +137,8 @@ function Expenses() {
     expenses.map((expense, index) => (
       <tr key={expense._id} className="border-b border-gray-200 hover:bg-gray-50 text-lg">
         <td className="p-3">{(currentPage - 1) * itemsPerPage + index + 1}</td>
-        <td className="p-3">{expense.expense}</td>
-        <td className="p-3">{expense.amount}</td>
+        <td className="p-3">{expense.expense || '--'}</td>
+        <td className="p-3">{expense.amount ||'--'}</td>
         {/* <td className="p-3">{new Date(expense.date).toLocaleDateString()}</td> */}
         <td className="p-3 text-blue-800 cursor-pointer">
           <TbPencilMinus
@@ -170,14 +170,14 @@ function Expenses() {
                     <span>Page {currentPage} of {totalPages}</span>
                     <div className="flex space-x-2">
                         <button
-                            className={`px-4 py-2 border border-gray-300 rounded-lg ${currentPage === 1 ? 'text-gray-400 cursor-not-allowed' : 'hover:bg-gray-100'}`}
+                            className={`px-4 py-2 border border-gray-300 rounded-lg ${currentPage === 1 ? 'text-gray-300 cursor-not-allowed' : 'hover:bg-gray-100'}`}
                             onClick={handlePreviousPage}
                             disabled={currentPage === 1}
                         >
                             Previous
                         </button>
                         <button
-                            className={`px-4 py-2 border border-gray-300 rounded-lg ${currentPage === totalPages ? 'text-gray-400 cursor-not-allowed' : 'hover:bg-gray-100'}`}
+                            className={`px-4 py-2 border border-gray-300 rounded-lg ${currentPage === totalPages ? 'text-[#4079ED] cursor-not-allowed' : 'hover:bg-gray-100'}`}
                             onClick={handleNextPage}
                             disabled={currentPage === totalPages}
                         >

@@ -180,17 +180,17 @@ export default function CustomerHeader() {
                   >
 
                     <td className="p-2">{index + 1 + (currentPage - 1) * limit}</td>
-                    <td className="p-2">{customer.customerName}</td>
-                    <td className="p-2">{customer.address}</td>
-                    <td className="p-2">{customer.phone}</td>
-                    <td className="p-2">{customer.whatsapp}</td>
-                    <td className="p-2">{customer.discount}%</td>
+                    <td className="p-2">{customer.customerName || '--'}</td>
+                    <td className="p-2">{customer.address || '--'}</td>
+                    <td className="p-2">{customer.phone || '--' }</td>
+                    <td className="p-2">{customer.whatsapp || '--'}</td>
+                    <td className="p-2">{customer.discount != null ? `${customer.discount}%` : '--'}</td>
 
                     <td className="p-2">
-                    ₹{customer.openingBalance.toFixed(2)}
+                    {customer.openingBalance != null ? `₹${customer.openingBalance.toFixed(2)}` : '--'}
                     </td>
                     <td className="p-2 flex items-center gap-8 ">
-                      {customer.routeCustomer ? "Yes" : "No"}
+                    {customer.routeCustomer != null ? (customer.routeCustomer ? "Yes" : "No") : '--'}
                     </td>
                     <td>
                       <LuPencilLine
@@ -231,7 +231,7 @@ export default function CustomerHeader() {
               onClick={handlePrevious}
               disabled={currentPage === 1}
               className={`px-4 py-2 border border-gray-300 rounded-lg ${currentPage === 1
-                ? "text-gray-400 cursor-not-allowed"
+                ? "text-gray-300 cursor-not-allowed"
                 : "hover:bg-gray-100"
                 }`}
             >
@@ -241,7 +241,7 @@ export default function CustomerHeader() {
               onClick={handleNext}
               disabled={currentPage === totalPages}
               className={`px-4 py-2 border border-gray-300 rounded-lg ${currentPage === totalPages
-                ? "text-gray-400 cursor-not-allowed"
+                ? "text-[#4079ED] cursor-not-allowed"
                 : "hover:bg-gray-100"
                 }`}
             >

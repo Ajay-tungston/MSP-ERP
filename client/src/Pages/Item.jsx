@@ -163,8 +163,8 @@ function Item() {
                     <td className="p-3">
                       {index + 1 + (currentPage - 1) * limit}
                     </td>
-                    <td className="p-3">{item?.itemCode}</td>
-                    <td className="p-3">{item.itemName}</td>
+                    <td className="p-3">{item?.itemCode ||'--'}</td>
+                    <td className="p-3">{item.itemName || '--'}</td>
                     <td className="p-3 text-[#6A5AE0]">
                       <LuPencilLine
                         className="text-[#6A5AE0] w-4 h-4 cursor-pointer"
@@ -194,7 +194,7 @@ function Item() {
               disabled={currentPage === 1}
               className={`px-4 py-2 border border-gray-300 rounded-lg ${
                 currentPage === 1
-                  ? "text-gray-400 cursor-not-allowed"
+                  ? "text-gray-300 cursor-not-allowed"
                   : "hover:bg-gray-100"
               }`}
             >
@@ -205,7 +205,7 @@ function Item() {
               disabled={currentPage === totalPages}
               className={`px-4 py-2 border border-gray-300 rounded-lg ${
                 currentPage === totalPages
-                  ? "text-gray-400 cursor-not-allowed"
+                  ? "text-[#4079ED] cursor-not-allowed"
                   : "hover:bg-gray-100"
               }`}
             >

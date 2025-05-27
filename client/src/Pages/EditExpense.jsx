@@ -85,7 +85,7 @@ const EditExpenseForm = ({ setPopup, initialData, refreshExpenses }) => {
             />
           </div>
 
-          <div className="flex items-center gap-4">
+          {/* <div className="flex items-center gap-4">
             <label className="w-40 text-xl text-gray-600">Date <span className="text-red-500">*</span></label>
             <input
               type="date"
@@ -93,7 +93,7 @@ const EditExpenseForm = ({ setPopup, initialData, refreshExpenses }) => {
               onChange={(e) => setDate(e.target.value)}
               className="w-full sm:w-[350px] h-14 px-6 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
-          </div>
+          </div> */}
         </div>
 
         <div className="flex justify-end gap-4 mt-12">

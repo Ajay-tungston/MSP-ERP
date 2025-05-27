@@ -194,9 +194,9 @@ export default function Lender() {
                       }`}
                   >
                     <td className="p-3">{index + 1 + (currentPage - 1) * limit}</td>
-                    <td className="p-3">{lender.name}</td>
-                    <td className="p-3">{lender.phone}</td>
-                    <td className="p-3">{lender.address}</td>
+                    <td className="p-3">{lender.name || '--'}</td>
+                    <td className="p-3">{lender.phone ||'--'}</td>
+                    <td className="p-3">{lender.address ||'--'}</td>
            
                     <td className="p-3">
   ₹{(lender.openingBalance ?? 0).toFixed(2)}
@@ -221,7 +221,7 @@ export default function Lender() {
           <span>Page {currentPage} of {totalPages}</span>
           <div className="flex space-x-2">
             <button
-              className={`px-4 py-2 border border-gray-300 rounded-lg ${currentPage === 1 ? "cursor-not-allowed text-gray-400" : ""
+              className={`px-4 py-2 border border-gray-300 rounded-lg ${currentPage === 1 ? "cursor-not-allowed text-gray-300" : ""
                 }`}
               disabled={currentPage === 1}
               onClick={() => handlePageChange(currentPage - 1)}
@@ -229,7 +229,7 @@ export default function Lender() {
               Previous
             </button>
             <button
-              className={`px-4 py-2 border border-gray-300 rounded-lg ${currentPage === totalPages ? "cursor-not-allowed text-gray-400" : ""
+              className={`px-4 py-2 border border-gray-300 rounded-lg ${currentPage === totalPages ? "cursor-not-allowed text-[#4079ED]" : ""
                 }`}
               disabled={currentPage === totalPages}
               onClick={() => handlePageChange(currentPage + 1)}

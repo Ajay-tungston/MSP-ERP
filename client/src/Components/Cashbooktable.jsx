@@ -16,6 +16,7 @@ const TransactionTable = ({
     paymentOuts = [], 
     expenses = [] 
   } = transactions;
+  console.log(transactions)
 
   // Calculate opening balance from props or default to 0
   const openingBalance = transactions?.openingBalance || 0;
@@ -72,6 +73,9 @@ const TransactionTable = ({
            item.supplier?.supplierName ||
            item.company?.companyName ||
            item.employee?.employeeName ||
+           item.vehicle?.vehicleName ||
+           item.expense?.expense ||
+           item.lender?.name ||
            item.otherPartyName ||
            "Unknown Party";
   }
@@ -171,14 +175,21 @@ const TransactionTable = ({
               <button
                 onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
                 disabled={page === 1}
-                className="px-4 py-1 rounded-md bg-gray-100 text-gray-400 border border-gray-200 disabled:cursor-not-allowed hover:bg-gray-200"
+                className={`px-4 py-2 border border-gray-300 rounded-lg 
+                 text-gray-300 cursor-not-allowed
+                    hover:bg-gray-100
+                }`}
               >
                 Previous
               </button>
               <button
                 onClick={() => setPage((prev) => Math.min(prev + 1, pagination.totalPages))}
                 disabled={page === pagination.totalPages}
-                className="px-4 py-1 rounded-md bg-white border border-gray-300 text-blue-600 font-medium hover:bg-blue-50"
+                className={`px-4 py-2 border border-gray-300 rounded-lg 
+              
+                  text-[#4079ED] cursor-not-allowed
+                     hover:bg-gray-100
+                }`}
               >
                 Next
               </button>

@@ -156,12 +156,12 @@ export default function CustomerHeader() {
                     <td className="p-3">
                       {index + 1 + (currentPage - 1) * limit}
                     </td>
-                    <td className="p-3">{supplier?.supplierCode}</td>
-                    <td className="p-3">{supplier?.supplierName}</td>
-                    <td className="p-3">{supplier?.address}</td>
-                    <td className="p-3">{supplier?.phone}</td>
-                    <td className="p-3">{supplier?.whatsapp}</td>
-                    <td className="p-3">{supplier?.commission}</td>
+                    <td className="p-3">{supplier?.supplierCode || '--'}</td>
+                    <td className="p-3">{supplier?.supplierName || '--'}</td>
+                    <td className="p-3">{supplier?.address ||  '--'}</td>
+                    <td className="p-3">{supplier?.phone || '--'}</td>
+                    <td className="p-3">{supplier?.whatsapp ||'--'}</td>
+                    <td className="p-3">{supplier?.commission ||'--'}</td>
 
                     <td className="p-3 text-blue-600">
                       <LuPencilLine
@@ -191,7 +191,7 @@ export default function CustomerHeader() {
             <button
               className={`px-4 py-2 border border-gray-300 rounded-lg ${
                 currentPage === 1
-                  ? "text-gray-400 cursor-not-allowed"
+                  ? "text-gray-300 cursor-not-allowed"
                   : "hover:bg-gray-100"
               }`}
               disabled={currentPage === 1}
@@ -202,7 +202,7 @@ export default function CustomerHeader() {
             <button
               className={`px-4 py-2 border border-gray-300 rounded-lg ${
                 currentPage === supplier?.totalPages
-                  ? "text-gray-400 cursor-not-allowed"
+                  ? "text-[#4079ED] cursor-not-allowed"
                   : "hover:bg-gray-100"
               }`}
               disabled={currentPage === supplier?.totalPages}

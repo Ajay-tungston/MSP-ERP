@@ -173,25 +173,25 @@ function Employee() {
                       {index + 1 + (currentPage - 1) * limit}
                     </td>
                     <td className="max-w-20 px-4 py-3 truncate overflow-hidden whitespace-nowrap">
-                      {employee?.employeeName}
+                      {employee?.employeeName || '--'}
                     </td>
                     <td className="max-w-30 px-4 py-3 truncate overflow-hidden whitespace-nowrap">
-                      {employee?.address}
+                      {employee?.address || '--'}
                     </td>
                     <td className="max-w-20 px-4 py-3 truncate overflow-hidden whitespace-nowrap">
-                      {employee?.phone}
+                      {employee?.phone || '--'}
                     </td>
                     <td className="max-w-20 px-4 py-3 truncate overflow-hidden whitespace-nowrap">
-                      {employee?.whatsapp}
+                      {employee?.whatsapp || '--'} 
                     </td>
                     <td className="max-w-20 px-4 py-3 truncate overflow-hidden whitespace-nowrap">
-                    ₹ {employee?.openingBalance}
+                    {employee.openingBalance != null ? `₹${employee.openingBalance.toFixed(2)}` : '--'}
                     </td>
                     <td className="max-w-32 px-4 py-3 truncate overflow-hidden whitespace-nowrap">
-                      {format(parseISO(employee?.joiningDate), "dd/MM/yyyy")}
+                      {format(parseISO(employee?.joiningDate || '--'), "dd/MM/yyyy")}
                     </td>
 
-                    <td className="min-w-32 px-4 py-3">₹{employee?.salary}</td>
+                    <td className="min-w-32 px-4 py-3">₹{employee?.salary  || '--'}</td>
 
                     <td className="min-w-4 px-4 py-3 text-blue-600">
                       <LuPencilLine
@@ -226,7 +226,7 @@ function Employee() {
               disabled={currentPage === 1}
               className={`px-4 py-2 border border-gray-300 rounded-lg ${
                 currentPage === 1
-                  ? "text-gray-400 cursor-not-allowed"
+                  ? "text-gray-300 cursor-not-allowed"
                   : "hover:bg-gray-100"
               }`}
             >
@@ -237,7 +237,7 @@ function Employee() {
               disabled={currentPage === totalPages}
               className={`px-4 py-2 border border-gray-300 rounded-lg ${
                 currentPage === totalPages
-                  ? "text-gray-400 cursor-not-allowed"
+                  ? "text-[#4079ED] cursor-not-allowed"
                   : "hover:bg-gray-100"
               }`}
             >

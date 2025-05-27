@@ -97,7 +97,7 @@ const SalesRegister = () => {
 
   const navigate = useNavigate();
   return (
-    <div className="p-6 bg-white mt-10">
+    <div className="p-6 bg-white mt-10 shadow-sm">
       <div className="flex items-center justify-between mb-6">
         <div className="space-y-1">
           <div className="text-[20px] text-gray-500 mt-10 ">
@@ -151,14 +151,22 @@ const SalesRegister = () => {
             <button
               onClick={handlePrevious}
               disabled={currentPage === 1}
-              className={`w-36 h-[64px] px-4 py-2 border border-gray-300 rounded-lg ${currentPage === 1 ? 'text-gray-400 cursor-not-allowed' : 'hover:bg-gray-100'}`}
+              className={`px-4 py-2 border border-gray-300 rounded-lg ${
+                currentPage === 1
+                  ? "text-gray-300 cursor-not-allowed"
+                  : "hover:bg-gray-100"
+              }`}
             >
               Previous
             </button>
             <button
               onClick={handleNext}
               disabled={currentPage === totalPages}
-              className={`w-36 h-[64px] px-4 py-2 border border-gray-300 rounded-lg ${currentPage === totalPages ? 'text-gray-400 cursor-not-allowed' : 'hover:bg-gray-100'}`}
+              className={`px-4 py-2 border border-gray-300 rounded-lg ${
+                currentPage === totalPages
+                  ? "text-[#4079ED] cursor-not-allowed"
+                  : "hover:bg-gray-100"
+              }`}
             >
               Next
             </button>

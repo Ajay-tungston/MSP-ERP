@@ -157,18 +157,18 @@ function VehicleReport() {
         </span>
         <div className="flex gap-4">
           <button
-            className="px-6 py-3 rounded-xl border hover:bg-gray-100 disabled:opacity-50"
+            className="px-6 py-2 rounded-xl border border-gray-300 disabled:opacity-50"
             onClick={handlePrevious}
             disabled={currentPage === 1}
           >
             <span className="text-gray-600 text-lg font-semibold">Previous</span>
           </button>
           <button
-            className="px-6 py-3 rounded-xl border hover:bg-gray-100 disabled:opacity-50"
+            className="px-6 py-2 rounded-xl border border-gray-300 hover:bg-gray-100"
             onClick={handleNext}
             disabled={currentPage === totalPages}
           >
-            <span className="text-blue-800 text-lg font-semibold">Next</span>
+            <span className=" text-[#4079ED] font-semibold">Next</span>
           </button>
         </div>
       </div>

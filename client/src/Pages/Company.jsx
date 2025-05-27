@@ -129,7 +129,7 @@ const axiosInstense = useAxiosPrivate()
               disabled={currentPage === 1}
               className={`px-6 py-2 border border-gray-300 rounded-lg ${
                 currentPage === 1
-                  ? "text-gray-400 cursor-not-allowed"
+                  ? "text-gray-300 cursor-not-allowed"
                   : "hover:bg-gray-100"
               }`}
             >
@@ -140,7 +140,7 @@ const axiosInstense = useAxiosPrivate()
               disabled={currentPage === totalPages}
               className={`px-6 py-2 border border-gray-300 rounded-lg ${
                 currentPage === totalPages
-                  ? "text-gray-400 cursor-not-allowed"
+                  ? "text-[#4079ED] cursor-not-allowed"
                   : "hover:bg-gray-100"
               }`}
             >

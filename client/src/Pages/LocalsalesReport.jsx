@@ -119,7 +119,7 @@ function LocalsalesReport() {
             </button>
           </div>}
         <div className="flex items-center gap-2 text-sm text-gray-500 float-right">
-          <span>Date Range</span>
+          <span className="text-[#73779166] text-lg">Date Range</span> 
           <input
             type="date"
             value={startDate}
@@ -128,7 +128,7 @@ function LocalsalesReport() {
             className="w-52 px-4 py-3 bg-gray-50 rounded-xl text-zinc-700 text-xl outline-none"
           
           />
-          <span>to</span>
+          <span className=" text-[#73779166] text-lg">to</span>
           <input
             type="date"
             value={endDate}

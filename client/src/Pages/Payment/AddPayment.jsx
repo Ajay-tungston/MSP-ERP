@@ -347,8 +347,7 @@ console.log("dsfibdf",date)
             {(category === "supplier" ||
               category === "employee" ||
               category === "customer" ||
-              category === "lender" ||
-              category === "vehicle") && // Add here
+              category === "lender" )&& // Add here
               sellectedData && (
                 <div className="mb-4">
                   <label className="text-slate-500 text-xl font-normal font-['Urbanist'] pl-6 ">

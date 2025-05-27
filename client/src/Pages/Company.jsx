@@ -6,6 +6,7 @@ import AddCompanyForm from './AddCompany';
 import useAxiosPrivate from "../hooks/useAxiosPrivate"
 import { FaChevronRight } from "react-icons/fa6";
 
+
 function Company() {
 
   const [popup, setPopup] = useState(false);

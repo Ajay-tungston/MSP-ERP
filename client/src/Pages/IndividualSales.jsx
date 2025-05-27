@@ -268,7 +268,7 @@ export default function IndividualSales() {
                 </button>
               </div>
             )}
-            <div className="flex items-center gap-3 text-sm text-gray-500">
+            <div className="flex items-center gap-3 text-xl text-[#73779166]">
               <label>Date</label>
               <input
                 type="date"

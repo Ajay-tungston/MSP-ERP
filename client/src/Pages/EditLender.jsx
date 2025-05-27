@@ -7,7 +7,7 @@ const EditLenderForm = ({ setPopup, refreshLenders, lender }) => {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
-
+  const [openingBalance, setOpeningBalance] = useState("");
   const [nameError, setNameError] = useState("");
   const [phoneError, setPhoneError] = useState("");
 
@@ -18,6 +18,7 @@ const EditLenderForm = ({ setPopup, refreshLenders, lender }) => {
       setName(lender.name || "");
       setPhone(lender.phone || "");
       setAddress(lender.address || "");
+      setOpeningBalance(lender.openingBalance ?? "");
     }
   }, [lender]);
 
@@ -47,6 +48,7 @@ const EditLenderForm = ({ setPopup, refreshLenders, lender }) => {
         name,
         phone,
         address,
+        openingBalance: parseFloat(openingBalance) || 0,
       });
 
       Swal.fire("Success", "Lender updated successfully.", "success");
@@ -62,6 +64,7 @@ const EditLenderForm = ({ setPopup, refreshLenders, lender }) => {
     setPhone("");
     setAddress("");
     setNameError("");
+    setOpeningBalance("");
     setPhoneError("");
     setPopup(false);
   };
@@ -105,7 +108,7 @@ const EditLenderForm = ({ setPopup, refreshLenders, lender }) => {
                 Phone <span className="text-red-500">*</span>
               </label>
               <input
-                type="text"
+                type="number"
                 placeholder="Enter phone"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
@@ -116,9 +119,11 @@ const EditLenderForm = ({ setPopup, refreshLenders, lender }) => {
           </div>
 
           {/* Address */}
-          <div className="flex flex-col w-full sm:col-span-2">
+          <div className="flex flex-col w-full ">
             <div className="flex items-center gap-x-4">
-              <label className="text-gray-600">Address</label>
+              <label className="text-gray-600 pl-12">
+                Address
+              </label>
               <input
                 type="text"
                 placeholder="Enter address"
@@ -128,8 +133,23 @@ const EditLenderForm = ({ setPopup, refreshLenders, lender }) => {
               />
             </div>
           </div>
-        </div>
 
+          {/* OPENINGBALANCE */}
+          <div className="flex flex-col w-full">
+            <div className="flex items-center gap-x-4">
+              <label className="text-gray-600">
+                Opening Balance
+              </label>
+              <input
+                type="number"
+                placeholder="Enter opening balance"
+                value={openingBalance}
+                onChange={(e) => setOpeningBalance(e.target.value)}
+                className="w-[350px] h-[56px] gap-2 rounded-[12px] pt-4 pr-6 pb-4 pl-6 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+          </div>
+        </div>
         {/* Buttons */}
         <div className="w-full h-full p-4 md:p-8 lg:p-12 bg-white rounded-3xl flex flex-col justify-start items-start gap-12 overflow-hidden">
           <div className="self-stretch flex justify-end items-center gap-4 mt-8 md:mr-25">

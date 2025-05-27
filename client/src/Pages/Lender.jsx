@@ -9,6 +9,7 @@ import OvalSpinner from "../Components/spinners/OvalSpinner";
 import { LuPencilLine } from "react-icons/lu";
 import EditLenderForm from "./EditLender";
 import {  CheckCircleIcon } from "@heroicons/react/24/outline";
+import Swal from "sweetalert2";
 
 export default function Lender() {
   const [recentTransactions, setRecentTransactions] = useState([]);
@@ -56,14 +57,6 @@ export default function Lender() {
     return () => debouncedFetch.cancel();
   }, [search, currentPage]);
 
-  const deleteLender = async (id) => {
-    try {
-      await axiosInstance.delete(`/admin/lender/delete/${id}`);
-      fetchLenders();
-    } catch (err) {
-      console.error("Failed to delete lender", err);
-    }
-  };
 
 
   useEffect(() => {
@@ -91,6 +84,44 @@ export default function Lender() {
     if (newPage < 1 || newPage > totalPages) return;
     setCurrentPage(newPage);
   };
+
+  const deleteLender = async (id) => {
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: 'This will permanently delete the lender.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Yes, delete it!',
+    });
+  
+    if (result.isConfirmed) {
+      try {
+        const response = await axiosInstance.delete(`/admin/lender/delete/${id}`);
+  
+        // Refresh data
+        fetchLenders();
+  
+        Swal.fire({
+          title: 'Deleted!',
+          text: response.data.message || 'Lender deleted successfully.',
+          icon: 'success',
+          timer: 2000,
+          showConfirmButton: false,
+        });
+      } catch (error) {
+        Swal.fire({
+          title: 'Error!',
+          text: error?.response?.data?.message || 'Failed to delete lender.',
+          icon: 'error',
+          confirmButtonText: 'OK',
+        });
+      }
+    }
+  };
+  
+  
   return (
     <>
       <div className="py-4 rounded-lg shadow-sm h-[800px] bg-white mt-5">
@@ -136,8 +167,9 @@ export default function Lender() {
                 <th className="p-3">Lender Name</th>
                 <th className="p-3">Phone Number</th>
                 <th className="p-3">Address</th>
+                <th  className="p-3">Opening Bal. </th>
                 <th  className="p-3"></th>
-                <th  className="p-3"></th>
+                <th className="p-3"></th>
                 <th className="p-3"></th>
               </tr>
             </thead>
@@ -165,12 +197,17 @@ export default function Lender() {
                     <td className="p-3">{lender.name}</td>
                     <td className="p-3">{lender.phone}</td>
                     <td className="p-3">{lender.address}</td>
+           
+                    <td className="p-3">
+  ₹{(lender.openingBalance ?? 0).toFixed(2)}
+</td>
+
                     <td className="p-3 text-blue-800 cursor-pointer">
                       < LuPencilLine   onClick={() => handleEditClick(lender)}/></td>
                     <td className="p-3 text-red-600 cursor-pointer">
                       <FaTrashAlt onClick={() => deleteLender(lender._id)} />
                     </td>
-                    
+                    <td className="p-3"></td>
                   </tr>
                 ))
               )}

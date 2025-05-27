@@ -32,12 +32,30 @@ const addNewVehicle = async (req, res) => {
 // Get all vehicles
 const getAllVehicles = async (req, res) => {
   try {
-    const vehicles = await Vehicle.find().sort({ createdAt: -1 });
-    return res.status(200).json(vehicles);
+    const { page = 1, limit = 10, search = "" } = req.query;
+    const query = {
+      vehicleName: { $regex: search, $options: "i" } // case-insensitive search
+    };
+    
+    const totalCount = await Vehicle.countDocuments(query);
+    const vehicles = await Vehicle.find(query)
+    .sort({ createdAt: -1 })
+    .skip((page - 1) * limit)
+    .limit(Number(limit));
+    
+    console.log(vehicles)
+    return res.status(200).json({
+      data: vehicles,
+      currentPage: Number(page),
+      totalPages: Math.ceil(totalCount / limit),
+      totalCount,
+    });
   } catch (error) {
+    console.error("Error fetching vehicles:", error);
     return res.status(500).json({ message: "Error fetching vehicles" });
   }
 };
+
 
 // Get single vehicle by ID
 const getVehicleById = async (req, res) => {

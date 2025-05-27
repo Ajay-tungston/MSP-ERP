@@ -129,14 +129,14 @@ function PurchaseReport() {
           {/* Date Inputs and Print */}
           <div className="flex flex-wrap gap-6 items-center">
             <div className="flex items-center gap-4">
-              <span className="text-slate-500/40 text-xl">Date Range</span>
+              <span className="text-[#73779166] text-xl">Date Range</span>
               <input
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
                 className="w-50 px-4 py-2 bg-gray-50 rounded-xl outline-none text-zinc-700 text-xl"
               />
-              <span className="text-slate-500/40 text-xl">to</span>
+              <span className="text-[#73779166] text-xl">to</span>
               <input
                 type="date"
                 value={toDate}

@@ -17,7 +17,7 @@ export default function CustomerHeader() {
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
   const axiosInstance = useAxiosPrivate();
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState("");63.
   const limit = 10;
 
   const fetchCustomersDebounced = debounce((page, searchTerm) => {

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import useAxiosPrivate from "../hooks/useAxiosPrivate";
 import { ChevronDown, ChevronUp, Printer } from "lucide-react";
-
+import { handleTrialBalancePrint } from "../utils/trailBalanceprint";
 export default function TrialBalance() {
   const [selectedMonth, setSelectedMonth] = useState(() => {
     const now = new Date();
@@ -417,6 +417,27 @@ export default function TrialBalance() {
     (lenderPayables?.total || 0) +
     vehicleData?.income?.netBalance;
 
+
+    const handlePrintClick = () => {
+      handleTrialBalancePrint({
+        receivablesFromCustomers: receivables.total || 0,
+        receivablesFromEmployees: employeeReceivables.total || 0,
+        receivablesFromSuppliers: supplierReceivables.total || 0,
+        payablesToSuppliers: supplierPayables.total || 0,
+        payablesToLenders: lenderPayables.total || 0,
+        vehicleReceivables: vehicleData.expense.netBalance || 0,
+        vehiclePayables : vehicleData.income.netBalance || 0,
+        totalCommission: commissions.totalCommission || 0,
+        totalCoolie: coolieCharges.total || 0,
+        totalExpense: expense.totalExpenses || 0,
+        totalSalary: employeeReceivables.totalSalaries || 0,
+        cashBalance: cashBalance.total || 0,
+        stockInHand: stockData.total || 0,
+        profit: profitLossData.totalProfit || 0,
+        loss: profitLossData.totalLoss || 0,
+      });
+    };
+
   return (
     <div className="p-4 bg-white min-h-screen mt-10 rounded-xl">
       <nav className="text-gray-500 text-[20px] mb-4">
@@ -424,7 +445,9 @@ export default function TrialBalance() {
       </nav>
       <div className="flex justify-between w-full">
         <h1 className="text-3xl font-semibold">Trial Balance</h1>
-        <button className="flex items-center px-4 py-2 bg-[#F9FAFB] rounded hover:bg-indigo-200">
+        <button 
+             onClick={handlePrintClick}
+        className="flex items-center px-4 py-2 bg-[#F9FAFB] rounded hover:bg-indigo-200">
           <Printer className="mr-2" size={16} /> Print
         </button>
         {/* <input

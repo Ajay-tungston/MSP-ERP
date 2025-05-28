@@ -275,8 +275,8 @@ const FinancialDashboard = () => {
                         dominantBaseline="central"
                         style={{ fontSize: "12px", fontWeight: 500 }}
                       >
-                        {item.name} ₹{item.value} ({(percent * 100).toFixed(2)}
-                        %)
+                      <tspan x={x} dy="0">{item.name}</tspan>
+        <tspan x={x} dy="1.2em">₹{item.value?.toFixed(0)} ({(percent * 100).toFixed(1)}%)</tspan>
                       </text>
                     );
                   }}

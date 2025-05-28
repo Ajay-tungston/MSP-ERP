@@ -3,6 +3,7 @@ import { Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Bookmark, X } from "lucide-react";
 import { Await, useNavigate } from "react-router-dom";
+import { FaChevronRight } from "react-icons/fa6";
 import useAxiosPrivate from "../hooks/useAxiosPrivate";
 const SalesRegister = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -97,12 +98,15 @@ const SalesRegister = () => {
 
   const navigate = useNavigate();
   return (
-    <div className="p-6 bg-white mt-10 shadow-sm">
+    <div className="p-6 bg-white mt-5 shadow-md rounded-3xl">
       <div className="flex items-center justify-between mb-6">
         <div className="space-y-1">
-          <div className="text-[20px] text-gray-500 mt-10 ">
-            Transactions / Sales
-          </div>
+        <div className="flex items-center text-[20px] text-gray-500 mt-10">
+  <span>Transactions</span>
+  <FaChevronRight className="mx-2" />
+  <span>Sales</span>
+</div>
+
           <h1 className="text-[32px] font-semibold">Sales register</h1>
         </div>
         <button

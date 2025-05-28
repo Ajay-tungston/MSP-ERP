@@ -45,7 +45,7 @@ console.log(location.pathname)
   const pageTitle = routeTitles[location.pathname] || "Page";
 
   return (
-    <div className="bg-shadow-md px-6 py-4 flex items-center justify-between rounded-2xl bg-white mt-10">
+    <div className="bg-shadow-md px-6 py-4  mr-2 flex items-center justify-between rounded-2xl bg-white mt-5 shadow-[0_0_10px_rgba(0,0,0,0.10)]">
       {/* Dynamic Page Title */}
       <h1 className="text-2xl font-bold text-gray-900">{pageTitle}</h1>
 

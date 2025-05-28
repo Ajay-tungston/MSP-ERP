@@ -96,16 +96,16 @@ function Employee() {
 
   return (
     <>
-      <div className="p-4 rounded-lg shadow-sm h-[800px] bg-white mt-5">
+      <div className="p-6 rounded-3xl shadow-md h-[800px] bg-white mt-5">
         {/* Breadcrumb */}
-        <nav className="flex items-center gap-2 text-[20px] text-gray-500 mb-2 mt-10">
+        <nav className="flex items-center gap-2 text-[20px] text-[#737791] mb-2 mt-10">
           <span>Master</span>
           <FaChevronRight />
-          <span className="text-gray-700">Employee</span>
+          <span className="text-[#737791]">Employee</span>
         </nav>
 
         {/* Header & Buttons */}
-        <h1 className="text-3xl font-bold text-gray-800 mb-6">Employee</h1>
+        <h1 className="text-3xl font-bold text-[#151D48] mb-6">Employee</h1>
         <div className="relative max-w-md">
           <input
             type="text"
@@ -124,29 +124,29 @@ function Employee() {
             className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-2 rounded-lg flex items-center gap-2"
             onClick={() => setPopup(true)}
           >
-            <CiCirclePlus className="text-xl " /> Add New Employee
+            <CiCirclePlus className="text-xl font-bold " /> Add New Employee
           </button>
         </div>
 
         {/* Dynamic Table */}
-        <div className="mt-10 bg-white">
+        <div className="mt-8 bg-white">
           <table className="w-full border-collapse text-gray-900">
             <thead>
               <tr className="text-left text-gray-900 font-bold border-b-2 border-gray-200 bg-[#F9FAFB] text-lg">
-                <th className="max-w-5 px-4 py-2">No.</th>
-                <th className="max-w-20 px-4 py-2">Name</th>
-                <th className="max-w-30 px-4 py-2">Address</th>
-                <th className="max-w-20 px-4 py-2">Phone</th>
-                <th className="max-w-20 px-4 py-2">WhatsApp</th>
-                <th className="max-w-20 px-4 py-2">Opening Bal.</th>
-                <th className="max-w-32 px-4 py-2">Joining Date</th>
-                <th className="max-w-32 px-4 py-2">
+                <th className="max-w-5 p-3">No.</th>
+                <th className="max-w-20 p-3">Name</th>
+                <th className="max-w-30 p-3">Address</th>
+                <th className="max-w-20 p-3">Phone</th>
+                <th className="max-w-20 p-3">WhatsApp</th>
+                <th className="max-w-20 p-3">Opening Bal.</th>
+                <th className="max-w-32 p-3">Joining Date</th>
+                <th className="max-w-32 p-3">
                   Salary
-                  <br />
+               
                   (Monthly/Daily)
                 </th>
-                <th className="max-w-4 px-4 py-2"></th>
-                <th className="max-w-4 px-4 py-2"></th>
+                <th className="max-w-4 p-3"></th>
+                <th className="max-w-4 p-3"></th>
               </tr>
             </thead>
 
@@ -169,31 +169,31 @@ function Employee() {
                     key={employee._id}
                     className="bg-white border-b border-gray-200 hover:bg-gray-50 font-['Urbanist'] text-lg "
                   >
-                    <td className="max-w-5 px-4 py-3">
+                    <td className="max-w-5 p-2">
                       {index + 1 + (currentPage - 1) * limit}
                     </td>
-                    <td className="max-w-20 px-4 py-3 truncate overflow-hidden whitespace-nowrap">
+                    <td className="max-w-20 p-2 truncate overflow-hidden whitespace-nowrap">
                       {employee?.employeeName || '--'}
                     </td>
-                    <td className="max-w-30 px-4 py-3 truncate overflow-hidden whitespace-nowrap">
+                    <td className="max-w-30 p-2 truncate overflow-hidden whitespace-nowrap">
                       {employee?.address || '--'}
                     </td>
-                    <td className="max-w-20 px-4 py-3 truncate overflow-hidden whitespace-nowrap">
+                    <td className="max-w-20 p-2 truncate overflow-hidden whitespace-nowrap">
                       {employee?.phone || '--'}
                     </td>
-                    <td className="max-w-20 px-4 py-3 truncate overflow-hidden whitespace-nowrap">
+                    <td className="max-w-20 p-2 truncate overflow-hidden whitespace-nowrap">
                       {employee?.whatsapp || '--'} 
                     </td>
-                    <td className="max-w-20 px-4 py-3 truncate overflow-hidden whitespace-nowrap">
+                    <td className="max-w-20 p-2 truncate overflow-hidden whitespace-nowrap">
                     {employee.openingBalance != null ? `₹${employee.openingBalance.toFixed(2)}` : '--'}
                     </td>
-                    <td className="max-w-32 px-4 py-3 truncate overflow-hidden whitespace-nowrap">
+                    <td className="max-w-32 p-2 truncate overflow-hidden whitespace-nowrap">
                       {format(parseISO(employee?.joiningDate || '--'), "dd/MM/yyyy")}
                     </td>
 
-                    <td className="min-w-32 px-4 py-3">₹{employee?.salary  || '--'}</td>
+                    <td className="min-w-32 p-2">₹{employee?.salary  || '--'}</td>
 
-                    <td className="min-w-4 px-4 py-3 text-blue-600">
+                    <td className="min-w-4 p-2 text-blue-600">
                       <LuPencilLine
                         className="text-[#6A5AE0] w-4 h-4 cursor-pointer"
                         onClick={() => {

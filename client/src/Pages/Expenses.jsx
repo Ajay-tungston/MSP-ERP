@@ -11,7 +11,7 @@ import OvalSpinner from "../Components/spinners/OvalSpinner";
 
 function Expenses() {
     const axiosInstance = useAxiosPrivate();
-
+    const [search, setSearch] = useState("");
     const [expenses, setExpenses] = useState([]);
     const [popup, setPopup] = useState(false);
 
@@ -27,7 +27,7 @@ function Expenses() {
     const fetchExpenses = async () => {
         try {
             setIsLoading(true);
-            const response = await axiosInstance.get(`/admin/expense?page=${currentPage}&limit=${itemsPerPage}`);
+            const response = await axiosInstance.get(`/admin/expense?page=${currentPage}&limit=${itemsPerPage}&search=${search}`);
             setExpenses(response.data.data || []);
             setTotalPages(response.data.totalPages);
             console.log(response)
@@ -40,7 +40,7 @@ function Expenses() {
 
     useEffect(() => {
         fetchExpenses();
-    }, [axiosInstance, currentPage]);
+    }, [axiosInstance, currentPage,search]);
 
     const handleNextPage = () => {
         if (currentPage < totalPages) setCurrentPage(currentPage + 1);
@@ -95,26 +95,42 @@ function Expenses() {
     
     return (
         <>
-            <div className={`p-4 rounded-lg shadow-sm h-[800px] bg-white mt-5 ${popup ? 'backdrop-blur-xl' : ''}`}>
+            <div className={`p-6 rounded-3xl shadow-md h-[800px] bg-white mt-5 ${popup ? 'backdrop-blur-xl' : ''}`}>
                 {/* Breadcrumb */}
-                <nav className="text-[20px] text-gray-500 mb-2 mt-10">
+                <nav className="text-[20px] text-[#737791] mb-2 mt-10">
                     <span>Master</span>
                     <span className="mx-1"><FaChevronRight className="inline-block" /></span>
-                    <span className="text-gray-500">Expense</span>
+                    <span className="text-[#737791]">Expense</span>
                 </nav>
 
                 {/* Header */}
-                <div className="flex justify-between items-center">
-                    <h1 className="text-3xl font-bold text-gray-900">Expense</h1>
-                    <div className="flex space-x-3 -mt-10 mr-10" onClick={() => { setPopup(true);; }}>
-                        <button className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-2 rounded-lg flex items-center gap-2">
-                            <CiCirclePlus className="text-xl" /> Add New Expense
+                <h1 className="text-3xl font-bold text-[#151D48] mb-6">Expense</h1>
+        <div className="relative max-w-md">
+          <input
+            type="text"
+            value={search}
+              autoComplete="off"
+            onChange={(e)=>{
+              setCurrentPage(1)
+              setSearch(e.target.value)}}
+            placeholder="Search here..."
+            className=" px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
+        </div>
+        <div className="flex space-x-3 -mt-10  float-end ">
+                   
+                        <button 
+                     
+                        className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-2 rounded-lg flex items-center gap-2"
+                                        onClick={() =>  setPopup(true) }
+                                        >
+                            <CiCirclePlus className="text-xl font-bold" /> Add New Expense
                         </button>
                     </div>
-                </div>
+
 
                 {/* Table */}
-                <div className="mt-20 bg-white overflow-x-auto">
+                <div className="mt-8 bg-white overflow-x-auto">
                     <table className="w-full border-collapse text-gray-900">
                         <thead>
                             <tr className="text-left font-bold border-b-2 border-gray-200 bg-[#F9FAFB] text-lg">
@@ -136,11 +152,11 @@ function Expenses() {
   ) : expenses.length > 0 ? (
     expenses.map((expense, index) => (
       <tr key={expense._id} className="border-b border-gray-200 hover:bg-gray-50 text-lg">
-        <td className="p-3">{(currentPage - 1) * itemsPerPage + index + 1}</td>
-        <td className="p-3">{expense.expense || '--'}</td>
-        <td className="p-3">{expense.amount ||'--'}</td>
-        {/* <td className="p-3">{new Date(expense.date).toLocaleDateString()}</td> */}
-        <td className="p-3 text-blue-800 cursor-pointer">
+        <td className="p-2">{(currentPage - 1) * itemsPerPage + index + 1}</td>
+        <td className="p-2">{expense.expense || '--'}</td>
+        <td className="p-2">{expense.amount ||'--'}</td>
+        {/* <td className="p-2">{new Date(expense.date).toLocaleDateString()}</td> */}
+        <td className="p-2 text-blue-800 cursor-pointer">
           <TbPencilMinus
             size={20}
             onClick={() => {
@@ -149,7 +165,7 @@ function Expenses() {
             }}
           />
         </td>
-        <td className="p-3 text-red-600 cursor-pointer">
+        <td className="p-2 text-red-600 cursor-pointer">
           <FaRegTrashCan size={18} onClick={() => handleDeleteExpense(expense._id)} />
         </td>
       </tr>

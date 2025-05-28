@@ -136,7 +136,7 @@ const FinancialDashboard = () => {
     fetchOverview();
   }, [axiosInstance]);
   return (
-    <div>
+    <div> 
       <div className="grid grid-cols-1 md:grid-cols-6 gap-6 p-4 ">
         {/* Financial Overview */}
         <div className="bg-white rounded-2xl shadow-[0_0_10px_rgba(0,0,0,0.10)] p-6 w-full col-span-2 overflow-visible">

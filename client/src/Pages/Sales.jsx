@@ -392,7 +392,7 @@ const Sales = () => {
 
 
   return (
-    <div className="w-full min-h-screen bg-[#EEEEEE] p-4 md:p-8">
+    <div className="w-full min-h-screen bg-[#EEEEEE] p-6 md:p-8">
       <div className="flex flex-col lg:flex-row gap-6">
         {/* <div className="w-[665px] h-full left-[1200px] top-[148px] absolute bg-[#c92222]">
           <div className="w-[653px] left-[6px] top-[176px] absolute inline-flex flex-col justify-start items-start">

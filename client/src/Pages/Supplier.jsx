@@ -83,17 +83,17 @@ export default function CustomerHeader() {
 
   return (
     <>
-      <div className="p-4 rounded-lg shadow-sm h-[800px] bg-white mt-5">
+      <div className="p-6 rounded-3xl shadow-md h-[800px] bg-white mt-5">
         {/* Breadcrumb */}
-        <nav className="flex items-center gap-2 text-[20px] text-gray-500 mb-2 mt-10">
+        <nav className="flex items-center gap-2 text-[20px] text-[#737791] mb-2 mt-10">
           <span>Master</span>
           <FaChevronRight />
-          <span className="text-gray-700">Supplier</span>
+          <span className="text-[#737791]">Supplier</span>
         </nav>
 
         {/* Header & Buttons */}
 
-        <h1 className="text-3xl font-bold text-gray-800 mb-6">Supplier</h1>
+        <h1 className="text-3xl font-bold text-[#151D48] mb-6">Supplier</h1>
         <div className="relative max-w-md">
           <input
             type="text"
@@ -112,11 +112,11 @@ export default function CustomerHeader() {
             className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-2 rounded-lg flex items-center gap-2"
             onClick={() => setPopup(true)}
           >
-            <CiCirclePlus className="text-xl " /> Add New supplier
+            <CiCirclePlus className="text-xl font-bold" /> Add New supplier
           </button>
         </div>
 
-        <div className="mt-20 bg-white ">
+        <div className="mt-8 bg-white ">
           <table className="w-full border-collapse text-gray-900">
             {/* Table Header */}
             <thead>
@@ -153,17 +153,17 @@ export default function CustomerHeader() {
                     key={supplier._id}
                     className="border-b border-gray-200 hover:bg-gray-50 bg-white text-lg"
                   >
-                    <td className="p-3">
+                    <td className="p-1">
                       {index + 1 + (currentPage - 1) * limit}
                     </td>
-                    <td className="p-3">{supplier?.supplierCode || '--'}</td>
-                    <td className="p-3">{supplier?.supplierName || '--'}</td>
-                    <td className="p-3">{supplier?.address ||  '--'}</td>
-                    <td className="p-3">{supplier?.phone || '--'}</td>
-                    <td className="p-3">{supplier?.whatsapp ||'--'}</td>
-                    <td className="p-3">{supplier?.commission ||'--'}</td>
+                    <td className="p-2">{supplier?.supplierCode || '--'}</td>
+                    <td className="p-2">{supplier?.supplierName || '--'}</td>
+                    <td className="p-2">{supplier?.address ||  '--'}</td>
+                    <td className="p-2">{supplier?.phone || '--'}</td>
+                    <td className="p-2">{supplier?.whatsapp ||'--'}</td>
+                    <td className="p-2">{supplier?.commission ||'--'}</td>
 
-                    <td className="p-3 text-blue-600">
+                    <td className="p-2 text-blue-600">
                       <LuPencilLine
                         className="text-[#6A5AE0] w-4 h-4 cursor-pointer"
                         onClick={() => {
@@ -172,7 +172,7 @@ export default function CustomerHeader() {
                         }}
                       />
                     </td>
-                    <td className="p-3 text-red-600" onClick={()=>handleDelete(supplier._id)}>
+                    <td className="p-2 text-red-600" onClick={()=>handleDelete(supplier._id)}>
                       <FaTrashAlt />
                     </td>
                   </tr>

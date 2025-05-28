@@ -86,7 +86,7 @@ const [search, setSearch] = useState("");
   };
   return (
     <>
-    <div className="p-4 rounded-lg shadow-sm bg-white mt-10">
+    <div className="p-4 rounded-lg shadow-sm bg-white mt-5">
       {/* Breadcrumb */}
       <nav className="flex items-center gap-x-2 text-[20px] text-gray-500 mb-4">
         <span>Transactions</span>

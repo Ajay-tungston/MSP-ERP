@@ -53,24 +53,24 @@ const axiosInstense = useAxiosPrivate()
   };
   return (
     <>
-    <div className="p-4 rounded-lg shadow-sm bg-white mt-10">
-      {/* Breadcrumb */}
-      <nav className="flex items-center gap-x-2 text-[20px] text-gray-500 mb-4">
-        <span>Master</span>
-        <FaChevronRight />
-        <span className="text-gray-700">Company</span>
-      </nav>
+       <div className="p-6 rounded-3xl shadow-md h-[800px] bg-white mt-5">
+        {/* Breadcrumb */}
+        <nav className="flex items-center text-[20px] text-[#737791] gap-2 mb-2 mt-10">
+          <span>Master</span>
+          <FaChevronRight />
+          <span className="text-[#737791]">Customer</span>
+        </nav>
   
       {/* Header & Actions */}
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-800">Company</h1>
+        <h1 className="text-3xl font-bold text-[#151D48] ">Company</h1>
   
         <div className="flex space-x-4">
           <button
             className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg flex items-center gap-2"
             onClick={() => setPopup(true)}
           >
-            <CiCirclePlus className="text-xl" /> Add New Company
+            <CiCirclePlus className="text-xl font-bold" /> Add New Company
           </button>
         
         </div>
@@ -81,7 +81,7 @@ const axiosInstense = useAxiosPrivate()
         {companies.map((company, index) => (
           <div
             key={index}
-            className="bg-gray-50 rounded-2xl p-6 shadow border border-gray-100"
+            className="bg-gray-50 rounded-2xl p-6 shadow border border-gray-100 "
           >
             <table className="w-full table-fixed text-left">
               <thead>

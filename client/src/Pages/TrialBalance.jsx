@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import useAxiosPrivate from "../hooks/useAxiosPrivate";
 import { ChevronDown, ChevronUp, Printer } from "lucide-react";
 import { handleTrialBalancePrint } from "../utils/trailBalanceprint";
+import { FaChevronRight } from "react-icons/fa6";
 export default function TrialBalance() {
   const [selectedMonth, setSelectedMonth] = useState(() => {
     const now = new Date();
@@ -440,12 +441,15 @@ export default function TrialBalance() {
     };
 
   return (
-    <div className="p-4 bg-white min-h-screen mt-10 rounded-xl">
-      <nav className="text-gray-500 text-[20px] mb-4">
-        Reports &gt; Trial Balance
-      </nav>
+    <div className="p-6 bg-white min-h-screen mt-5 rounded-3xl">
+     <nav className="flex items-center text-gray-500 text-[20px] mb-4">
+  <span>Reports</span>
+  <FaChevronRight className="mx-2" />
+  <span>Trial Balance</span>
+</nav>
+
       <div className="flex justify-between w-full">
-        <h1 className="text-3xl font-semibold">Trial Balance</h1>
+        <h1 className="text-3xl font-bold">Trial Balance</h1>
         <button 
              onClick={handlePrintClick}
         className="flex items-center px-4 py-2 bg-[#F9FAFB] rounded hover:bg-indigo-200">

@@ -108,16 +108,16 @@ export default function CustomerHeader() {
   
   return (
     <>
-      <div className="p-4 rounded-lg shadow-sm h-[800px] bg-white mt-5">
+      <div className="p-6 rounded-3xl shadow-md h-[800px] bg-white mt-5">
         {/* Breadcrumb */}
-        <nav className="flex items-center text-[20px] text-gray-500 gap-2 mb-2 mt-10">
+        <nav className="flex items-center text-[20px] text-[#737791] gap-2 mb-2 mt-10">
           <span>Master</span>
           <FaChevronRight />
-          <span className="text-gray-700">Customer</span>
+          <span className="text-[#737791]">Customer</span>
         </nav>
 
 
-        <h1 className="text-3xl font-bold text-gray-800 mb-6">Customer</h1>
+        <h1 className="text-3xl font-bold text-[#151D48] mb-6">Customer</h1>
 
         {/* Search Input */}
         <div className="relative max-w-md">
@@ -140,27 +140,27 @@ export default function CustomerHeader() {
             className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-2 rounded-lg flex items-center gap-2"
             onClick={() => setPopup(true)}
           >
-            <CiCirclePlus className="text-xl " /> Add New Customer
+            <CiCirclePlus className="text-xl font-bold " /> Add New Customer
           </button>
         </div>
 
         {/* Dynamic Table */}
-        <div className="mt-10 bg-white ">
+        <div className="mt-8 bg-white ">
           <table className="w-full border-collapse text-gray-900 ">
             <thead>
               <tr className="text-left text-gray-900 font-bold border-b-2 border-gray-200 bg-[#F9FAFB] text-lg ">
 
-                <th className="p-2 w-[5%] ">No.</th>
-                <th className="p-2 w-[10%] ">Name</th>
-                <th className="p-2 w-[15%] ">Address</th>
-                <th className="p-2 w-[10%] ">Phone</th>
-                <th className="p-2 w-[10%]">WhatsApp</th>
-                <th className="p-2 w-[10%] ">Discount %</th>
+                <th className="p-3 w-[5%] ">No.</th>
+                <th className="p-3 w-[10%] ">Name</th>
+                <th className="p-3 w-[15%] ">Address</th>
+                <th className="p-3 w-[10%] ">Phone</th>
+                <th className="p-3 w-[10%]">WhatsApp</th>
+                <th className="p-3 w-[10%] ">Discount %</th>
 
-                <th className="p-2 w-[10%] ">Opening Bal.</th>
-                <th className="p-2 w-[10%] ">Route</th>
-                <th className="p-2 w-[10%]" ></th>
-                <th className="p-2 w-[10%]"></th>
+                <th className="p-3 w-[10%] ">Opening Bal.</th>
+                <th className="p-3 w-[10%] ">Route</th>
+                <th className="p-3 w-[10%]" ></th>
+                <th className="p-3 w-[10%]"></th>
 
               </tr>
             </thead>

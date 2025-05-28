@@ -114,7 +114,7 @@ function PurchaseReport() {
   
 
      
-      <div className="bg-white h-auto rounded-t-2xl px-6 pt-6 pb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mt-10">
+      <div className="p-6 shadow-md bg-white h-auto rounded-t-3xl px-6 pt-6 pb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mt-5">
           <div className="flex flex-col">
             <div className="flex items-center gap-2 text-slate-500 text-xl font-normal">
               <span>Reports</span>
@@ -134,19 +134,19 @@ function PurchaseReport() {
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="w-50 px-4 py-2 bg-gray-50 rounded-xl outline-none text-zinc-700 text-xl"
+                className="w-50 px-4 py-3 bg-gray-50 rounded-xl outline-none text-zinc-700 text-xl"
               />
               <span className="text-[#73779166] text-xl">to</span>
               <input
                 type="date"
                 value={toDate}
                 onChange={(e) => setToDate(e.target.value)}
-                className="w-50 px-4 py-2 bg-gray-50 rounded-xl outline-none text-zinc-700 text-xl"
+                className="w-50 px-4 py-3 bg-gray-50 rounded-xl outline-none text-zinc-700 text-xl"
               />
             </div>
             {!noReports && (
               <button
-                className="px-6 py-3 bg-gray-50 rounded-xl flex items-center gap-2"
+                className="px-4 py-3 bg-gray-50 rounded-xl flex items-center gap-2"
                 onClick={fetchPrintData}
               >
                 <BsPrinter className="w-6 h-6" />
@@ -156,10 +156,10 @@ function PurchaseReport() {
           </div>
         </div>
       <div className="w-full  mx-auto h-fit mb-0 relative bg-white  overflow-x-auto">
-        <div className="overflow-x-auto">
-          <table className="min-w-[1000px] w-full table-auto">
+        <div className="overflow-x-auto p-6">
+          <table className=" w-full ">
             <thead>
-              <tr className="bg-gray-50 border-b border-gray-200 text-lg">
+              <tr className="bg-gray-50 border-b border-gray-200 text-lg  ">
                 {[
                   "No.",
                   "Date",
@@ -188,7 +188,7 @@ function PurchaseReport() {
                 </tr>
               ) : noReports ? (
                 <tr>
-                  <td colSpan="8" className="text-center text-xl font-bold text-gray-400 py-10">
+                  <td colSpan="8" className="text-center text-xl  text-gray-400 py-10">
                     No reports available for the selected date range.
                   </td>
                 </tr>
@@ -196,7 +196,7 @@ function PurchaseReport() {
                 purchaseData?.purchaseEntries?.map((i, index) => (
                   <tr
                     key={i?._id}
-                    className="bg-white border-b border-gray-200 text-lg"
+                    className="bg-white border-b border-gray-100 text-lg even:bg-gray-50 "
                   >
                     <td className="px-4 py-2 text-slate-900 text-xl font-normal font-['Urbanist']">{index + 1 + (currentPage - 1) * limit}</td>
                     <td className="px-4 py-2 text-slate-900 text-xl font-normal font-['Urbanist']">
@@ -226,31 +226,8 @@ function PurchaseReport() {
             </tbody>
           </table>
         </div>
-  
-        {/* Totals Row */}
-        <div className="bg-[#F0FDFA] px-6 py-4 rounded-xl flex flex-wrap justify-between mt-8 border border-gray-200">
-          <div className="w-full sm:w-auto font-normal">Total</div>
-          <div className="text-slate-900 font-bold"> ₹{totalStats?.netTotalAmount?.toFixed(2)}</div>
-        </div>
-  
-        {/* Summary Info */}
-        <div className="w-full px-6 py-2 bg-white border-b border-gray-200 flex flex-wrap gap-y-3 justify-between items-center text-xl font-['Urbanist']">
-         {[
-            ["Commission", totalStats?.totalCommission?.toFixed(2)],
-            ["Qty(kg)", totalStats?.totalKg],
-            ["Qty(Box)", totalStats?.totalBox],
-            ["Expenses", totalStats?.totalMarketFee?.toFixed(2)],
-            ["Gross Total",totalStats?.grossTotalAmount?.toFixed(2)],
-          ].map(([label, value], i) => (
-            <div key={i} className="flex gap-2 items-center">
-              <div className="text-slate-500/40">{label}</div>
-              <div className="text-slate-900 font-bold">{value}</div>
-            </div>
-          ))}
-        </div>
-  
-        {/* Pagination */}
-        {!noReports && (
+   {/* Pagination */}
+   {!noReports && (
           <div className="w-full px-6 py-3 border-b border-gray-200 flex flex-wrap justify-between items-center text-xl font-['Urbanist']">
             <div className="text-slate-900">Page {currentPage} of {totalPages}</div>
             <div className="flex gap-4">
@@ -275,6 +252,54 @@ function PurchaseReport() {
             </div>
           </div>
         )}
+        {/* Totals Row */}
+        <div className="bg-[#F0FDFA] mx-6 px-6 py-4  flex flex-wrap justify-between mt-8 border border-gray-200">
+          <div className="w-full sm:w-auto font-normal">Total</div>
+          <div className="text-slate-900 font-bold"> ₹{totalStats?.netTotalAmount?.toFixed(2)}</div>
+        </div>
+  
+        {/* Summary Info */}
+        <div className="w-full px-6 py-2 bg-white border-b border-gray-200 flex flex-wrap gap-y-3 justify-between items-center text-xl font-['Urbanist'] pb-10">
+         {[
+            ["Commission", totalStats?.totalCommission?.toFixed(2)],
+            ["Qty(kg)", totalStats?.totalKg],
+            ["Qty(Box)", totalStats?.totalBox],
+            ["Expenses", totalStats?.totalMarketFee?.toFixed(2)],
+            ["Gross Total",totalStats?.grossTotalAmount?.toFixed(2)],
+          ].map(([label, value], i) => (
+            <div key={i} className="flex gap-2 items-center">
+              <div className="text-slate-500/40">{label}</div>
+              <div className="text-slate-900 font-bold">{value}</div>
+            </div>
+          ))}
+        </div>
+  
+        {/* Pagination */}
+        {/* {!noReports && (
+          <div className="w-full px-6 py-3 border-b border-gray-200 flex flex-wrap justify-between items-center text-xl font-['Urbanist']">
+            <div className="text-slate-900">Page {currentPage} of {totalPages}</div>
+            <div className="flex gap-4">
+              <button
+                className={`w-40 px-6 py-2 rounded-2xl outline outline-gray-300/30 ${
+                  currentPage === 1 ? "text-gray-300 cursor-not-allowed" : "text-blue-500"
+                }`}
+                onClick={handlePrevious}
+                disabled={currentPage === 1}
+              >
+                Previous
+              </button>
+              <button
+                className={`w-40 px-6 py-2 rounded-2xl outline outline-gray-300/30 ${
+                  currentPage === totalPages ? "text-gray-300 cursor-not-allowed" : "text-blue-500"
+                }`}
+                onClick={handleNext}
+                disabled={currentPage === totalPages}
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )} */}
   
 
         

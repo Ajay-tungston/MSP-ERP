@@ -312,11 +312,11 @@ function Purchasetransaction() {
           <OvalSpinner />
         </div>
       ) : (
-        <div className="w-full min-h-screen bg-white rounded-3xl p-8 overflow-x-hidden mt-10">
+        <div className="w-full min-h-screen bg-white rounded-3xl p-6 overflow-x-hidden mt-5 shadow-md" >
           <div className="max-w-screen-xl mx-auto flex flex-col gap-12">
             {/* Page Header */}
             <div className="pb-6 border-b border-gray-400">
-              <h1 className="text-indigo-950 text-4xl font-bold font-['Urbanist']">
+              <h1 className="text-indigo-950 text-3xl font-bold font-['Urbanist']">
                 Add New Purchase Transaction
               </h1>
             </div>

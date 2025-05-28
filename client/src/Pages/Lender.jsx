@@ -124,17 +124,17 @@ export default function Lender() {
   
   return (
     <>
-      <div className="py-4 rounded-lg shadow-sm h-[800px] bg-white mt-5">
+      <div className="p-6 rounded-3xl shadow-md h-[800px] bg-white mt-5">
         {/* Breadcrumb */}
-        <nav className="flex items-center text-[20px] text-gray-500 mb-2 px-4 mt-10 space-x-2">
+        <nav className="flex items-center gap-x-2 text-[20px] text-[#737791] mb-2 mt-10">
           <span>Master</span>
-          <FaChevronRight className="text-xs" />
-          <span className="text-gray-700 font-semibold ">Lender</span>
+          <FaChevronRight />
+          <span className="text-[#737791] ">Lender</span>
         </nav>
         {/* Header */}
 
-        <h1 className="text-3xl font-bold text-gray-900 ml-5">Lender</h1>
-        <div className="relative max-w-md mt-5 ml-5">
+        <h1 className="text-3xl font-bold text-[#151D48] mb-6">Lender</h1>
+        <div className="relative max-w-md mt-5 ">
           <input
             type="text"
             value={search}
@@ -153,16 +153,16 @@ export default function Lender() {
             className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-2 rounded-lg flex items-center gap-2 mr-8"
             onClick={() => setPopup(true)}
           >
-            <CiCirclePlus className="text-xl " /> Add New Lender
+            <CiCirclePlus className="text-xl font-bold " /> Add New Lender
           </button>
         </div>
 
 
         {/* Table */}
-        <div className="mt-10 px-4">
+        <div className="mt-8 ">
           <table className="w-full border-collapse text-gray-900">
             <thead>
-              <tr className="bg-gray-100 border-b-2 border-gray-200 text-left text-lg">
+              <tr className="bg-[#F9FAFB] border-b-2 border-gray-200 text-left text-lg">
                 <th className="p-3">No.</th>
                 <th className="p-3">Lender Name</th>
                 <th className="p-3">Phone Number</th>
@@ -193,21 +193,21 @@ export default function Lender() {
                     className={`border-b border-gray-200 hover:bg-gray-50 text-lg ${selectedRows.includes(lender._id) ? "bg-gray-50" : ""
                       }`}
                   >
-                    <td className="p-3">{index + 1 + (currentPage - 1) * limit}</td>
-                    <td className="p-3">{lender.name || '--'}</td>
-                    <td className="p-3">{lender.phone ||'--'}</td>
-                    <td className="p-3">{lender.address ||'--'}</td>
+                    <td className="p-2">{index + 1 + (currentPage - 1) * limit}</td>
+                    <td className="p-2">{lender.name || '--'}</td>
+                    <td className="p-2">{lender.phone ||'--'}</td>
+                    <td className="p-2">{lender.address ||'--'}</td>
            
-                    <td className="p-3">
+                    <td className="p-2">
   ₹{(lender.openingBalance ?? 0).toFixed(2)}
 </td>
 
-                    <td className="p-3 text-blue-800 cursor-pointer">
+                    <td className="p-2 text-blue-800 cursor-pointer">
                       < LuPencilLine   onClick={() => handleEditClick(lender)}/></td>
-                    <td className="p-3 text-red-600 cursor-pointer">
+                    <td className="p-2 text-red-600 cursor-pointer">
                       <FaTrashAlt onClick={() => deleteLender(lender._id)} />
                     </td>
-                    <td className="p-3"></td>
+                    <td className="p-2"></td>
                   </tr>
                 ))
               )}

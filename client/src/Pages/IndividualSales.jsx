@@ -196,18 +196,18 @@ export default function IndividualSales() {
       )}
 
       {/* <div className="p-4 sm:p-6 bg-[#235a9291] min-h-screen font-[Urbanist]"> */}
-      <div className="bg-white rounded-2xl p-6 sm:p-12 shadow-md relative mt-10">
+      <div className="bg-white rounded-3xl p-6 shadow-md relative mt-5">
         {/* Breadcrumb */}
-        <div className="flex items-center gap-x-2 text-gray-500 mb-4 text-[20px]">
-          <span>Print</span>
-          <FaChevronRight />
-          <span>Individual Sales</span>
-        </div>
+        <div className="flex items-center gap-2 text-slate-500 text-[20px] font-normal">
+                     <span>Reports</span>
+                     <FaChevronRight />
+                     <span>Individual Sales</span>
+                   </div>
 
         {/* Header */}
         <div className="flex flex-col lg:flex-row justify-between items-start mb-8 gap-6">
           <div className="flex flex-col gap-4 w-full lg:w-auto">
-            <h1 className="text-2xl sm:text-3xl font-bold leading-tight">Individual Sales</h1>
+            <h1 className="text-3xl  font-bold leading-tight">Individual Sales</h1>
 
             <div className="relative flex items-center gap-4 w-full max-w-xl" ref={suggRef}>
               <label className="text-[18px] text-gray-500 min-w-fit">Customer:</label>

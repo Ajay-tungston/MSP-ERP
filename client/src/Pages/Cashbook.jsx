@@ -234,7 +234,7 @@ const CashbookHeader = () => {
         <OvalSpinner />
       </div>
     )}
-    <div className="p-6 bg-white rounded-md shadow-sm mt-10">
+    <div className="p-6 bg-white rounded-md shadow-sm mt-5">
       <div className="flex justify-between items-start flex-wrap gap-4">
         <div>
           <p className="text-sm text-gray-400 flex items-center gap-1">

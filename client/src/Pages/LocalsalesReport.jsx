@@ -98,11 +98,11 @@ function LocalsalesReport() {
           <OvalSpinner />
         </div>
       )}
-      <div className="p-6 bg-white rounded-md mt-10">
+      <div className="p-6 bg-white rounded-3xl mt-5 shadow-md">
         <div className="flex items-center text-[20px] text-gray-500 mb-1">
           Report
           <FaChevronRight className="mx-2" />
-          <span className="font-medium">Local Sales Report</span>
+          <span className="font-medium ">Local Sales Report</span>
         </div>
 
         <h1 className="text-3xl font-bold text-[#0E0F3C] mb-4  p-2">

@@ -97,17 +97,17 @@ function Item() {
 
   return (
     <>
-      <div className="p-4 rounded-lg shadow-sm h-[800px] bg-white mt-5">
+      <div className="p-6 rounded-3xl shadow-md h-[800px] bg-white mt-5">
         {/* Breadcrumb */}
-        <nav className="flex items-center gap-x-2 text-[20px] text-gray-500 mb-2 mt-10">
+        <nav className="flex items-center gap-x-2 text-[20px] text-[#737791] mb-2 mt-10">
           <span>Master</span>
           <FaChevronRight />
-          <span className="text-gray-700">Item</span>
+          <span className="text-[#737791]">Item</span>
         </nav>
 
         {/* Header & Buttons */}
 
-        <h1 className="text-3xl font-bold text-gray-800 mb-6">Item</h1>
+        <h1 className="text-3xl font-bold text-[#151D48] mb-6">Item</h1>
         <div className="relative max-w-md">
           <input
             type="text"
@@ -126,11 +126,11 @@ function Item() {
             className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-2 rounded-lg flex items-center gap-2"
             onClick={() => setPopup(true)}
           >
-            <CiCirclePlus className="text-xl " /> Add New Item
+            <CiCirclePlus className="text-xl font-bold" /> Add New Item
           </button>
         </div>
 
-        <div className="mt-10 bg-white">
+        <div className="mt-8 bg-white">
           <table className="w-full border-collapse text-gray-900">
             <thead>
               <tr className="text-left text-gray-900 font-bold border-b-2 border-gray-200 bg-[#F9FAFB] text-lg">
@@ -160,12 +160,12 @@ function Item() {
                     key={item.id}
                     className="border-b border-gray-200 hover:bg-gray-50 bg-white text-lg"
                   >
-                    <td className="p-3">
+                    <td className="p-2">
                       {index + 1 + (currentPage - 1) * limit}
                     </td>
-                    <td className="p-3">{item?.itemCode ||'--'}</td>
-                    <td className="p-3">{item.itemName || '--'}</td>
-                    <td className="p-3 text-[#6A5AE0]">
+                    <td className="p-2">{item?.itemCode ||'--'}</td>
+                    <td className="p-2">{item.itemName || '--'}</td>
+                    <td className="p-2 text-[#6A5AE0]">
                       <LuPencilLine
                         className="text-[#6A5AE0] w-4 h-4 cursor-pointer"
                         onClick={() => {
@@ -174,7 +174,7 @@ function Item() {
                         }}
                       />
                     </td>
-                    <td className="p-3 text-red-600" onClick={()=>handleDelete(item._id)}>
+                    <td className="p-2 text-red-600" onClick={()=>handleDelete(item._id)}>
                       <FaTrashAlt />
                     </td>
                   </tr>

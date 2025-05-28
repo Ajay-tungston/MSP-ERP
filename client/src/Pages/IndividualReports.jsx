@@ -370,13 +370,13 @@ const IndividualReports = () => {
         </div>
       )}
 
-      <div className="p-9 bg-white rounded-3xl mt-10 shadow-md space-y-6">
+      <div className="p-6 bg-white rounded-3xl mt-5 shadow-md space-y-6">
         {/* Breadcrumb & Heading */}
         <div className="space-y-2">
           <div className="flex items-center gap-2 text-gray-500 text-xl ">
             Reports <FaChevronRight /> Individual Purchase Report
           </div>
-          <div className="pt-5  text-3xl font-bold text-indigo-950">Individual Purchase Report</div>
+          <div className="  text-3xl font-bold text-indigo-950">Individual Purchase Report</div>
         </div>
 
         {/* Actions */}
@@ -489,7 +489,7 @@ const IndividualReports = () => {
                 </tr>
               ) : reportsData?.length === 0 ? (
                 <tr>
-                  <td colSpan="11" className="text-center py-10 text-gray-500 font-bold text-lg">
+                  <td colSpan="11" className="text-center py-10 text-gray-400 text-lg">
                     No reports available for the selected date range.
                   </td>
                 </tr>

@@ -72,7 +72,7 @@ console.log(vehicles)
 
     return (
         <>
-            <div className="py-4 rounded-lg shadow-sm h-[800px] bg-white mt-10">
+            <div className="py-4 rounded-3xl shadow-md h-[800px] bg-white mt-5">
                 {/* Breadcrumb */}
                 <nav className="flex items-center text-[20px] text-gray-500 mb-2 px-4 mt-10">
                     <span>Master</span> <FaChevronRight className="mx-2" />
@@ -104,8 +104,8 @@ console.log(vehicles)
                     </button>
                 </div>
 
-                <div className="mt-10 bg-white">
-                    <table className="w-full border-collapse text-gray-900">
+                <div className=" bg-white p-6">
+                    <table className="w-full border-collapse text-gray-900 ">
                         <thead>
                             <tr className="text-left text-gray-900 font-bold border-b-2 border-gray-200 bg-[#F9FAFB] text-lg">
                                 <th className="p-3">No.</th>

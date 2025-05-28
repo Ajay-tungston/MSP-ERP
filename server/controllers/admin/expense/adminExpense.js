@@ -2,23 +2,28 @@ const { response } = require('express');
 const Expense = require('../../../models/Expense');
 const Payment = require('../../../models/Payment');
 
-// Get expenses with pagination
+// Get expenses with search and pagination
 exports.getExpenses = async (req, res) => {
-  const { page = 1, limit = 8 } = req.query;
+  const { page = 1, limit = 8, search = "" } = req.query;
 
   try {
-    const expenses = await Expense.find()
-      .sort({ date: -1 }) // <-- Sort by the `date` field instead of `createdAt`
+    // Build search query
+    const query = search
+      ? { expense: { $regex: search, $options: "i" } }
+      : {};
+
+    const expenses = await Expense.find(query)
+      .sort({ date: -1 }) // Sort by `date` field
       .skip((page - 1) * limit)
       .limit(Number(limit));
 
-    const count = await Expense.countDocuments();
+    const count = await Expense.countDocuments(query);
 
     res.status(200).json({
       data: expenses,
       currentPage: Number(page),
       totalPages: Math.ceil(count / limit),
-      totalItems: count
+      totalItems: count,
     });
   } catch (err) {
     res.status(500).json({ message: 'Server Error' });
@@ -29,7 +34,8 @@ exports.getExpenses = async (req, res) => {
 exports.createExpense = async (req, res) => {
   try {
     const { expense, amount } = req.body;
-console.log(req.body)
+    console.log(req.body);
+
     const newExpense = new Expense({ expense, amount });
     await newExpense.save();
 
@@ -44,7 +50,7 @@ exports.updateExpense = async (req, res) => {
   try {
     const updated = await Expense.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
-      runValidators: true
+      runValidators: true,
     });
 
     if (!updated) return res.status(404).json({ message: 'Expense not found' });
@@ -83,14 +89,15 @@ exports.deleteExpense = async (req, res) => {
   }
 };
 
+// Get full list of expenses (optionally with search)
 exports.getExpenseList = async (req, res) => {
   try {
     const search = req.query.search || "";
     const query = search
-  ? { expense: { $regex: search, $options: "i" } }
-  : {};
-    const expense = await Expense.find(query)
-   
+      ? { expense: { $regex: search, $options: "i" } }
+      : {};
+    const expense = await Expense.find(query);
+
     return res.status(200).json(expense);
   } catch (error) {
     console.log(error);

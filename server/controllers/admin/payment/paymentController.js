@@ -211,31 +211,143 @@ const addPayment = async (req, res) => {
 
 const getAllPayments = async (req, res) => {
   try {
-    const { page = 1, limit = 10, paymentType } = req.query;
+    const { page = 1, limit = 10, paymentType, search = "" } = req.query;
 
-    const query = {};
+    const matchStage = {};
 
     if (paymentType) {
       if (!["PaymentIn", "PaymentOut"].includes(paymentType)) {
         return res.status(400).json({ message: "Invalid payment type." });
       }
-      query.paymentType = paymentType;
+      matchStage.paymentType = paymentType;
     }
 
-    const payments = await Payment.find(query)
-      .sort({ date: -1 })
-      .skip((page - 1) * limit)
-      .limit(Number(limit))
-      .populate({ path: 'supplier', select: 'supplierName' })
-      .populate({ path: 'customer', select: 'customerName' })
-      .populate({ path: 'employee', select: 'employeeName' })
-      .populate({ path: 'company', select: 'companyName' })
-      .populate({ path: 'expense', select: 'expense' })
-      .populate({path: 'lender', select: 'name'})
-      .populate({ path: 'vehicle', select: 'vehicleName' })
-      .lean();
+    const searchRegex = new RegExp(search, "i");
 
-    const total = await Payment.countDocuments(query);
+    const searchConditions = [];
+
+    if (search) {
+      searchConditions.push(
+        { 'supplier.supplierName': searchRegex },
+        { 'customer.customerName': searchRegex },
+        { 'employee.employeeName': searchRegex },
+        { 'company.companyName': searchRegex },
+        { 'expense.expense': searchRegex },
+        { 'lender.name': searchRegex },
+        { 'vehicle.vehicleName': searchRegex }
+      );
+
+      // Also search by amount if it's a number
+      if (!isNaN(search)) {
+        searchConditions.push({ amount: Number(search) });
+      }
+    }
+
+    const aggregatePipeline = [
+      { $match: matchStage },
+
+      // Lookups
+      {
+        $lookup: {
+          from: 'suppliers',
+          localField: 'supplier',
+          foreignField: '_id',
+          as: 'supplier'
+        }
+      },
+      {
+        $unwind: { path: '$supplier', preserveNullAndEmptyArrays: true }
+      },
+      {
+        $lookup: {
+          from: 'customers',
+          localField: 'customer',
+          foreignField: '_id',
+          as: 'customer'
+        }
+      },
+      {
+        $unwind: { path: '$customer', preserveNullAndEmptyArrays: true }
+      },
+      {
+        $lookup: {
+          from: 'employees',
+          localField: 'employee',
+          foreignField: '_id',
+          as: 'employee'
+        }
+      },
+      {
+        $unwind: { path: '$employee', preserveNullAndEmptyArrays: true }
+      },
+      {
+        $lookup: {
+          from: 'companies',
+          localField: 'company',
+          foreignField: '_id',
+          as: 'company'
+        }
+      },
+      {
+        $unwind: { path: '$company', preserveNullAndEmptyArrays: true }
+      },
+      {
+        $lookup: {
+          from: 'expenses',
+          localField: 'expense',
+          foreignField: '_id',
+          as: 'expense'
+        }
+      },
+      {
+        $unwind: { path: '$expense', preserveNullAndEmptyArrays: true }
+      },
+      {
+        $lookup: {
+          from: 'lenders',
+          localField: 'lender',
+          foreignField: '_id',
+          as: 'lender'
+        }
+      },
+      {
+        $unwind: { path: '$lender', preserveNullAndEmptyArrays: true }
+      },
+      {
+        $lookup: {
+          from: 'pickups',
+          localField: 'vehicle',
+          foreignField: '_id',
+          as: 'vehicle'
+        }
+      },
+      {
+        $unwind: { path: '$vehicle', preserveNullAndEmptyArrays: true }
+      },
+
+      // Apply search filters
+      ...(searchConditions.length > 0 ? [{ $match: { $or: searchConditions } }] : []),
+
+      { $sort: { date: -1 } },
+
+      // Pagination
+      {
+        $facet: {
+          data: [
+            { $skip: (Number(page) - 1) * Number(limit) },
+            { $limit: Number(limit) }
+          ],
+          totalCount: [
+            { $count: "count" }
+          ]
+        }
+      }
+    ];
+
+    const result = await Payment.aggregate(aggregatePipeline);
+
+    const payments = result[0]?.data || [];
+    const total = result[0]?.totalCount[0]?.count || 0;
 
     res.status(200).json({
       payments,
@@ -244,7 +356,7 @@ const getAllPayments = async (req, res) => {
       totalPages: Math.ceil(total / limit),
     });
   } catch (error) {
-    console.error("Error fetching payments:", error);
+    console.error("Error fetching payments with aggregation:", error);
     res.status(500).json({ message: "Internal server error." });
   }
 };

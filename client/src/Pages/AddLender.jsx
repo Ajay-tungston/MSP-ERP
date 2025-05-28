@@ -77,7 +77,7 @@ const parsedBalance = parseFloat(openingBalance);
           <div className="flex items-center gap-4">
             <label className="w-[150px] text-[#737791] text-xl">Phone<span className="text-red-500">*</span></label>
             <input
-              type="text"
+              type="number"
               placeholder="Enter phone"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}

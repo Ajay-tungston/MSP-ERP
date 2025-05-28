@@ -244,7 +244,7 @@ const FinancialDashboard = () => {
 
           {(expenseData[0]?.value || 0) > 0 ||
           (expenseData[1]?.value || 0) > 0 ? (
-            <ResponsiveContainer width="100%" height={250}>
+            <ResponsiveContainer width="100%" height={300} className="overflow-visible">
               <PieChart>
                 <Pie
                   data={expenseData}

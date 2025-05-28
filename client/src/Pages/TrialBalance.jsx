@@ -316,6 +316,7 @@ export default function TrialBalance() {
           ? breakdown.map((item) => ({
               lenderName: item.lenderName || "Unknown", // Lender name
               amount: Number(item.payable || 0), // Lender payable amount
+              openingBalance:item.openingBalance
             }))
           : [],
       });
@@ -1121,8 +1122,9 @@ export default function TrialBalance() {
                   <table className="w-full">
                     <thead className="bg-[#F9FAFB] text-left text-sm text-[#05004E] uppercase border-b border-gray-200">
                       <tr>
-                        <th className="px-6 py-2 w-5/12">Lender</th>
-                        <th className="px-6 py-2 w-3/12">Amount</th>
+                        <th className="px-6 py-2 w-4/12">Lender</th>
+                        <th className="px-6 py-2 w-4/12">Opening Balance</th>
+                        <th className="px-6 py-2 w-4/12">Amount</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1132,8 +1134,9 @@ export default function TrialBalance() {
                           className="border-b border-gray-200 hover:bg-gray-50"
                         >
                           <td className="px-6 py-2">{row.lenderName}</td>
+                          <td className="px-6 py-2">₹{row?.openingBalance?.toFixed(2)}</td>
                           <td className="px-6 py-2">
-                            ₹{Number(row.amount).toFixed(2)}
+                            ₹{Number(row?.amount)?.toFixed(2)}
                           </td>
                         </tr>
                       ))}

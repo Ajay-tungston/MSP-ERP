@@ -492,8 +492,6 @@ const getCoolieFromSuppliers = async (req, res) => {
   }
 };
 
-
-
 // ========== 8. Receivables from lender ==========
 const getLenderPayables = async (req, res) => {
   try {
@@ -505,14 +503,17 @@ const getLenderPayables = async (req, res) => {
 
     const lenderPayables = {};
 
+    // Initialize with lender name and opening balance
     lenders.forEach((lender) => {
       lenderPayables[lender._id.toString()] = {
         lenderName: lender.name,
-        payable: 0,
+        openingBalance: lender.openingBalance || 0,
+        paymentTotal: 0,
+        payable: lender.openingBalance || 0,
       };
     });
 
-    // Calculate payable amounts
+    // Apply payments to the respective lender
     payments.forEach((payment) => {
       const lid = payment.lender?.toString();
       if (!lid) return;
@@ -520,13 +521,17 @@ const getLenderPayables = async (req, res) => {
       if (!lenderPayables[lid]) {
         lenderPayables[lid] = {
           lenderName: "Unknown Lender",
+          openingBalance: 0,
+          paymentTotal: 0,
           payable: 0,
         };
       }
 
       if (payment.paymentType === "PaymentIn") {
+        lenderPayables[lid].paymentTotal += payment.amount;
         lenderPayables[lid].payable += payment.amount;
       } else if (payment.paymentType === "PaymentOut") {
+        lenderPayables[lid].paymentTotal -= payment.amount;
         lenderPayables[lid].payable -= payment.amount;
       }
     });
@@ -534,14 +539,23 @@ const getLenderPayables = async (req, res) => {
     const breakdown = Object.values(lenderPayables).filter(
       (l) => l.payable !== 0
     );
-    const totalPayables = breakdown.reduce((sum, l) => sum + l.payable, 0);
 
-    res.json({ totalPayables, breakdown });
+    const totalPayables = breakdown.reduce((sum, l) => sum + l.payable, 0);
+    const totalOpening = breakdown.reduce((sum, l) => sum + l.openingBalance, 0);
+    const totalTransactions = breakdown.reduce((sum, l) => sum + l.paymentTotal, 0);
+
+    res.json({
+      totalPayables,
+      totalOpening,
+      totalTransactions,
+      breakdown,
+    });
   } catch (err) {
     console.error("Error calculating lender payables:", err);
     res.status(500).json({ message: "Failed to fetch lender payables." });
   }
 };
+
 
 // ========== 9. Receivables from supplier ==========
 const getSupplierBalances = async (req, res) => {

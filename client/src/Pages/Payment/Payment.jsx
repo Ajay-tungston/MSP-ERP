@@ -20,7 +20,7 @@ function Payment() {
   const [totalPages, setTotalPages] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const axiosInstance = useAxiosPrivate();
-
+const [search, setSearch] = useState("");
   const { type } = useParams();
 
   const paymentType = type === "in" ? "PaymentIn" : "PaymentOut";
@@ -29,7 +29,7 @@ function Payment() {
     setIsLoading(true);
     try {
       const response = await axiosInstance.get(
-        `/admin/payment?page=${currentPage}&limit=${itemsPerPage}&paymentType=${paymentType}`
+        `/admin/payment?page=${currentPage}&limit=${itemsPerPage}&paymentType=${paymentType}&search=${search}`
       );
       SetPaymentInData(response?.data?.payments);
       setTotalPages(response?.data?.totalPages);
@@ -42,7 +42,7 @@ function Payment() {
 
   useEffect(() => {
     fetchPaymentData();
-  }, [currentPage, paymentType]);
+  }, [currentPage, paymentType,search]);
 
   const handleNext = () => {
     if (currentPage < totalPages) setCurrentPage((prev) => prev + 1);
@@ -96,11 +96,23 @@ function Payment() {
         </span>
       </nav>
   
-      {/* Header & Add Button */}
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-800">
+      {/* Header & Add Button */}<h1 className="text-3xl font-bold text-gray-800">
           {paymentType === "PaymentIn" ? "Payment In" : "Payment Out"}
         </h1>
+      <div className="flex justify-between items-center my-4">
+      <div className="">
+          <input
+            type="text"
+            value={search}
+              autoComplete="off"
+            onChange={(e) => {
+              setCurrentPage(1);
+              setSearch(e.target.value);
+            }}
+            placeholder="Search here..."
+            className=" px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
+        </div>
         <button
           className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-2 rounded-lg flex items-center gap-2"
           onClick={() => setPopup(true)}

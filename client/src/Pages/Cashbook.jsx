@@ -210,6 +210,8 @@ const CashbookHeader = () => {
       printWindow.print();
     } catch (err) {
       console.error("Print error:", err);
+    }finally{
+      setPrintLoading(false);
     }
   };
   

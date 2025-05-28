@@ -135,75 +135,79 @@ const FinancialDashboard = () => {
 
     fetchOverview();
   }, [axiosInstance]);
-
   return (
     <div>
       <div className="grid grid-cols-1 md:grid-cols-6 gap-6 p-4 ">
         {/* Financial Overview */}
-        <div className="bg-white rounded-2xl shadow-md p-6 w-full col-span-2 overflow-visible">
+        <div className="bg-white rounded-2xl shadow-[0_0_10px_rgba(0,0,0,0.10)] p-6 w-full col-span-2 overflow-visible">
           <h2 className="text-lg font-semibold text-black mb-4">
             Financial Overview
           </h2>
           <hr className="mb-4 border-gray-200" />
           <div className="flex justify-center overflow-visible">
-            <PieChart width={450} height={320}>
-              <Pie
-                data={overview}
-                cx="50%"
-                cy="50%"
-                outerRadius={150}
-                innerRadius={0}
-                dataKey="value"
-                labelLine={false}
-                paddingAngle={0}
-                label={({
-                  cx,
-                  cy,
-                  midAngle,
-                  innerRadius,
-                  outerRadius,
-                  name,
-                  value,
-                }) => {
-                  const RADIAN = Math.PI / 180;
-                  const radius =
-                    innerRadius + (outerRadius - innerRadius) * 0.6;
-                  const x = cx + radius * Math.cos(-midAngle * RADIAN);
-                  const y = cy + radius * Math.sin(-midAngle * RADIAN);
+            {overview.some((item) => item.value > 0) ? (
+              <PieChart width={450} height={300}>
+                <Pie
+                  data={overview}
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={150}
+                  innerRadius={0}
+                  dataKey="value"
+                  labelLine={false}
+                  paddingAngle={0}
+                  label={({
+                    cx,
+                    cy,
+                    midAngle,
+                    innerRadius,
+                    outerRadius,
+                    name,
+                    value,
+                  }) => {
+                    const RADIAN = Math.PI / 180;
+                    const radius =
+                      innerRadius + (outerRadius - innerRadius) * 0.6;
+                    const x = cx + radius * Math.cos(-midAngle * RADIAN);
+                    const y = cy + radius * Math.sin(-midAngle * RADIAN);
 
-                  return (
-                    <text
-                      x={x}
-                      y={y}
-                      fill="white"
-                      textAnchor="middle"
-                      dominantBaseline="central"
-                      style={{ fontSize: "12px", fontWeight: "bold" }}
-                    >
-                      {name}
-                      <tspan x={x} dy="1.2em">
-                        ₹{value.toLocaleString()}
-                      </tspan>
-                    </text>
-                  );
-                }}
-              >
-                {overview.map((entry, index) => (
-                  <Cell
-                    key={`cell-${index}`}
-                    fill={COLORS[index]}
-                    // stroke="white"
-                    strokeWidth={0}
-                  />
-                ))}
-              </Pie>
-              <Tooltip formatter={(value) => `₹${value.toLocaleString()}`} />
-            </PieChart>
+                    return (
+                      <text
+                        x={x}
+                        y={y}
+                        fill="white"
+                        textAnchor="middle"
+                        dominantBaseline="central"
+                        style={{ fontSize: "12px", fontWeight: "bold" }}
+                      >
+                        {name}
+                        <tspan x={x} dy="1.2em">
+                          ₹{value.toLocaleString()}
+                        </tspan>
+                      </text>
+                    );
+                  }}
+                >
+                  {overview.map((entry, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={COLORS[index]}
+                      strokeWidth={0}
+                    />
+                  ))}
+                </Pie>
+                <Tooltip formatter={(value) => `₹${value.toLocaleString()}`} />
+              </PieChart>
+            ) : (
+              <div className="text-center text-gray-500 font-medium h-[250px] flex items-center justify-center">
+                No data available{" "}
+              </div>
+            )}
           </div>
         </div>
 
         {/* Net Profit */}
-        <div className="bg-white rounded-2xl shadow-md p-6  w-full col-span-4">
+        <div className="bg-white rounded-2xl shadow-[0_0_10px_rgba(0,0,0,0.10)] p-6  w-full col-span-4">
           {/* <div className="flex justify-between items-center mb-4 w-full overflow-visible"> */}
           <h2 className="text-lg font-semibold text-black mb-4">Net Profit</h2>
           <hr className="mb-4 border-gray-200" />
@@ -232,7 +236,7 @@ const FinancialDashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-5 gap-6 p-4">
         {/* Expense Summary */}
 
-        <div className="bg-white shadow-xl rounded-2xl p-6 col-span-2">
+        <div className="bg-white shadow-[0_0_10px_rgba(0,0,0,0.10)] rounded-2xl p-6 col-span-2">
           <h2 className="text-lg font-semibold text-black mb-4">
             Expense Summary
           </h2>
@@ -282,7 +286,7 @@ const FinancialDashboard = () => {
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                   <Label
-                    value={`₹${totalExpense}`}
+                    value={`₹${totalExpense.toFixed(0)}`}
                     position="center"
                     style={{
                       fontSize: "24px",
@@ -301,15 +305,15 @@ const FinancialDashboard = () => {
         </div>
 
         {/* Recent Transactions */}
-        <div className="bg-white shadow-xl rounded-2xl p-6 col-span-3">
+        <div className="bg-white shadow-[0_0_10px_rgba(0,0,0,0.10)] rounded-2xl p-6 col-span-3">
           <h2 className="text-lg font-semibold text-black mb-4">
             Recent Transactions
           </h2>
-          <hr className="mb-4 border-gray-200" />
+          <hr className="mb-2 border-gray-200" />
 
           <div className="overflow-x-auto">
             <table className="w-full text-left text-gray-700">
-              <thead className=" text-gray-600 ">
+              <thead className=" text-gray-600 border-b border-b-gray-200 ">
                 <tr>
                   <th className="py-2 px-4 text-base font-medium text-gray-800">
                     Date
@@ -326,18 +330,21 @@ const FinancialDashboard = () => {
                 </tr>
               </thead>
               <tbody>
-                {recentTransactions.map((tx, idx) => (
-                  <tr key={idx} className=" odd:bg-gray-100">
+                {recentTransactions?.length>0?recentTransactions?.map((tx, idx) => (
+                  <tr key={idx} className=" even:bg-gray-100">
                     <td className="py-2 px-4">
                       {format(new Date(tx.date), "dd/MM/yyyy")}
                     </td>
                     <td className="py-2 px-4">{tx.module}</td>
                     <td className="py-2 px-4">{tx.desc}</td>
-                    <td className="py-2 px-4 ">
-                      ₹{tx.amount.toFixed(2)}
-                    </td>
+                    <td className="py-2 px-4 ">₹{tx.amount.toFixed(2)}</td>
                   </tr>
-                ))}
+                )):<tr>
+                <td colSpan="5" className="text-center text-gray-500 py-6">
+                  No data available
+                </td>
+              </tr>
+}              
               </tbody>
             </table>
           </div>
@@ -346,7 +353,7 @@ const FinancialDashboard = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-4">
         {/* KPI Chart */}
-        {/* <div className="bg-white shadow-xl rounded-2xl p-4">
+        {/* <div className="bg-white shadow-[0_0_10px_rgba(0,0,0,0.15)] rounded-2xl p-4">
           <h2 className="text-xl font-bold text-gray-800 mb-4">Key Performance Indicators</h2>
           <ResponsiveContainer width="100%" height={200}>
             <AreaChart data={kpiData}>

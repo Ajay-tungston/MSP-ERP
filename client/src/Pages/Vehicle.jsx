@@ -5,8 +5,10 @@ import { TbPencilMinus } from "react-icons/tb";
 import { FaTrashAlt } from "react-icons/fa";
 import useAxiosPrivate from "../hooks/useAxiosPrivate";
 import AddVehicle from "./AddVehicle";
+import EditVehicle from "./EditVehicle"; 
 import { debounce } from "lodash";
 import OvalSpinner from "../Components/spinners/OvalSpinner";
+import Swal from "sweetalert2";
 
 export default function Vehicle() {
     const [vehicles, setVehicles] = useState([]);
@@ -14,7 +16,6 @@ export default function Vehicle() {
     const [popup, setPopup] = useState();
     const [loading, setIsLoading] = useState(false);
     const [search, setSearch] = useState("");
-console.log(vehicles)
     const [selectedVehicle, setSelectedVehicle] = useState(null);
     const [currentPage, setCurrentPage] = useState(1);
     const [limit] = useState(8);
@@ -22,24 +23,25 @@ console.log(vehicles)
 
     const axiosInstance = useAxiosPrivate();
 
-    // Fetch vehicles from backend
-    const fetchVehiclesDebounced = debounce(async () => {
+    // Debounced fetch function
+    const fetchVehicles = debounce(async () => {
         try {
             setIsLoading(true);
-            const res = await axiosInstance.get(`/admin/vehicle/get?page=${currentPage}&limit=${limit}&search=${search}`);
+            const res = await axiosInstance.get(
+                `/admin/vehicle/get?page=${currentPage}&limit=${limit}&search=${search}`
+            );
             setVehicles(res.data.data);
             setCurrentPage(res.data.currentPage || 1);
             setTotalPages(res.data.totalPages || 1);
         } catch (error) {
-            
             console.error("Failed to fetch vehicles:", error);
         } finally {
             setIsLoading(false);
         }
-    },300)
+    }, 300);
 
     useEffect(() => {
-        fetchVehiclesDebounced();
+        fetchVehicles();
     }, [search, currentPage]);
 
     const toggleRowSelection = (id) => {
@@ -56,19 +58,32 @@ console.log(vehicles)
         }
     };
 
-    const deleteVehicle = async (id) => {
-        try {
-            await axiosInstance.delete(`/admin/vehicle/delete/${id}`);
-            fetchVehicles();
-        } catch (err) {
-            console.error("Failed to delete vehicle", err);
-        }
-    };
 
     const handlePageChange = (newPage) => {
         if (newPage < 1 || newPage > totalPages) return;
         setCurrentPage(newPage);
     };
+    const deleteVehicle = async (id) => {
+        try {
+          const result = await Swal.fire({
+            title: "Are you sure?",
+            text: "Do you really want to delete this vehicle?",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "Yes, delete it!",
+          });
+      
+          if (result.isConfirmed) {
+            const response = await axiosInstance.delete(`/admin/vehicle/delete/${id}`);
+            Swal.fire("Deleted!", response.data.message, "success");
+            fetchVehicles();
+          }
+        } catch (err) {
+          const msg = err.response?.data?.message || "Failed to delete vehicle";
+          Swal.fire("Cannot Delete", msg, "error");
+          console.error("Delete error:", err);
+        }
+      };
 
     return (
         <>
@@ -92,7 +107,7 @@ console.log(vehicles)
                             setSearch(value);
                         }}
                         placeholder="Search here..."
-                        className=" px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                 </div>
                 <div className="flex space-x-3 -mt-10 mr-10 float-end">
@@ -104,7 +119,7 @@ console.log(vehicles)
                     </button>
                 </div>
 
-                <div className=" bg-white p-6">
+                <div className="bg-white p-6">
                     <table className="w-full border-collapse text-gray-900 ">
                         <thead>
                             <tr className="text-left text-gray-900 font-bold border-b-2 border-gray-200 bg-[#F9FAFB] text-lg">
@@ -184,13 +199,13 @@ console.log(vehicles)
                 <AddVehicle setPopup={setPopup} fetchVehicles={fetchVehicles} />
             )}
 
-            {popup === "edit" && selectedVehicle && (
+           {popup === "edit" && selectedVehicle && (
                 <EditVehicle
                     setPopup={setPopup}
                     fetchVehicles={fetchVehicles}
                     vehicleToEdit={selectedVehicle}
                 />
-            )}
+            )} 
         </>
     );
 }

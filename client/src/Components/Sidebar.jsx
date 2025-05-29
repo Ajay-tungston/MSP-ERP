@@ -98,7 +98,7 @@ export default function Sidebar() {
               className="w-full h-full object-cover"
             />
           </div>
-          <span className="text-2xl font-semibold">MSP</span>
+          <span className="text-2xl font-semibold ">M.S. Pareekutty Sons</span>
         </div>
 
         {/* Dashboard */}
@@ -331,13 +331,13 @@ export default function Sidebar() {
             ))}
           </div>
         </div>
-        <div className="absolute  px-12 bottom-5 flex items-center ">
+        <div className="absolute  px-12 bottom-5 flex items-center opacity-70">
           {/* ml-[2%] */}
           <div>
-            <img src="images/Layer 2.png" />
+            <img className="w-6" src="images/Layer 2.png" />
           </div>
           <div className="ml-1">
-            <p className="text-gray-500 text-sm">
+            <p className="text-gray-500 text-xs ">
               Designed by <br />
               <span className="text-[#F48211] font-extrabold">
                 Tungston Labs

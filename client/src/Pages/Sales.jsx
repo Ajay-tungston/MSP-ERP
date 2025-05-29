@@ -811,7 +811,7 @@ const Sales = () => {
 
               <button
                 onClick={handleAddSale}
-                className="flex items-center gap-2 border border-blue-800 text-blue-800 px-5 py-2 rounded-lg hover:bg-red-100 transition"
+                className="flex items-center gap-2 border border-blue-800 text-blue-800 px-5 py-2 rounded-lg hover:bg-blue-100 transition"
               >
                 Save
               </button>

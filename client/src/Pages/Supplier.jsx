@@ -158,7 +158,7 @@ export default function CustomerHeader() {
                     </td>
                     <td className="p-2">{supplier?.supplierCode || '--'}</td>
                     <td className="p-2">{supplier?.supplierName || '--'}</td>
-                    <td className="p-2">{supplier?.address ||  '--'}</td>
+                    <td className="p-2 max-w-24 truncate whitespace-nowrap">{supplier?.address ||  '--'}</td>
                     <td className="p-2">{supplier?.phone || '--'}</td>
                     <td className="p-2">{supplier?.whatsapp ||'--'}</td>
                     <td className="p-2">{supplier?.commission ||'--'}</td>

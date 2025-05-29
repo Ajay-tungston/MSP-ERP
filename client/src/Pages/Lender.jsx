@@ -193,7 +193,7 @@ export default function Lender() {
                     </td>
                     <td className="p-2">{lender.name || "--"}</td>
                     <td className="p-2">{lender.phone || "--"}</td>
-                    <td className="p-2">{lender.address || "--"}</td>
+                    <td className="p-2 max-w-24 truncate whitespace-nowrap">{lender.address || "--"}</td>
 
                     <td className="p-2">
                       ₹{(lender.openingBalance ?? 0).toFixed(2)}

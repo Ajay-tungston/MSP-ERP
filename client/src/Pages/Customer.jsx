@@ -174,7 +174,7 @@ export default function CustomerHeader() {
                       {index + 1 + (currentPage - 1) * limit}
                     </td>
                     <td className="p-2">{customer.customerName || "--"}</td>
-                    <td className="p-2 max-w-[150px] truncate whitespace-nowrap">
+                    <td className="p-2 max-w-24 truncate whitespace-nowrap">
                       {customer.address || "--"}
                     </td>
                     <td className="p-2">{customer.phone || "--"}</td>

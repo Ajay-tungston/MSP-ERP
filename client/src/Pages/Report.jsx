@@ -65,16 +65,16 @@ function VehicleReport() {
   };
 
   return (
-    <div className="p-6 bg-white rounded-3xl mt-5 shadow-md">
+    <div className="p-6 bg-white rounded-3xl  shadow-md">
       {/* Breadcrumbs */}
-      <div className="flex items-center text-[20px] text-gray-500 mb-1">
+      <div className="flex items-center text-md text-[#737791] mb-1">
         Vehicle
         <FaChevronRight className="mx-2" />
         <span className="font-medium">Vehicle Report</span>
       </div>
 
       {/* Title */}
-      <h1 className="text-3xl font-bold text-[#0E0F3C] mb-4 p-2">Vehicle Report</h1>
+      <h1 className="text-3xl font-bold text-[#151D48] mb-4 p-2">Vehicle Report</h1>
 
       {/* Print Button */}
       {/* <div className="flex items-center justify-between mb-4 float-right -mt-[5%] mr-[5%]">
@@ -85,7 +85,7 @@ function VehicleReport() {
       </div> */}
 
       {/* Date Range Inputs */}
-      <div className="flex items-center gap-2 text-sm text-gray-500 float-right">
+      <div className="flex items-center gap-2 text-xl text-[#73779166]  float-right">
         <span>Date Range</span>
         <input
           type="date"
@@ -97,7 +97,7 @@ function VehicleReport() {
           className="w-52 px-4 py-3 bg-gray-50 rounded-xl text-zinc-700 text-xl outline-none"
           max={today}
         />
-        <span>to</span>
+        <span>To</span>
         <input
           type="date"
           value={toDate}

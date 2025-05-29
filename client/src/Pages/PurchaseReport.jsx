@@ -106,6 +106,7 @@ function PurchaseReport() {
   };
   return (
     <>
+    <div className="h-full">
     {printLoading && (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/50 backdrop-blur-sm">
         <OvalSpinner />
@@ -116,12 +117,12 @@ function PurchaseReport() {
      
       <div className="p-6 shadow-md bg-white h-auto rounded-t-3xl px-6 pt-6 pb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mt-5">
           <div className="flex flex-col">
-            <div className="flex items-center gap-2 text-slate-500 text-xl font-normal">
+            <div className="flex items-center gap-2 text-slate-500 text-md font-normal">
               <span>Reports</span>
               <FaChevronRight />
               <span>Purchase Report</span>
             </div>
-            <div className="text-indigo-950 text-3xl font-bold leading-[50.40px]">
+            <div className="text-[#151D48] text-3xl font-bold leading-[50.40px]">
               Purchase Report
             </div>
           </div>
@@ -136,7 +137,7 @@ function PurchaseReport() {
                 onChange={(e) => setStartDate(e.target.value)}
                 className="w-50 px-4 py-3 bg-gray-50 rounded-xl outline-none text-zinc-700 text-xl"
               />
-              <span className="text-[#73779166] text-xl">to</span>
+              <span className="text-[#73779166] text-xl">To</span>
               <input
                 type="date"
                 value={toDate}
@@ -155,9 +156,9 @@ function PurchaseReport() {
             )}
           </div>
         </div>
-      <div className="w-full  mx-auto h-fit mb-0 relative bg-white  overflow-x-auto">
+      <div className="w-full  mx-auto h-full mb-0 relative bg-white  overflow-x-auto">
         <div className="overflow-x-auto p-6">
-          <table className=" w-full ">
+          <table className=" w-full  ">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-200 text-lg  ">
                 {[
@@ -228,7 +229,7 @@ function PurchaseReport() {
         </div>
    {/* Pagination */}
    {!noReports && (
-          <div className="w-full px-6 py-3 border-b border-gray-200 flex flex-wrap justify-between items-center text-xl font-['Urbanist']">
+          <div className="w-full px-6 py-3 border-b border-gray-200 flex flex-wrap justify-between items-center text-xl font-['Urbanist'] ">
             <div className="text-slate-900">Page {currentPage} of {totalPages}</div>
             <div className="flex gap-4">
               <button
@@ -253,13 +254,13 @@ function PurchaseReport() {
           </div>
         )}
         {/* Totals Row */}
-        <div className="bg-[#F0FDFA] mx-6 px-6 py-4  flex flex-wrap justify-between mt-8 border border-gray-200">
+        <div className="bg-[#F0FDFA] mx-6 px-6 py-4  flex flex-wrap justify-between  border border-gray-200 ">
           <div className="w-full sm:w-auto font-normal">Total</div>
           <div className="text-slate-900 font-bold"> ₹{totalStats?.netTotalAmount?.toFixed(2)}</div>
         </div>
   
         {/* Summary Info */}
-        <div className="w-full px-6 py-2 bg-white border-b border-gray-200 flex flex-wrap gap-y-3 justify-between items-center text-xl font-['Urbanist'] pb-10">
+        <div className=" w-full px-6 py-2 bg-white  flex flex-wrap gap-y-3 justify-between items-center text-xl font-['Urbanist'] pb-10">
          {[
             ["Commission", totalStats?.totalCommission?.toFixed(2)],
             ["Qty(kg)", totalStats?.totalKg],
@@ -304,7 +305,7 @@ function PurchaseReport() {
 
         
       </div>
-  
+  </div>
   </>
   
   );

@@ -15,7 +15,7 @@ const LayOut = () => {
         <Search />
 
         {/* The Outlet should take up the remaining space */}
-        <div className="flex-grow overflow-auto ">
+        <div className="flex-grow overflow-auto mt-5 h-fit">
           <Outlet />
         </div>
       </div>

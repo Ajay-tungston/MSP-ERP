@@ -3,7 +3,9 @@ import useAxiosPrivate from "../hooks/useAxiosPrivate";
 import { ChevronDown, ChevronUp, Printer } from "lucide-react";
 import { handleTrialBalancePrint } from "../utils/trailBalanceprint";
 import { FaChevronRight } from "react-icons/fa6";
+import { BsPrinter } from "react-icons/bs";
 export default function TrialBalance() {
+  
   const [selectedMonth, setSelectedMonth] = useState(() => {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(
@@ -441,20 +443,21 @@ export default function TrialBalance() {
     };
 
   return (
-    <div className="p-6 bg-white min-h-screen mt-5 rounded-3xl">
-     <nav className="flex items-center text-gray-500 text-[20px] mb-4">
+    <div className="p-6 bg-white min-h-screen  rounded-3xl">
+     <nav className="flex items-center text-[#737791] text-md mb-4">
   <span>Reports</span>
   <FaChevronRight className="mx-2" />
   <span>Trial Balance</span>
 </nav>
 
       <div className="flex justify-between w-full">
-        <h1 className="text-3xl font-bold">Trial Balance</h1>
+        <h1 className="text-3xl font-bold text-[#151D48]">Trial Balance</h1>
         <button 
              onClick={handlePrintClick}
-        className="flex items-center px-4 py-2 bg-[#F9FAFB] rounded hover:bg-indigo-200">
-          <Printer className="mr-2" size={16} /> Print
-        </button>
+        className="px-4 py-3 bg-gray-50 rounded-xl flex items-center gap-2">
+        <BsPrinter className="w-6 h-6" />
+                        <span className="text-indigo-950 text-xl font-bold">Print</span>
+                      </button>
         {/* <input
           type="month"
           value={selectedMonth}

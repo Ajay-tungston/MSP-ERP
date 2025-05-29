@@ -370,13 +370,13 @@ const IndividualReports = () => {
         </div>
       )}
 
-      <div className="p-6 bg-white rounded-3xl mt-5 shadow-md space-y-6">
+      <div className="p-6 bg-white rounded-3xl  shadow-md space-y-6 h-full">
         {/* Breadcrumb & Heading */}
         <div className="space-y-2">
-          <div className="flex items-center gap-2 text-gray-500 text-xl ">
+          <div className="flex items-center gap-2 text-[#737791] text-md ">
             Reports <FaChevronRight /> Individual Purchase Report
           </div>
-          <div className="  text-3xl font-bold text-indigo-950">Individual Purchase Report</div>
+          <div className="  text-3xl font-bold text-[#151D48]">Individual Purchase Report</div>
         </div>
 
         {/* Actions */}
@@ -439,7 +439,7 @@ const IndividualReports = () => {
               </div>
             )}
 
-            <label className="text-[#73779166] text-xl">From</label>
+            <label className="text-[#73779166] text-xl">Date Range</label>
             <input
               type="date"
               value={startDate}
@@ -563,7 +563,7 @@ const IndividualReports = () => {
         </div>
 
         {/* Stats */}
-        <div className="bg-[#F0FDFA] px-6 py-4 rounded-xl flex flex-wrap justify-between mt-8 border border-gray-200">
+        <div className="bg-[#F0FDFA] px-6 py-4  flex flex-wrap justify-between mt-8 border border-gray-200">
           <Stat label="Total" value={totalStats?.netTotalAmount?.toFixed(2)} />
           <Stat label="Commission" value={totalStats?.totalCommission?.toFixed(2)} />
           <Stat label="Qty (Kg)" value={totalStats?.totalKg} />

@@ -120,9 +120,9 @@ export default function Lender() {
 
   return (
     <>
-      <div className="p-6 rounded-3xl shadow-md h-[800px] bg-white mt-5">
+      <div className="p-6 rounded-3xl shadow-md h-[800px] bg-white ">
         {/* Breadcrumb */}
-        <nav className="flex items-center gap-x-2 text-[20px] text-[#737791] mb-2 mt-10">
+        <nav className="flex items-center gap-x-2 text-md text-[#737791] mb-2 ">
           <span>Master</span>
           <FaChevronRight />
           <span className="text-[#737791] ">Lender</span>

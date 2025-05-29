@@ -95,11 +95,11 @@ function Expenses() {
     
     return (
         <>
-            <div className={`p-6 rounded-3xl shadow-md h-[800px] bg-white mt-5 ${popup ? 'backdrop-blur-xl' : ''}`}>
+            <div className={`p-6 rounded-3xl shadow-md h-[800px] bg-white  ${popup ? 'backdrop-blur-xl' : ''}`}>
                 {/* Breadcrumb */}
-                <nav className="text-[20px] text-[#737791] mb-2 mt-10">
+                <nav className="text-md text-[#737791] mb-2 ">
                     <span>Master</span>
-                    <span className="mx-1"><FaChevronRight className="inline-block" /></span>
+                    <span className="mx-1"><FaChevronRight className="inline-block " /></span>
                     <span className="text-[#737791]">Expense</span>
                 </nav>
 

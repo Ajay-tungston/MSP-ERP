@@ -312,7 +312,7 @@ function Purchasetransaction() {
           <OvalSpinner />
         </div>
       ) : (
-        <div className="w-full min-h-screen bg-white rounded-3xl p-6 overflow-x-hidden mt-5 shadow-md" >
+        <div className="w-full min-h-screen bg-white rounded-3xl p-6 overflow-x-hidden  shadow-md" >
           <div className="max-w-screen-xl mx-auto flex flex-col gap-12">
             {/* Page Header */}
             <div className="pb-6 border-b border-gray-400">
@@ -334,7 +334,7 @@ function Purchasetransaction() {
                   </div>
                 </div>
                 <div className="flex items-center gap-6 w-full md:w-[48%]">
-                  <label className="min-w-44 text-slate-500 text-xl font-normal">
+                  <label className="min-w-44 text-[#73779166]  text-xl font-normal">
                     Date of Purchase <span className="text-red-500">*</span>
                   </label>
                   <input

@@ -86,12 +86,12 @@ const [search, setSearch] = useState("");
   };
   return (
     <>
-    <div className="p-4 rounded-lg shadow-sm bg-white mt-5">
+    <div className="p-4 rounded-lg shadow-sm bg-white  h-full">
       {/* Breadcrumb */}
-      <nav className="flex items-center gap-x-2 text-[20px] text-gray-500 mb-4">
+      <nav className="flex items-center gap-x-2 text-md text-[#737791] mb-4">
         <span>Transactions</span>
         <FaChevronRight />
-        <span className="text-gray-700">
+        <span className="text-[#737791]">
           {paymentType === "PaymentIn" ? "Payment In" : "Payment Out"}
         </span>
       </nav>

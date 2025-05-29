@@ -87,15 +87,15 @@ export default function Vehicle() {
 
     return (
         <>
-            <div className="py-4 rounded-3xl shadow-md h-[800px] bg-white mt-5">
+            <div className="py-4 rounded-3xl shadow-md h-[800px] bg-white ">
                 {/* Breadcrumb */}
-                <nav className="flex items-center text-[20px] text-gray-500 mb-2 px-4 mt-10">
+                <nav className="flex items-center text-md text-[#737791] mb-2 px-4 ">
                     <span>Master</span> <FaChevronRight className="mx-2" />
                     <span className="text-gray-700">Vehicle</span>
                 </nav>
 
                 {/* Header & Buttons */}
-                <h1 className="text-3xl font-bold text-gray-900 ml-5">Vehicle</h1>
+                <h1 className="text-3xl font-bold text-[#151D48] ml-5">Vehicle</h1>
                 <div className="relative max-w-md ml-5 mt-5">
                     <input
                         type="text"

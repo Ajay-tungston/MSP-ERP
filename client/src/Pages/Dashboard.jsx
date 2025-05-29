@@ -140,7 +140,7 @@ const FinancialDashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-6 gap-6 p-4 ">
         {/* Financial Overview */}
         <div className="bg-white rounded-2xl shadow-[0_0_10px_rgba(0,0,0,0.10)] p-6 w-full col-span-2 overflow-visible">
-          <h2 className="text-lg font-semibold text-black mb-4">
+          <h2 className="text-2xl font-semibold text-[#05004E] mb-4">
             Financial Overview
           </h2>
           <hr className="mb-4 border-gray-200" />
@@ -209,7 +209,7 @@ const FinancialDashboard = () => {
         {/* Net Profit */}
         <div className="bg-white rounded-2xl shadow-[0_0_10px_rgba(0,0,0,0.10)] p-6  w-full col-span-4">
           {/* <div className="flex justify-between items-center mb-4 w-full overflow-visible"> */}
-          <h2 className="text-lg font-semibold text-black mb-4">Net Profit</h2>
+          <h2 className="text-2xl font-semibold text-[#05004E] mb-4">Net Profit</h2>
           <hr className="mb-4 border-gray-200" />
 
           {/* <span className="text-green-600 font-bold text-lg ">
@@ -237,7 +237,7 @@ const FinancialDashboard = () => {
         {/* Expense Summary */}
 
         <div className="bg-white shadow-[0_0_10px_rgba(0,0,0,0.10)] rounded-2xl p-6 col-span-2">
-          <h2 className="text-lg font-semibold text-black mb-4">
+          <h2 className="text-2xl font-semibold text-[#05004E] mb-4">
             Expense Summary
           </h2>
           <hr className="mb-4 border-gray-200" />
@@ -306,7 +306,7 @@ const FinancialDashboard = () => {
 
         {/* Recent Transactions */}
         <div className="bg-white shadow-[0_0_10px_rgba(0,0,0,0.10)] rounded-2xl p-6 col-span-3">
-          <h2 className="text-lg font-semibold text-black mb-4">
+        <h2 className="text-2xl font-semibold text-[#05004E] mb-4">
             Recent Transactions
           </h2>
           <hr className="mb-2 border-gray-200" />

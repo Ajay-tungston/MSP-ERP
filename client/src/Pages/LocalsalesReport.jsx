@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Printer } from "lucide-react";
+import { BsPrinter } from "react-icons/bs";
 import useAxiosPrivate from "../hooks/useAxiosPrivate";
 import OvalSpinner from "../Components/spinners/OvalSpinner";
 import { openSalesRegisterPrintPage } from "../utils/totalSaleReport";
@@ -98,45 +98,45 @@ function LocalsalesReport() {
           <OvalSpinner />
         </div>
       )}
-      <div className="p-6 bg-white rounded-3xl mt-5 shadow-md">
-        <div className="flex items-center text-[20px] text-gray-500 mb-1">
+      <div className="p-6 bg-white rounded-3xl  shadow-md h-full">
+        <div className="flex items-center text-md text-[#737791] mb-1">
           Report
           <FaChevronRight className="mx-2" />
           <span className="font-medium ">Local Sales Report</span>
         </div>
 
-        <h1 className="text-3xl font-bold text-[#0E0F3C] mb-4  p-2">
+        <h1 className="text-3xl font-bold text-[#151D48] mb-4  p-2">
           Local Sales Report
         </h1>
         {salesData?.length > 0 &&
           <div className="flex items-center justify-between mb-4 float-right -mt-[5%] mr-[5%]">
             <button
-              className="flex items-center gap-1 px-4 py-2  rounded-md bg-[#F9FAFB] "
               onClick={fetchPrintData}
+              className="bg-gray-100 hover:bg-gray-200 px-6 py-3 rounded-xl flex items-center gap-3"
             >
-              <Printer size={16} />
-              <span className="font-medium text-[#0E0F3C]">Print</span>
+              <BsPrinter className="text-2xl text-indigo-950" />
+              <span className="text-indigo-950 text-xl font-bold">Print</span>
             </button>
           </div>}
-        <div className="flex items-center gap-2 text-sm text-gray-500 float-right">
-          <span className="text-[#73779166] text-lg">Date Range</span> 
+        <div className="flex items-center gap-2 text-xl text-gray-500 float-right">
+          <span className="text-[#73779166] text-xl">Date Range</span>
           <input
             type="date"
             value={startDate}
             onChange={(e) => setStartDate(e.target.value || getToday())}
             placeholder="DD/MM/YYYY"
             className="w-52 px-4 py-3 bg-gray-50 rounded-xl text-zinc-700 text-xl outline-none"
-          
+
           />
-          <span className=" text-[#73779166] text-lg">to</span>
+          <span className=" text-[#73779166] text-xl">To</span>
           <input
             type="date"
             value={endDate}
             onChange={(e) => setEndDate(e.target.value || getToday())}
             placeholder="DD/MM/YYYY"
             className="w-52 px-4 py-3 bg-gray-50 rounded-xl text-zinc-700 text-xl outline-none"
-            />
-         
+          />
+
         </div>
 
         <table className="w-full text-sm border rounded-md overflow-hidden mt-[6%] ">
@@ -160,8 +160,7 @@ function LocalsalesReport() {
               <tr>
                 <td
                   colSpan="8"
-                  className="text-center py-10 text-lg font-bold text-gray-400"
-                >
+                  className="text-center py-10 text-gray-400 text-lg">
                   No more reports available for the selected date range.
                 </td>
               </tr>
@@ -194,14 +193,14 @@ function LocalsalesReport() {
                   onClick={handlePrevious}
                   disabled={currentPage === 1}
                 >
-             <span className="text-gray-600 text-lg font-semibold">Previous</span>
+                  <span className="text-gray-600 text-lg font-semibold">Previous</span>
                 </button>
                 <button
-                                className={`px-6 py-3 rounded-xl border ${currentPage === totalPages ? "opacity-30 cursor-not-allowed" : "hover:bg-gray-100"}`}
+                  className={`px-6 py-3 rounded-xl border ${currentPage === totalPages ? "opacity-30 cursor-not-allowed" : "hover:bg-gray-100"}`}
                   onClick={handleNext}
                   disabled={currentPage === totalPages}
                 >
-                 <span className="text-blue-800 text-lg font-semibold">Next</span>
+                  <span className="text-blue-800 text-lg font-semibold">Next</span>
                 </button>
               </div>
             </div>

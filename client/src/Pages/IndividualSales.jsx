@@ -195,9 +195,9 @@ export default function IndividualSales() {
       </div>
     )}
   
-    <div className="bg-white rounded-3xl p-4 sm:p-6 shadow-md relative mt-5">
+    <div className="bg-white rounded-3xl p-4 sm:p-6 shadow-md relative h-full">
       {/* Breadcrumb */}
-      <div className="flex flex-wrap items-center gap-2 text-slate-500 text-base sm:text-[20px] font-normal mb-4">
+      <div className="flex flex-wrap items-center gap-2 text-[#737791] text-base sm:text-md font-normal mb-4">
         <span>Reports</span>
         <FaChevronRight />
         <span>Individual Sales</span>
@@ -206,14 +206,14 @@ export default function IndividualSales() {
       {/* Header */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 gap-6 w-full">
         <div className="flex flex-col gap-4 w-full lg:max-w-2xl">
-          <h1 className="text-2xl sm:text-3xl font-bold leading-tight">Individual Sales</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold leading-tight text-[#151D48]">Individual Sales</h1>
   
           <div className="relative flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4" ref={suggRef}>
             <label className="text-base sm:text-[18px] text-gray-500 min-w-fit">Customer:</label>
-            <div className="relative w-full">
+            <div className="relative  w-64 bg-gray-50 rounded-2xl px-3 flex items-center h-14">
               <input
                 type="text"
-                className="w-full rounded-md px-4 py-2 bg-gray-50 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                          className="w-full bg-transparent pl-2 text-xl text-slate-500 outline-none"
                 value={customerName}
                 onChange={(e) => {
                   setCustomerName(e.target.value);
@@ -288,55 +288,56 @@ export default function IndividualSales() {
       )}
   
       {/* Table */}
-      <div className="overflow-x-auto">
-        {/* Header */}
-        <div className="bg-[#F9FAFB] px-4 sm:px-8 py-2 w-full flex min-w-[700px] border-b border-gray-200">
-          {["No.", "Item", "Supplier", "Qty (KG)", "Qty (Box)", "Unit Price", "Price"].map((h, i) => (
-            <div
-              key={i}
-              className="text-black font-semibold text-sm sm:text-base min-w-[120px] sm:min-w-[152px] flex items-center"
-            >
-              {h}
-            </div>
-          ))}
-          <div className="w-6"></div>
-        </div>
-  
-        {/* Body */}
-        <div className="bg-white px-4 sm:px-8 min-w-[700px]">
-          {tableRows.map((row) => (
-            <div
-              key={row.key}
-              className="flex items-center text-sm sm:text-lg py-3 border-b last:border-none border-gray-200"
-            >
-              <div className="min-w-[120px] sm:min-w-[152px]">{row.code}</div>
-              <div className="min-w-[120px] sm:min-w-[152px]">{row.item}</div>
-              <div className="min-w-[120px] sm:min-w-[152px]">{row.supplier}</div>
-              <div className="min-w-[120px] sm:min-w-[152px]">{row.qtyKg}</div>
-              <div className="min-w-[120px] sm:min-w-[152px]">{row.qtyBox}</div>
-              <div className="min-w-[120px] sm:min-w-[152px]">₹{row.price.toFixed(2)}</div>
-              <div className="min-w-[120px] sm:min-w-[152px] font-semibold">₹{row.total.toFixed(2)}</div>
-            </div>
-          ))}
-  
-          {/* Grand Total */}
-          {tableRows.length > 0 && (
-            <div className="bg-[#F0FDFA] flex items-center text-sm sm:text-lg py-3 border-t border-gray-300 font-semibold">
-              <div className="min-w-[120px] sm:min-w-[152px]"></div>
-              <div className="min-w-[120px] sm:min-w-[152px]"></div>
-              <div className="min-w-[120px] sm:min-w-[152px]"></div>
-              <div className="min-w-[120px] sm:min-w-[152px] text-black">Grand Total:</div>
-              <div className="min-w-[120px] sm:min-w-[152px] text-black">₹{grandTotal.toFixed(2)}</div>
-            </div>
-          )}
-  
-          {tableRows.length === 0 && (
-            <div className="py-6 text-center text-gray-500 text-sm sm:text-base">
-              {customerId ? "No sales found." : "Please select a customer."}
-            </div>
-          )}
-        </div>
-      </div>
+      <div className="overflow-x-auto px-4 sm:px-8 min-w-[700px]">
+  <table className="w-full text-sm sm:text-lg border-collapse bg-white">
+    {/* Table Header */}
+    <thead className="bg-[#F9FAFB] border-b border-gray-200">
+      <tr>
+        {["No.", "Item", "Supplier", "Qty (KG)", "Qty (Box)", "Unit Price", "Price"].map((h, i) => (
+          <th
+            key={i}
+            className="text-black font-semibold text-left py-3 px-4 min-w-[120px] sm:min-w-[152px]"
+          >
+            {h}
+          </th>
+        ))}
+      </tr>
+    </thead>
+
+    {/* Table Body */}
+    <tbody>
+      {tableRows.map((row, index) => (
+        <tr key={row.key} className="border-b last:border-none border-gray-200">
+          <td className="py-3">{index + 1}</td>
+          <td className="py-3">{row.item}</td>
+          <td className="py-3">{row.supplier}</td>
+          <td className="py-3">{row.qtyKg}</td>
+          <td className="py-3">{row.qtyBox}</td>
+          <td className="py-3">₹{row.price.toFixed(2)}</td>
+          <td className="py-3 font-semibold">₹{row.total.toFixed(2)}</td>
+        </tr>
+      ))}
+
+      {/* Grand Total Row */}
+      {tableRows.length > 0 && (
+        <tr className="bg-[#F0FDFA] font-semibold border-t border-gray-300 text-black">
+          <td colSpan="4"></td>
+          <td className="py-3">Grand Total:</td>
+          <td className="py-3">₹{grandTotal.toFixed(2)}</td>
+          <td></td>
+        </tr>
+      )}
+    </tbody>
+  </table>
+
+  {/* Empty State Message */}
+  {tableRows.length === 0 && (
+    <div className="text-center py-10 text-gray-400 text-lg">
+      {customerId ? "No sales found." : "Please select a customer."}
+    </div>
+  )}
+</div>
+
     </div>
   </>
   

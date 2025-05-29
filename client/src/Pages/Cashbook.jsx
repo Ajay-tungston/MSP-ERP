@@ -236,10 +236,10 @@ const CashbookHeader = () => {
         <OvalSpinner />
       </div>
     )}
-    <div className="p-6 bg-white rounded-md shadow-sm mt-5">
+    <div className="p-6 bg-white rounded-md shadow-sm h-full">
       <div className="flex justify-between items-start flex-wrap gap-4">
         <div>
-          <p className="text-sm text-gray-400 flex items-center gap-1">
+          <p className="text-md text-[#737791] flex items-center gap-1">
             Transactions <FaChevronRight /> Cashbook
           </p>
           <h1 className="text-3xl font-bold text-gray-900 mb-4">Cashbook</h1>

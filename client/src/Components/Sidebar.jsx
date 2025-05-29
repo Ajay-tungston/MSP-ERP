@@ -98,7 +98,7 @@ export default function Sidebar() {
               className="w-full h-full object-cover"
             />
           </div>
-          <span className="text-2xl font-semibold ">M.S. Pareekutty Sons</span>
+          <span className="text-2xl font-semibold text-[#151D48]">M.S. Pareekutty Sons</span>
         </div>
 
         {/* Dashboard */}

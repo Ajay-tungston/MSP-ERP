@@ -3,7 +3,7 @@ import Swal from "sweetalert2";
 import { XCircleIcon, PlusCircleIcon } from "@heroicons/react/24/solid";
 import useAxiosPrivate from "../hooks/useAxiosPrivate";
 
-const AddCustomerModal = ({ onClose, setPopup }) => {
+const AddCustomerModal = ({ onClose, setPopup,fetchCustomersDebounced }) => {
   const axiosInstance = useAxiosPrivate();
   const safeOnClose = typeof onClose === "function" ? onClose : () => { };
 
@@ -61,7 +61,7 @@ const AddCustomerModal = ({ onClose, setPopup }) => {
         text: "The customer has been added successfully.",
         confirmButtonColor: "#2563EB",
       });
-
+      fetchCustomersDebounced()
       safeOnClose();
       setPopup(false);
     } catch (err) {

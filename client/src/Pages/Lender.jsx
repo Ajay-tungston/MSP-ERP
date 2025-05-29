@@ -8,7 +8,7 @@ import debounce from "lodash/debounce";
 import OvalSpinner from "../Components/spinners/OvalSpinner";
 import { LuPencilLine } from "react-icons/lu";
 import EditLenderForm from "./EditLender";
-import {  CheckCircleIcon } from "@heroicons/react/24/outline";
+import { CheckCircleIcon } from "@heroicons/react/24/outline";
 import Swal from "sweetalert2";
 
 export default function Lender() {
@@ -35,29 +35,24 @@ export default function Lender() {
       const res = await axiosInstance.get(
         `/admin/lender/get?page=${currentPage}&limit=${limit}&search=${search}`
       );
-      console.log("Get from backend",)
+      console.log("Get from backend");
       setLenders(res.data?.lenders || []);
 
       setCurrentPage(res.data.currentPage || 1);
       setTotalPages(res.data.totalPages || 1);
 
       setTotalPages(res.data?.totalPages || 1);
-
-    }
-    catch (err) {
+    } catch (err) {
       console.error("Failed to fetch lenders", err);
     } finally {
       setIsLoading(false);
     }
-
   };
   useEffect(() => {
     const debouncedFetch = debounce(fetchLenders, 300);
     debouncedFetch();
     return () => debouncedFetch.cancel();
   }, [search, currentPage]);
-
-
 
   useEffect(() => {
     fetchLenders();
@@ -87,41 +82,42 @@ export default function Lender() {
 
   const deleteLender = async (id) => {
     const result = await Swal.fire({
-      title: 'Are you sure?',
-      text: 'This will permanently delete the lender.',
-      icon: 'warning',
+      title: "Are you sure?",
+      text: "This will permanently delete the lender.",
+      icon: "warning",
       showCancelButton: true,
-      confirmButtonColor: '#d33',
-      cancelButtonColor: '#3085d6',
-      confirmButtonText: 'Yes, delete it!',
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, delete it!",
     });
-  
+
     if (result.isConfirmed) {
       try {
-        const response = await axiosInstance.delete(`/admin/lender/delete/${id}`);
-  
+        const response = await axiosInstance.delete(
+          `/admin/lender/delete/${id}`
+        );
+
         // Refresh data
         fetchLenders();
-  
+
         Swal.fire({
-          title: 'Deleted!',
-          text: response.data.message || 'Lender deleted successfully.',
-          icon: 'success',
+          title: "Deleted!",
+          text: response.data.message || "Lender deleted successfully.",
+          icon: "success",
           timer: 2000,
           showConfirmButton: false,
         });
       } catch (error) {
         Swal.fire({
-          title: 'Error!',
-          text: error?.response?.data?.message || 'Failed to delete lender.',
-          icon: 'error',
-          confirmButtonText: 'OK',
+          title: "Error!",
+          text: error?.response?.data?.message || "Failed to delete lender.",
+          icon: "error",
+          confirmButtonText: "OK",
         });
       }
     }
   };
-  
-  
+
   return (
     <>
       <div className="p-6 rounded-3xl shadow-md h-[800px] bg-white mt-5">
@@ -146,7 +142,6 @@ export default function Lender() {
             placeholder="Search lenders..."
             className=" px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
-
         </div>
         <div className="flex space-x-3 -mt-10 float-right">
           <button
@@ -157,7 +152,6 @@ export default function Lender() {
           </button>
         </div>
 
-
         {/* Table */}
         <div className="mt-8 ">
           <table className="w-full border-collapse text-gray-900">
@@ -167,8 +161,8 @@ export default function Lender() {
                 <th className="p-3">Lender Name</th>
                 <th className="p-3">Phone Number</th>
                 <th className="p-3">Address</th>
-                <th  className="p-3">Opening Bal. </th>
-                <th  className="p-3"></th>
+                <th className="p-3">Opening Bal. </th>
+                <th className="p-3"></th>
                 <th className="p-3"></th>
                 <th className="p-3"></th>
               </tr>
@@ -190,20 +184,24 @@ export default function Lender() {
                 lenders.map((lender, index) => (
                   <tr
                     key={lender._id}
-                    className={`border-b border-gray-200 hover:bg-gray-50 text-lg ${selectedRows.includes(lender._id) ? "bg-gray-50" : ""
-                      }`}
+                    className={`border-b border-gray-200 hover:bg-gray-50 text-lg ${
+                      selectedRows.includes(lender._id) ? "bg-gray-50" : ""
+                    }`}
                   >
-                    <td className="p-2">{index + 1 + (currentPage - 1) * limit}</td>
-                    <td className="p-2">{lender.name || '--'}</td>
-                    <td className="p-2">{lender.phone ||'--'}</td>
-                    <td className="p-2">{lender.address ||'--'}</td>
-           
                     <td className="p-2">
-  ₹{(lender.openingBalance ?? 0).toFixed(2)}
-</td>
+                      {index + 1 + (currentPage - 1) * limit}
+                    </td>
+                    <td className="p-2">{lender.name || "--"}</td>
+                    <td className="p-2">{lender.phone || "--"}</td>
+                    <td className="p-2">{lender.address || "--"}</td>
+
+                    <td className="p-2">
+                      ₹{(lender.openingBalance ?? 0).toFixed(2)}
+                    </td>
 
                     <td className="p-2 text-blue-800 cursor-pointer">
-                      < LuPencilLine   onClick={() => handleEditClick(lender)}/></td>
+                      <LuPencilLine onClick={() => handleEditClick(lender)} />
+                    </td>
                     <td className="p-2 text-red-600 cursor-pointer">
                       <FaTrashAlt onClick={() => deleteLender(lender._id)} />
                     </td>
@@ -212,25 +210,30 @@ export default function Lender() {
                 ))
               )}
             </tbody>
-
           </table>
         </div>
 
         {/* Pagination */}
         <div className="flex justify-between items-center mt-10 text-gray-600 px-4">
-          <span>Page {currentPage} of {totalPages}</span>
+          <span>
+            Page {currentPage} of {totalPages}
+          </span>
           <div className="flex space-x-2">
             <button
-              className={`px-4 py-2 border border-gray-300 rounded-lg ${currentPage === 1 ? "cursor-not-allowed text-gray-300" : ""
-                }`}
+              className={`px-4 py-2 border border-gray-300 rounded-lg ${
+                currentPage === 1 ? "cursor-not-allowed text-gray-300" : ""
+              }`}
               disabled={currentPage === 1}
               onClick={() => handlePageChange(currentPage - 1)}
             >
               Previous
             </button>
             <button
-              className={`px-4 py-2 border border-gray-300 rounded-lg ${currentPage === totalPages ? "cursor-not-allowed text-[#4079ED]" : ""
-                }`}
+              className={`px-4 py-2 border border-gray-300 rounded-lg ${
+                currentPage === totalPages
+                  ? "cursor-not-allowed text-[#4079ED]"
+                  : ""
+              }`}
               disabled={currentPage === totalPages}
               onClick={() => handlePageChange(currentPage + 1)}
             >
@@ -239,7 +242,9 @@ export default function Lender() {
           </div>
         </div>
       </div>
-      {popup && <AddLenderForm setPopup={setPopup} />}
+      {popup && (
+        <AddLenderForm setPopup={setPopup} refreshLenders={fetchLenders} />
+      )}
       {showEditPopup && selectedLender && (
         <EditLenderForm
           setPopup={setShowEditPopup}

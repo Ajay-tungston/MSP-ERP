@@ -10,46 +10,40 @@ import Swal from "sweetalert2";
 import { debounce } from "lodash";
 import OvalSpinner from "../Components/spinners/OvalSpinner";
 
-
 export default function CustomerHeader() {
   const [customers, setCustomers] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
   const axiosInstance = useAxiosPrivate();
-  const [search, setSearch] = useState("");63.
+  const [search, setSearch] = useState("");
   const limit = 10;
 
-  const fetchCustomersDebounced = debounce((page, searchTerm) => {
+  const fetchCustomers = async () => {
+    console.log("called");
     setLoading(true);
     try {
-   axiosInstance   
-        .get(`/admin/customer/get?page=${page}&limit=${limit}&search=${searchTerm}`)
-        .then((response) => {
-          const data = response.data;
-          setCustomers(data.customers);
-          setCurrentPage(data.currentPage);
-          setTotalPages(data.totalPages);
-        })
-        .catch((error) => {
-          console.error("Error fetching customers:", error);
-        })
-        .finally(() => {
-          setLoading(false);
-        });
+      const response = await axiosInstance.get(
+        `/admin/customer/get?page=${currentPage}&limit=${limit}&search=${search}`
+      );
+      console.log(response);
+      const data = response.data;
+      setCustomers(data.customers);
+      setCurrentPage(data.currentPage);
+      setTotalPages(data.totalPages);
     } catch (error) {
       console.error("Error fetching customers:", error);
+    } finally {
       setLoading(false);
     }
-  }, 300); // 500ms debounce time
-  
+  };
 
   useEffect(() => {
-    fetchCustomersDebounced(currentPage, search);
-
-    // Cleanup the debounce function when component unmounts
+    console.log("first");
+    const debouncedFetch = debounce(fetchCustomers, 300);
+    debouncedFetch();
     return () => {
-      fetchCustomersDebounced.cancel();
+      debouncedFetch.cancel();
     };
   }, [currentPage, search]);
 
@@ -68,44 +62,45 @@ export default function CustomerHeader() {
   const [popup, setPopup] = useState(false);
   const [editpopup, setEditPopup] = useState(false);
   const [selectedCustomerId, setSelectedCustomerId] = useState(null);
-  
+
   const handleDeleteCustomer = async (id) => {
     const result = await Swal.fire({
-      title: 'Are you sure?',
-      text: 'This will permanently delete the customer.',
-      icon: 'warning',
+      title: "Are you sure?",
+      text: "This will permanently delete the customer.",
+      icon: "warning",
       showCancelButton: true,
-      confirmButtonColor: '#d33',
-      cancelButtonColor: '#3085d6',
-      confirmButtonText: 'Yes, delete it!',
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, delete it!",
     });
-  
+
     if (result.isConfirmed) {
       try {
-        const response = await axiosInstance.delete(`/admin/customer/delete/${id}`);
-  
+        const response = await axiosInstance.delete(
+          `/admin/customer/delete/${id}`
+        );
+
         // Remove from state
         setCustomers((prev) => prev.filter((cust) => cust._id !== id));
-  
+
         Swal.fire({
-          title: 'Deleted!',
+          title: "Deleted!",
           text: response.data.message,
-          icon: 'success',
+          icon: "success",
           timer: 2000,
           showConfirmButton: false,
         });
       } catch (error) {
         Swal.fire({
-          title: 'Error!',
-          text: error?.response?.data?.message || 'Failed to delete customer.',
-          icon: 'error',
-          confirmButtonText: 'OK',
+          title: "Error!",
+          text: error?.response?.data?.message || "Failed to delete customer.",
+          icon: "error",
+          confirmButtonText: "OK",
         });
       }
     }
   };
-  
-  
+
   return (
     <>
       <div className="p-6 rounded-3xl shadow-md h-[800px] bg-white mt-5">
@@ -116,24 +111,23 @@ export default function CustomerHeader() {
           <span className="text-[#737791]">Customer</span>
         </nav>
 
-
         <h1 className="text-3xl font-bold text-[#151D48] mb-6">Customer</h1>
 
         {/* Search Input */}
         <div className="relative max-w-md">
-        <input
-  type="text"
-  placeholder="Search here..."
-  value={search}
-    autoComplete="off"
-  onChange={(e) => {
-    const value = e.target.value;
-    setSearch(value);
-    // fetchCustomers(1, value); // Always start from page 1 when searching
-    setCurrentPage(1)
-  }}
-  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-/>
+          <input
+            type="text"
+            placeholder="Search here..."
+            value={search}
+            autoComplete="off"
+            onChange={(e) => {
+              const value = e.target.value;
+              setSearch(value);
+              // fetchCustomers(1, value); // Always start from page 1 when searching
+              setCurrentPage(1);
+            }}
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
         </div>
         <div className="flex space-x-3 -mt-10 float-right">
           <button
@@ -149,7 +143,6 @@ export default function CustomerHeader() {
           <table className="w-full border-collapse text-gray-900 ">
             <thead>
               <tr className="text-left text-gray-900 font-bold border-b-2 border-gray-200 bg-[#F9FAFB] text-lg ">
-
                 <th className="p-3 w-[5%] ">No.</th>
                 <th className="p-3 w-[10%] ">Name</th>
                 <th className="p-3 w-[15%] ">Address</th>
@@ -159,9 +152,8 @@ export default function CustomerHeader() {
 
                 <th className="p-3 w-[10%] ">Opening Bal.</th>
                 <th className="p-3 w-[10%] ">Route</th>
-                <th className="p-3 w-[10%]" ></th>
                 <th className="p-3 w-[10%]"></th>
-
+                <th className="p-3 w-[10%]"></th>
               </tr>
             </thead>
 
@@ -169,28 +161,41 @@ export default function CustomerHeader() {
               {loading ? (
                 <tr>
                   <td colSpan="10" className="text-center p-5">
-             <OvalSpinner/>
+                    <OvalSpinner />
                   </td>
                 </tr>
               ) : customers.length > 0 ? (
-                customers.map((customer,index) => (
+                customers.map((customer, index) => (
                   <tr
                     key={customer._id || customer.customerNumber}
                     className="border-b border-gray-200 hover:bg-gray-50 bg-white text-lg"
                   >
-
-                    <td className="p-2">{index + 1 + (currentPage - 1) * limit}</td>
-                    <td className="p-2">{customer.customerName || '--'}</td>
-                    <td className="p-2">{customer.address || '--'}</td>
-                    <td className="p-2">{customer.phone || '--' }</td>
-                    <td className="p-2">{customer.whatsapp || '--'}</td>
-                    <td className="p-2">{customer.discount != null ? `${customer.discount}%` : '--'}</td>
+                    <td className="p-2">
+                      {index + 1 + (currentPage - 1) * limit}
+                    </td>
+                    <td className="p-2">{customer.customerName || "--"}</td>
+                    <td className="p-2 max-w-[150px] truncate whitespace-nowrap">
+                      {customer.address || "--"}
+                    </td>
+                    <td className="p-2">{customer.phone || "--"}</td>
+                    <td className="p-2">{customer.whatsapp || "--"}</td>
+                    <td className="p-2">
+                      {customer.discount != null
+                        ? `${customer.discount}%`
+                        : "--"}
+                    </td>
 
                     <td className="p-2">
-                    {customer.openingBalance != null ? `₹${customer.openingBalance.toFixed(2)}` : '--'}
+                      {customer.openingBalance != null
+                        ? `₹${customer.openingBalance.toFixed(2)}`
+                        : "--"}
                     </td>
                     <td className="p-2 flex items-center gap-8 ">
-                    {customer.routeCustomer != null ? (customer.routeCustomer ? "Yes" : "No") : '--'}
+                      {customer.routeCustomer != null
+                        ? customer.routeCustomer
+                          ? "Yes"
+                          : "No"
+                        : "--"}
                     </td>
                     <td>
                       <LuPencilLine
@@ -202,12 +207,11 @@ export default function CustomerHeader() {
                       />
                     </td>
                     <td className="p-2 text-red-500">
-  <FaTrashAlt
-    className="cursor-pointer hover:text-red-700"
-    onClick={() => handleDeleteCustomer(customer._id)}
-  />
-</td>
-
+                      <FaTrashAlt
+                        className="cursor-pointer hover:text-red-700"
+                        onClick={() => handleDeleteCustomer(customer._id)}
+                      />
+                    </td>
                   </tr>
                 ))
               ) : (
@@ -230,31 +234,39 @@ export default function CustomerHeader() {
             <button
               onClick={handlePrevious}
               disabled={currentPage === 1}
-              className={`px-4 py-2 border border-gray-300 rounded-lg ${currentPage === 1
-                ? "text-gray-300 cursor-not-allowed"
-                : "hover:bg-gray-100"
-                }`}
+              className={`px-4 py-2 border border-gray-300 rounded-lg ${
+                currentPage === 1
+                  ? "text-gray-300 cursor-not-allowed"
+                  : "hover:bg-gray-100"
+              }`}
             >
               Previous
             </button>
             <button
               onClick={handleNext}
               disabled={currentPage === totalPages}
-              className={`px-4 py-2 border border-gray-300 rounded-lg ${currentPage === totalPages
-                ? "text-[#4079ED] cursor-not-allowed"
-                : "hover:bg-gray-100"
-                }`}
+              className={`px-4 py-2 border border-gray-300 rounded-lg ${
+                currentPage === totalPages
+                  ? "text-[#4079ED] cursor-not-allowed"
+                  : "hover:bg-gray-100"
+              }`}
             >
               Next
             </button>
           </div>
         </div>
       </div>
-      {popup && <AddCustomerModal setPopup={setPopup} />}
+      {popup && (
+        <AddCustomerModal
+          setPopup={setPopup}
+          fetchCustomersDebounced={fetchCustomers}
+        />
+      )}
       {editpopup && selectedCustomerId && (
         <EditCustomerModal
           customerId={selectedCustomerId}
           setEditPopup={setEditPopup}
+          fetchCustomersDebounced={fetchCustomers}
         />
       )}
     </>

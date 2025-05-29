@@ -60,6 +60,8 @@ export const openPaymentPrintPage = (payment) => {
                   ? payment?.expense?.expense
                   : payment.category === "vehicle"
                   ? payment?.vehicle?.vehicleName
+                  : payment.category === "lender"
+                  ? payment?.lender?.name
                   : payment?.otherPartyName || "N/A"
               }
             </td>

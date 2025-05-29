@@ -48,7 +48,7 @@ const addPayment = async (req, res) => {
       return res.status(400).json({ message: "Invalid category." });
     }
 
-    if (!validator.isNumeric(amount.toString(), { no_symbols: true })) {
+    if (!validator.isFloat(amount.toString(), { min: 0 })) {
       return res
         .status(400)
         .json({ message: "Amount must be a positive number." });
@@ -371,7 +371,7 @@ const getPaymentById = async (req, res) => {
       .populate({ path: 'employee', select: 'employeeName' })
       .populate({ path: 'company', select: 'companyName' })
       .populate({ path: 'expense', select: 'expense' })
-    .populate({path:'lender', select: 'lenderName'})
+    .populate({path:'lender', select: 'name'})
     .populate({path:'vehicle', select: 'vehicleName'})
 
       .lean();

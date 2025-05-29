@@ -4,7 +4,7 @@ import {useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import useAxiosPrivate from "../hooks/useAxiosPrivate";
 import { XCircleIcon, CheckCircleIcon } from "@heroicons/react/24/solid";
-const EditCustomerPage = ({customerId,setEditPopup}) => {
+const EditCustomerPage = ({customerId,setEditPopup,fetchCustomersDebounced}) => {
   const axiosInstance = useAxiosPrivate();
   const navigate = useNavigate();
 
@@ -79,6 +79,7 @@ const EditCustomerPage = ({customerId,setEditPopup}) => {
       await axiosInstance.put(`/admin/customer/update/${customerId}`, payload);
 
       await Swal.fire("Success", "Customer updated successfully", "success");
+      fetchCustomersDebounced()
       // navigate("/mastercustomer"); // Go back to customer list
       setEditPopup(false)
     } catch (err) {

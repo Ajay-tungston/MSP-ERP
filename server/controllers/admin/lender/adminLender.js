@@ -15,8 +15,8 @@ exports.getLenders = async (req, res) => {
 
     // If search query is provided, filter by name or phone (case-insensitive)
     if (search) {
-      const regex = new RegExp(search, "i");
-      query.$or = [{ name: regex }, { phone: regex }];
+      const regex = new RegExp(".*" + search.trim() + ".*", "i");
+      query.name = regex;
     }
 
     // Get total number of lenders matching the query
@@ -97,9 +97,7 @@ exports.deleteLender = async (req, res) => {
 exports.getAllLendersList = async (req, res) => {
   try {
     const search = req.query.search || "";
-    const query = search
-      ? { name: { $regex: search, $options: "i" } }
-      : {};
+    const query = search ? { name: { $regex: search, $options: "i" } } : {};
 
     const lenders = await Lender.find(query);
     return res.status(200).json(lenders);
@@ -115,7 +113,9 @@ exports.updateLender = async (req, res) => {
   const { name, phone, address, openingBalance } = req.body;
 
   if (!name || name.trim().length < 3) {
-    return res.status(400).json({ message: "Lender name must be at least 3 characters long." });
+    return res
+      .status(400)
+      .json({ message: "Lender name must be at least 3 characters long." });
   }
 
   if (!phone || phone.trim().length < 7) {
@@ -138,7 +138,9 @@ exports.updateLender = async (req, res) => {
       return res.status(404).json({ message: "Lender not found." });
     }
 
-    res.status(200).json({ message: "Lender updated successfully.", lender: updatedLender });
+    res
+      .status(200)
+      .json({ message: "Lender updated successfully.", lender: updatedLender });
   } catch (error) {
     console.error("Error updating lender:", error);
     res.status(500).json({ message: "Failed to update lender." });

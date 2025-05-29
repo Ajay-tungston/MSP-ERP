@@ -35,7 +35,6 @@ export default function Lender() {
       const res = await axiosInstance.get(
         `/admin/lender/get?page=${currentPage}&limit=${limit}&search=${search}`
       );
-      console.log("Get from backend");
       setLenders(res.data?.lenders || []);
 
       setCurrentPage(res.data.currentPage || 1);

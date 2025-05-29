@@ -63,7 +63,6 @@ export default function TrialBalance() {
     totalSalaries: 0,
     salaryBreakdown: [],
   });
-  console.log(employeeReceivables);
   const [openStockSection, setOpenStockSection] = useState(false);
   const [stockData, setStockData] = useState({ total: 0, rows: [] });
   const [loadingStock, setLoadingStock] = useState(true);
@@ -170,7 +169,6 @@ export default function TrialBalance() {
       );
       const { totalReceivables, breakdown, totalSalaries, salaryBreakdown } =
         response.data;
-      console.log(response);
       setEmployeeReceivables({
         total: totalReceivables,
         rows: breakdown.map((item) => ({
@@ -392,7 +390,6 @@ export default function TrialBalance() {
     setVehicleLoading(true);
     try {
       const response = await axiosPrivate.get(`/admin/trialBalance/vehicle`);
-      console.log("vehicel=", response);
       setVehicleData(response?.data);
     } catch (err) {
       setVehicleError("Failed to fetch vehicle");

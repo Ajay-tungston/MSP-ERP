@@ -20,13 +20,11 @@ export default function CustomerHeader() {
   const limit = 10;
 
   const fetchCustomers = async () => {
-    console.log("called");
     setLoading(true);
     try {
       const response = await axiosInstance.get(
         `/admin/customer/get?page=${currentPage}&limit=${limit}&search=${search}`
       );
-      console.log(response);
       const data = response.data;
       setCustomers(data.customers);
       setCurrentPage(data.currentPage);
@@ -39,7 +37,6 @@ export default function CustomerHeader() {
   };
 
   useEffect(() => {
-    console.log("first");
     const debouncedFetch = debounce(fetchCustomers, 300);
     debouncedFetch();
     return () => {

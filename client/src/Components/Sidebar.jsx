@@ -331,7 +331,7 @@ export default function Sidebar() {
             ))}
           </div>
         </div>
-        <div className="absolute  px-12 bottom-5 flex items-center opacity-70">
+        <div className="absolute  px-12 bottom-5 flex items-center opacity-30">
           {/* ml-[2%] */}
           <div>
             <img className="w-6" src="images/Layer 2.png" />

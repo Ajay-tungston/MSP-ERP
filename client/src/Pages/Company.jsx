@@ -20,7 +20,6 @@ function Company() {
       const response = await axiosInstense.get(
         `/admin/company/get?page=${currentPage}&limit=${limit}`
       );
-      console.log(response?.data);
       setCompanies(response?.data?.companies);
       setTotalPages(response?.data?.totalPages);
       const reversed = [...response.data.companies].reverse();

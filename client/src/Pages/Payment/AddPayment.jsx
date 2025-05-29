@@ -21,7 +21,6 @@ function AddPayment({ setPopup, fetchData, type }) {
   const [sellectedData, setselectedData] = useState(null);
   const [purpose, setPurpose] = useState("salary");
   const axiosInstance = useAxiosPrivate();
-console.log("dsfibdf",date)
   useEffect(() => {
     const fetchName = async () => {
       const qry =
@@ -33,7 +32,6 @@ console.log("dsfibdf",date)
         category === "customer"
           ? setNameList(response?.data?.customers)
           : setNameList(response?.data);
-        console.log(response);
       } catch (error) {
         console.log(error);
       }
@@ -120,9 +118,7 @@ console.log("dsfibdf",date)
           `/admin/payment/add`,
           payload
         );
-        console.log(response);
         fetchData();
-        console.log(payload);
         Swal.fire({
           title: "Payment added successfully!",
           icon: "success",

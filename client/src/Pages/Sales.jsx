@@ -18,7 +18,6 @@ const Sales = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [purchase, setPurchase] = useState();
-  // console.log("Add purchase", purchase);
   const axiosInstance = useAxiosPrivate();
   const [loadingPurchase, setLoadingPurchase] = useState(true);
   const [submitLoading, setSubmitloading] = useState(false);
@@ -42,9 +41,7 @@ const Sales = () => {
       error: "",
     },
   ]);
-  console.log("Rows before validation:", rows);
 
-  // console.log("edjdekjdejkejefjhr",rows)
   // which row’s dropdown is open?
   const [activeCustomerIndex, setActiveCustomerIndex] = useState(null);
   // what the user has typed when searching
@@ -149,13 +146,10 @@ const Sales = () => {
     setRows(copy);
   };
   const handleCustomerSelect = (i, customer) => {
-    console.log("customer", customer);
-    console.log("i", i);
     const copy = [...rows];
     copy[i].customer = customer.value;
     copy[i].customerLabel = customer.label;
 
-    console.log("copy", copy);
     setRows(copy);
     setActiveCustomerIndex(null);
   };
@@ -221,7 +215,6 @@ const Sales = () => {
 
   const handleQuantityChange = (index, value) => {
     const q = value === "" ? "" : parseFloat(value);
-    console.log("value=", value);
     setRows((rs) =>
       rs.map((r, i) => {
         if (i !== index) return r;

@@ -25,7 +25,6 @@ export default function Pickup() {
         try {
             setIsLoading(true);
             const res = await axiosInstance.get(`/admin/vehicle/get?page=${currentPage}&limit=${limit}&search=${search}`);
-            console.log("Fetched pickups:", res.data.pickups);
             setPickups(res.data.pickups);
             setCurrentPage(res.data.currentPage || 1);
             setTotalPages(res.data.totalPages || 1);

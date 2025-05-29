@@ -70,7 +70,6 @@ export default function IndividualSales() {
       const res = await axiosInstance.get("/admin/sales/getbydate", {
         params: { customerId: custId, date: dateStr },
       });
-      console.log("result=", res);
 
       const {
         dailyReceipts = [],

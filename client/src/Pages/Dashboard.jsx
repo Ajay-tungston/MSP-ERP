@@ -93,7 +93,6 @@ const FinancialDashboard = () => {
         const resp = await axiosInstance.get("/admin/transaction/transactions");
 
         setRecentTransactions(resp.data || []);
-        console.log(resp);
       } catch (error) {
         console.error("Failed to fetch recent transactions", error);
       }

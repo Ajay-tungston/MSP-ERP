@@ -78,7 +78,6 @@ function Purchasetransaction() {
           `/admin/supplier/list?search=${searchTerm}`
         );
         setSupplierList(response.data);
-        console.log(response.data);
       } catch (error) {
         console.log(error);
       } finally {
@@ -107,7 +106,6 @@ function Purchasetransaction() {
           `/admin/item/list?search=${searchTerm}`
         );
         setItemList(response.data);
-        console.log(response.data);
       } catch (error) {
         console.log(error);
       } finally {
@@ -131,7 +129,6 @@ function Purchasetransaction() {
     try {
       const response = await axiosInstance(`/admin/purchase/count`);
       setPurchaseCount((Number(response?.data?.count) || 0) + 1);
-      console.log(response?.data?.count)
     } catch (error) {
       console.log(error);
     }

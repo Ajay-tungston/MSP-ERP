@@ -133,7 +133,6 @@ function EditPurchaseTransaction() {
         const response = await axiosInstance.get(
           `/admin/purchase/get-secure/${id}`
         );
-        console.log("phc", response);
         setItems(
           response?.data?.items?.map((i) => {
             return {

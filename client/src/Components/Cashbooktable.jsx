@@ -16,7 +16,6 @@ const TransactionTable = ({
     paymentOuts = [], 
     expenses = [] 
   } = transactions;
-  console.log(transactions)
 
   // Calculate opening balance from props or default to 0
   const openingBalance = transactions?.openingBalance || 0;

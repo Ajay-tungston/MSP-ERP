@@ -38,7 +38,6 @@ function PurchaseReport() {
           setPurchaseData(response?.data);
           setTotalPages(response?.data?.totalPages);
         }
-        // console.log(response);
         // setPurchaseData(response?.data);
         // setTotalPages(response?.data?.totalPages);
       } catch (error) {

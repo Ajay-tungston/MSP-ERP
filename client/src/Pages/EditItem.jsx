@@ -19,7 +19,6 @@ const EditItem = ({itemId,setEditPopup,fetchItemData}) => {
       try {
         const res = await axiosInstance.get(`/admin/item/get/${itemId}`);
         const { itemCode, itemName, } = res.data;
-        console.log(res.data)
         setItemCode(itemCode);
         setItemName(itemName);
 

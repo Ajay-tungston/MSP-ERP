@@ -55,7 +55,6 @@ const [search, setSearch] = useState("");
   const fetchInduvidualPayment = async (id) => {
     try {
       const response = await axiosInstance.get(`/admin/payment/get/${id}`);
-      console.log("print",response);
       openPaymentPrintPage(response?.data);
     } catch (error) {
       console.log(error);

@@ -34,7 +34,6 @@ export default function CommissionForm() {
   // Handle form submission
   const handleSubmit = (e) => {
     e.preventDefault(); // Prevent default form submission
-    console.log("Form submitted:", formData); // Log form data (replace with API call)
     // Optional: Add validation before submission
     navigate('/commission'); // Redirect after submission
   };

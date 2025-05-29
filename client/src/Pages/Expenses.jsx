@@ -30,7 +30,6 @@ function Expenses() {
             const response = await axiosInstance.get(`/admin/expense?page=${currentPage}&limit=${itemsPerPage}&search=${search}`);
             setExpenses(response.data.data || []);
             setTotalPages(response.data.totalPages);
-            console.log(response)
         } catch (error) {
             console.error("Failed to fetch expenses:", error);
         } finally {

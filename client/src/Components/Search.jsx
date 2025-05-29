@@ -41,7 +41,6 @@ const userName = localStorage.getItem("userName")
     
  
   };          
-console.log(location.pathname)
   const pageTitle = routeTitles[location.pathname] || "Page";
 
   return (

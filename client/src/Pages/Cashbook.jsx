@@ -16,7 +16,6 @@ const CashbookHeader = () => {
     paymentOuts: [],
     expenses: []
   });
-  console.log("transactions=",transactions)
   const [openingBalance, setOpeningBalance] = useState(0);
   const [page, setPage] = useState(1);
   const [limit] = useState(8);
@@ -46,7 +45,6 @@ const CashbookHeader = () => {
         expenses: response.data.expenses || []
 
       });
-      console.log(response)
       setOpeningBalance(response.data.openingBalance || 0);
       
       setPaginationInfo({

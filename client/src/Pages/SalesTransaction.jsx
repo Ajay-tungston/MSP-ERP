@@ -22,7 +22,7 @@ const SalesRegister = () => {
         const response = await axiosInstance.get("/admin/purchase/incomplete");
         setPurchaseData(response.data);
       } catch (error) {
-        console.log("Error fetching incomplete purchases", error);
+        console.log(error);
       }
       finally{
         setPurchaseLoading(false);

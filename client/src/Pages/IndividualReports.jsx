@@ -65,7 +65,6 @@ const IndividualReports = () => {
           const response = await axiosInstance.get(
             `admin/purchase/totalStats?startDate=${startDate}&endDate=${endDate}&supplierId=${selectedSupplier?._id}`
           );
-          console.log("data", response);
 
           setTotalStats(response?.data);
         } catch (error) {
@@ -336,7 +335,6 @@ const IndividualReports = () => {
 
       const whatsappUrl = `https://wa.me/${supplier?.whatsapp
         }?text=${encodeURIComponent(`Your purchase bill:\n${data.fileUrl}`)}`;
-      console.log(whatsappUrl);
       window.open(whatsappUrl, "_blank");
     } catch (err) {
       console.error("Failed to send PDF:", err);

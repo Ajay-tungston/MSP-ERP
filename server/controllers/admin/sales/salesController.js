@@ -7,7 +7,13 @@ const getNextCounterNumber = require("../../../utils/counter");
 
 const mongoose = require("mongoose");
 const Payment = require("../../../models/Payment");
+
 const createSaleTransaction = async (req, res) => {
+  const sessionData = {
+    originalPurchaseItems: null,
+    purchaseEntry: null,
+  };
+
   try {
     const sales = Array.isArray(req.body) ? req.body : [req.body];
     if (sales.length === 0) {
@@ -16,23 +22,25 @@ const createSaleTransaction = async (req, res) => {
         .json({ message: "At least one sale block is required" });
     }
 
-    // Get next transaction number
-    const transactionNumber = await getNextCounterNumber("saleTransaction");
-
-    // Build customer blocks
     const customersArray = [];
     let grandTotal = 0;
     let purchaseDta;
+
     for (const saleData of sales) {
       const { customer: customerId, discount = 0, items, purchase } = saleData;
       const purchaseEntry = await PurchaseEntry.findById(purchase);
+      if (!purchaseEntry) throw new Error("Purchase entry not found");
 
-      if (!purchaseEntry) {
-        throw new Error("Purchase entry not found");
+      // Save original purchase state for rollback
+      if (!sessionData.originalPurchaseItems) {
+        sessionData.originalPurchaseItems = JSON.parse(
+          JSON.stringify(purchaseEntry.items)
+        );
+        sessionData.purchaseEntry = purchaseEntry;
       }
+
       purchaseDta = purchase;
 
-      // Validate customer block
       if (!mongoose.isValidObjectId(customerId)) {
         return res
           .status(400)
@@ -100,7 +108,7 @@ const createSaleTransaction = async (req, res) => {
             .status(404)
             .json({ message: `Supplier ${supplierId} not found` });
         }
-        //for updating purchase schema
+
         const purchaseItem = purchaseEntry.items.find(
           (i) => i.item.toString() === itemId && i.quantityType === quantityType
         );
@@ -109,20 +117,16 @@ const createSaleTransaction = async (req, res) => {
           throw new Error("Item not found in purchase entry");
         }
 
-        // Update sold and remaining quantities
+        // Check and apply sale quantity
         purchaseItem.soldQuantity += quantity;
         purchaseItem.remainingQuantity =
           purchaseItem.quantity - purchaseItem.soldQuantity;
 
-        // Ensure values are within valid bounds
         if (purchaseItem.remainingQuantity < 0) {
           throw new Error("Sold quantity exceeds available quantity");
         }
 
-        // Update completion status
         purchaseItem.isCompleted = purchaseItem.remainingQuantity === 0;
-
-        // Save the changes
         await purchaseEntry.save();
 
         const totalCost = quantity * unitPrice;
@@ -138,11 +142,6 @@ const createSaleTransaction = async (req, res) => {
         });
       }
 
-      // //update the balance of customer
-      // customer.previousBalance = customer.openingBalance;
-      // customer.openingBalance += customerTotal - discount;
-      // await customer.save();
-
       customersArray.push({
         customer: customer._id,
         discount,
@@ -152,6 +151,8 @@ const createSaleTransaction = async (req, res) => {
 
       grandTotal += customerTotal - discount;
     }
+
+    const transactionNumber = await getNextCounterNumber("saleTransaction");
 
     const saleDoc = new SalesEntry({
       transactionNumber,
@@ -171,7 +172,19 @@ const createSaleTransaction = async (req, res) => {
       .json({ message: "Sales transaction saved", sale: saleDoc });
   } catch (err) {
     console.error("Sale creation error:", err);
-    return res.status(err.status || 500).json({
+
+    // Manual rollback if purchaseEntry was modified
+    if (sessionData.originalPurchaseItems && sessionData.purchaseEntry) {
+      sessionData.purchaseEntry.items = sessionData.originalPurchaseItems;
+      try {
+        await sessionData.purchaseEntry.save();
+        console.log("Rolled back purchase entry changes.");
+      } catch (rollbackErr) {
+        console.error("Rollback failed:", rollbackErr);
+      }
+    }
+
+    return res.status(500).json({
       message: err.message || "Internal server error",
     });
   }
@@ -381,11 +394,9 @@ const getCustomerSalesByDate = async (req, res) => {
     let entryNo = 1;
     let dailyTotal = 0;
 
-
     transactions.forEach((transaction) => {
       transaction.customers.forEach((customerEntry) => {
         if (customerEntry.customer._id.toString() === customerId) {
-
           dailyTotal += customerEntry.totalAmount;
 
           customerEntry.items.forEach((item) => {
@@ -459,76 +470,6 @@ const getCustomerSalesByDate = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
-
-// const getSalesEntriesByDate = async (req, res) => {
-//   try {
-//     const {
-//       page = 1,
-//       limit = 10,
-//       startDate,
-//       endDate
-//     } = req.query;
-
-//     if (!startDate || !endDate) {
-//       return res.status(400).json({ error: "Start date and end date are required" });
-//     }
-
-//     const start = new Date(startDate);
-//     const end = new Date(endDate);
-//     end.setHours(23, 59, 59, 999); // Include full end date
-
-//     const filter = {
-//       dateOfSale: { $gte: start, $lte: end }
-//     };
-
-//     const total = await SalesEntry.countDocuments(filter);
-//     const salesEntries = await SalesEntry.find(filter)
-//       .skip((page - 1) * limit)
-//       .limit(parseInt(limit))
-//       .sort({ dateOfSale: -1 }).populate({
-//         path: "purchase",
-//         select: "supplier",
-//         populate: {
-//           path: "supplier",
-//           select: "supplierName",
-//         },
-//       });
-
-//     // Add totalKg and totalBox to each entry
-//     const enhancedEntries = salesEntries.map((entry) => {
-//       let totalKg = 0;
-//       let totalBox = 0;
-
-//       entry.customers.forEach((customer) => {
-//         customer.items.forEach((item) => {
-//           if (item.quantityType === "kg") {
-//             totalKg += item.quantity;
-//           } else if (item.quantityType === "box") {
-//             totalBox += item.quantity;
-//           }
-//         });
-//       });
-
-//       // Return entry as a plain object and attach the new fields
-//       return {
-//         ...entry.toObject(),
-//         totalKg,
-//         totalBox
-//       };
-//     });
-
-//     res.json({
-//       total,
-//       page: parseInt(page),
-//       limit: parseInt(limit),
-//       totalPages: Math.ceil(total / limit),
-//       data: enhancedEntries,
-//     });
-//   } catch (error) {
-//     console.error("Error fetching sales entries:", error);
-//     res.status(500).json({ error: "Server error" });
-//   }
-// };
 
 //for sales report
 const getSalesEntriesByDate = async (req, res) => {
@@ -646,6 +587,102 @@ const getSalesEntriesByDate = async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 };
+
+//need to check
+
+// const createSaleTransaction = async (req, res) => {
+//   const session = await mongoose.startSession();
+//   try {
+//     await session.withTransaction(async () => {
+//       const sales = Array.isArray(req.body) ? req.body : [req.body];
+//       if (sales.length === 0) {
+//         throw new Error("At least one sale block is required");
+//       }
+
+//       const transactionNumber = await getNextCounterNumber("saleTransaction");
+//       const customersArray = [];
+//       let grandTotal = 0;
+//       let purchaseDta;
+
+//       for (const saleData of sales) {
+//         const { customer: customerId, discount = 0, items, purchase } = saleData;
+
+//         const purchaseEntry = await PurchaseEntry.findById(purchase).session(session);
+//         if (!purchaseEntry) throw new Error("Purchase entry not found");
+//         purchaseDta = purchase;
+
+//         const customer = await Customer.findById(customerId).session(session);
+//         if (!customer) throw new Error(`Customer ${customerId} not found`);
+
+//         let customerTotal = 0;
+//         const lineItems = [];
+
+//         for (const itm of items) {
+//           const { item: itemId, supplier: supplierId, quantityType, quantity, unitPrice } = itm;
+
+//           const item = await Item.findById(itemId).session(session);
+//           const supplier = await Supplier.findById(supplierId).session(session);
+//           const purchaseItem = purchaseEntry.items.find(
+//             (i) => i.item.toString() === itemId && i.quantityType === quantityType
+//           );
+
+//           if (!purchaseItem) throw new Error("Item not found in purchase entry");
+
+//           const projectedSold = purchaseItem.soldQuantity + quantity;
+//           const projectedRemaining = purchaseItem.quantity - projectedSold;
+//           if (projectedRemaining < 0) {
+//             throw new Error("Sold quantity exceeds available quantity");
+//           }
+
+//           purchaseItem.soldQuantity = projectedSold;
+//           purchaseItem.remainingQuantity = projectedRemaining;
+//           purchaseItem.isCompleted = projectedRemaining === 0;
+
+//           const totalCost = quantity * unitPrice;
+//           customerTotal += totalCost;
+
+//           lineItems.push({
+//             item: item._id,
+//             supplier: supplier._id,
+//             quantityType,
+//             quantity,
+//             unitPrice,
+//             totalCost,
+//           });
+//         }
+
+//         await purchaseEntry.save({ session });
+
+//         customersArray.push({
+//           customer: customer._id,
+//           discount,
+//           totalAmount: customerTotal - discount,
+//           items: lineItems,
+//         });
+
+//         grandTotal += customerTotal - discount;
+//       }
+
+//       const saleDoc = new SalesEntry({
+//         transactionNumber,
+//         dateOfSale: sales[0].dateOfSale ? new Date(sales[0].dateOfSale) : new Date(),
+//         totalAmount: grandTotal,
+//         status: "completed",
+//         purchase: purchaseDta,
+//         customers: customersArray,
+//       });
+
+//       await saleDoc.save({ session });
+//     });
+
+//     res.status(201).json({ message: "Sales transaction saved successfully" });
+//   } catch (err) {
+//     console.error("Sale transaction error:", err);
+//     res.status(500).json({ message: err.message || "Internal server error" });
+//   } finally {
+//     session.endSession();
+//   }
+// };
 
 module.exports = {
   createSaleTransaction,

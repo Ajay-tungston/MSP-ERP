@@ -136,7 +136,7 @@ const FinancialDashboard = () => {
     fetchOverview();
   }, [axiosInstance]);
   return (
-    <div> 
+    <div>
       <div className="grid grid-cols-1 md:grid-cols-6 gap-6 p-4 ">
         {/* Financial Overview */}
         <div className="bg-white rounded-2xl shadow-[0_0_10px_rgba(0,0,0,0.10)] p-6 w-full col-span-2 overflow-visible">
@@ -209,7 +209,9 @@ const FinancialDashboard = () => {
         {/* Net Profit */}
         <div className="bg-white rounded-2xl shadow-[0_0_10px_rgba(0,0,0,0.10)] p-6  w-full col-span-4">
           {/* <div className="flex justify-between items-center mb-4 w-full overflow-visible"> */}
-          <h2 className="text-2xl font-semibold text-[#05004E] mb-4">Net Profit</h2>
+          <h2 className="text-2xl font-semibold text-[#05004E] mb-4">
+            Net Profit
+          </h2>
           <hr className="mb-4 border-gray-200" />
 
           {/* <span className="text-green-600 font-bold text-lg ">
@@ -226,7 +228,26 @@ const FinancialDashboard = () => {
               <YAxis type="category" dataKey="name" />
               <Tooltip />
               <Bar dataKey="value" fill="#6366F1" barSize={20}>
-                <LabelList dataKey="value" position="right" />
+                <LabelList
+                  dataKey="value"
+                  content={({ x, y, width, height, value }) => {
+                    const padding = 5;
+                    const inside = width > 30;
+
+                    return (
+                      <text
+                        x={inside ? x + width - padding : x + width + padding}
+                        y={y + height / 2}
+                        fill={inside ? "white" : "#6366F1"}
+                        textAnchor={inside ? "end" : "start"}
+                        dominantBaseline="middle"
+                        style={{ fontSize: "12px", fontWeight: "bold" }}
+                      >
+                        ₹{value.toLocaleString()}
+                      </text>
+                    );
+                  }}
+                />
               </Bar>
             </BarChart>
           </ResponsiveContainer>
@@ -244,7 +265,11 @@ const FinancialDashboard = () => {
 
           {(expenseData[0]?.value || 0) > 0 ||
           (expenseData[1]?.value || 0) > 0 ? (
-            <ResponsiveContainer width="100%" height={300} className="overflow-visible">
+            <ResponsiveContainer
+              width="100%"
+              height={300}
+              className="overflow-visible"
+            >
               <PieChart>
                 <Pie
                   data={expenseData}
@@ -275,8 +300,13 @@ const FinancialDashboard = () => {
                         dominantBaseline="central"
                         style={{ fontSize: "12px", fontWeight: 500 }}
                       >
-                      <tspan x={x} dy="0">{item.name}</tspan>
-        <tspan x={x} dy="1.2em">₹{item.value?.toFixed(0)} ({(percent * 100).toFixed(1)}%)</tspan>
+                        <tspan x={x} dy="0">
+                          {item.name}
+                        </tspan>
+                        <tspan x={x} dy="1.2em">
+                          ₹{item.value?.toFixed(0)} (
+                          {(percent * 100).toFixed(1)}%)
+                        </tspan>
                       </text>
                     );
                   }}
@@ -306,7 +336,7 @@ const FinancialDashboard = () => {
 
         {/* Recent Transactions */}
         <div className="bg-white shadow-[0_0_10px_rgba(0,0,0,0.10)] rounded-2xl p-6 col-span-3">
-        <h2 className="text-2xl font-semibold text-[#05004E] mb-4">
+          <h2 className="text-2xl font-semibold text-[#05004E] mb-4">
             Recent Transactions
           </h2>
           <hr className="mb-2 border-gray-200" />
@@ -330,21 +360,24 @@ const FinancialDashboard = () => {
                 </tr>
               </thead>
               <tbody>
-                {recentTransactions?.length>0?recentTransactions?.map((tx, idx) => (
-                  <tr key={idx} className=" even:bg-gray-100">
-                    <td className="py-2 px-4">
-                      {format(new Date(tx.date), "dd/MM/yyyy")}
+                {recentTransactions?.length > 0 ? (
+                  recentTransactions?.map((tx, idx) => (
+                    <tr key={idx} className=" even:bg-gray-100">
+                      <td className="py-2 px-4">
+                        {format(new Date(tx.date), "dd/MM/yyyy")}
+                      </td>
+                      <td className="py-2 px-4">{tx.module}</td>
+                      <td className="py-2 px-4">{tx.desc}</td>
+                      <td className="py-2 px-4 ">₹{tx.amount.toFixed(2)}</td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="5" className="text-center text-gray-500 py-6">
+                      No data available
                     </td>
-                    <td className="py-2 px-4">{tx.module}</td>
-                    <td className="py-2 px-4">{tx.desc}</td>
-                    <td className="py-2 px-4 ">₹{tx.amount.toFixed(2)}</td>
                   </tr>
-                )):<tr>
-                <td colSpan="5" className="text-center text-gray-500 py-6">
-                  No data available
-                </td>
-              </tr>
-}              
+                )}
               </tbody>
             </table>
           </div>

@@ -121,6 +121,20 @@ const updateVehicle = async (req, res) => {
 const deleteVehicle = async (req, res) => {
   try {
     const { id } = req.params;
+
+    // Check if vehicle is used in any payment
+    const isUsed = await Payment.findOne({
+      category: "vehicle",
+      vehicle: id,
+    });
+
+    if (isUsed) {
+      return res.status(400).json({
+        message: "Cannot delete: Vehicle is referenced in payment records.",
+      });
+    }
+
+    // Proceed to delete if not used
     const deleted = await Vehicle.findByIdAndDelete(id);
 
     if (!deleted) {
@@ -129,6 +143,7 @@ const deleteVehicle = async (req, res) => {
 
     return res.status(200).json({ message: "Vehicle deleted successfully" });
   } catch (error) {
+    console.error("Error deleting vehicle:", error);
     return res.status(500).json({ message: "Error deleting vehicle" });
   }
 };

@@ -209,7 +209,7 @@ const FinancialDashboard = () => {
         <div className="bg-white rounded-2xl shadow-[0_0_10px_rgba(0,0,0,0.10)] p-6  w-full col-span-4">
           {/* <div className="flex justify-between items-center mb-4 w-full overflow-visible"> */}
           <h2 className="text-2xl font-semibold text-[#05004E] mb-4">
-            Net Profit
+          Overview
           </h2>
           <hr className="mb-4 border-gray-200" />
 

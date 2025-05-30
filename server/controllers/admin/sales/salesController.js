@@ -684,10 +684,130 @@ const getSalesEntriesByDate = async (req, res) => {
 //   }
 // };
 
+
+const getAllCustomerSalesByDate = async (req, res) => {
+  try {
+    const { date } = req.query;
+
+    if (!date) {
+      return res.status(400).json({ message: "Date is required" });
+    }
+
+    const startOfDay = new Date(date);
+    const endOfDay = new Date(date);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    // Fetch sales entries on the selected date
+    const transactions = await SalesEntry.find({
+      dateOfSale: { $gte: startOfDay, $lte: endOfDay },
+    })
+      .populate("customers.customer")
+      .populate("customers.items.item")
+      .populate("customers.items.supplier");
+
+    const customerSalesMap = new Map();
+
+    // Step 1: Group sales by customer
+    transactions.forEach((transaction) => {
+      transaction.customers.forEach((customerEntry) => {
+        const custId = customerEntry.customer._id.toString();
+
+        if (!customerSalesMap.has(custId)) {
+          customerSalesMap.set(custId, {
+            customerId: custId,
+            customerName: customerEntry.customer.customerName,
+            items: [],
+            dailyTotal: 0,
+          });
+        }
+
+        const customerData = customerSalesMap.get(custId);
+        customerData.dailyTotal += customerEntry.totalAmount;
+
+        customerEntry.items.forEach((item) => {
+          customerData.items.push({
+            Date: transaction.dateOfSale.toISOString().split("T")[0],
+            Item: item.item.itemName || "N/A",
+            Supplier: item.supplier.supplierName || "N/A",
+            "Qty (KG)": item.quantityType === "kg" ? item.quantity : "-",
+            "Qty (Box)": item.quantityType === "box" ? item.quantity : "-",
+            Price: item.unitPrice,
+            Total: item.totalCost,
+            supplierCode: item.supplier.supplierCode,
+          });
+        });
+      });
+    });
+
+    const allCustomersSales = Array.from(customerSalesMap.values());
+
+    // Step 2: Calculate previous balance & daily receipts per customer
+    for (const cust of allCustomersSales) {
+      const customerId = cust.customerId;
+
+      // Total sales before date
+      const salesBeforeDate = await SalesEntry.find({
+        dateOfSale: { $lt: startOfDay },
+        "customers.customer": customerId,
+      });
+
+      let totalSalesBefore = 0;
+      salesBeforeDate.forEach((sale) => {
+        sale.customers.forEach((c) => {
+          if (c.customer.toString() === customerId) {
+            totalSalesBefore += c.totalAmount;
+          }
+        });
+      });
+
+      // Total payments before date
+      const paymentsBeforeDate = await Payment.find({
+        customer: customerId,
+        paymentType: "PaymentIn",
+        date: { $lt: startOfDay },
+      });
+
+      let totalPaymentsBefore = 0;
+      paymentsBeforeDate.forEach((p) => {
+        totalPaymentsBefore += p.amount;
+      });
+
+      // Previous balance
+      const previousBalance = totalSalesBefore - totalPaymentsBefore;
+
+      // Daily receipts
+      const paymentsToday = await Payment.find({
+        customer: customerId,
+        paymentType: "PaymentIn",
+        date: { $gte: startOfDay, $lte: endOfDay },
+      });
+
+      let dailyReceipts = 0;
+      paymentsToday.forEach((p) => {
+        dailyReceipts += p.amount;
+      });
+
+      // Final calculations
+      cust.previousBalance = previousBalance;
+      cust.dailyReceipts = dailyReceipts;
+      cust.grossTotal = previousBalance + cust.dailyTotal - dailyReceipts;
+    }
+
+    res.json({
+      date,
+      customers: allCustomersSales,
+    });
+  } catch (error) {
+    console.error("Error fetching all customer sales report:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 module.exports = {
   createSaleTransaction,
   getSalesEntries,
   getCustomerSalesReport,
   getCustomerSalesByDate,
   getSalesEntriesByDate,
+  getAllCustomerSalesByDate
 };

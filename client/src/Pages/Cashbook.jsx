@@ -246,7 +246,12 @@ const CashbookHeader = () => {
             <div className="bg-blue-50 text-blue-600 font-medium px-4 py-2 rounded-md">
              ₹ {openingBalance.toFixed(2)}
             </div>
+            <span className="text-gray-400 ml-5">Total Balance</span>
+            <div className="  font-bold px-4 py-2 rounded-md">
+            ₹{summary.closingBalance.toFixed(2)}
+            </div>
           </div>
+         
         </div>
 
         {/* Print + Date */}

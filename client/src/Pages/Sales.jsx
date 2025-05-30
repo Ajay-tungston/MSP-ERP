@@ -383,6 +383,22 @@ const Sales = () => {
     });
   };
 
+  const purchaseTotal = purchase?.items?.reduce((total, item) => {
+    const remainingQuantity = item.remainingQuantity ?? 0;
+    const unitPrice = parseFloat(item.unitPrice ?? 0);
+    const quantityType = item.quantityType;
+  
+    if (quantityType === "kg" || quantityType === "box") {
+      return total + remainingQuantity * unitPrice;
+    }
+    return total;
+  }, 0) || 0;
+  
+  const salesDifference = netPayable - purchaseTotal;
+  
+  // Conditionally set text color
+  const differenceTextColor = salesDifference < 0 ? "text-red-600" : "text-blue-600";
+  
 
   return (
     <div className="w-full min-h-screen bg-[#EEEEEE] p-6 md:p-8">
@@ -511,7 +527,7 @@ const Sales = () => {
         <div className="w-full lg:w-2/3 bg-white rounded-xl p-6 shadow">
           <div className="text-slate-500 text-xl mb-2">Transactions &gt; Sales</div>
           <h2 className="text-3xl font-bold text-indigo-950 mb-6">Sales register</h2>
-         
+
 
           {/* </div> */}
           {/* <div className="w-[851px] left-[337px] top-[324px] absolute inline-flex flex-col justify-start items-start bf gap-3.5">
@@ -571,9 +587,9 @@ const Sales = () => {
 
                       {activeCustomerIndex === index && (
                         <div
-                    
-                        className="absolute top-12 left-0 right-0 bg-[#fff] rounded shadow-lg z-10"
-                      
+
+                          className="absolute top-12 left-0 right-0 bg-[#fff] rounded shadow-lg z-10"
+
                           onKeyDown={(e) => handleKeyDown(e, index)}
                           tabIndex={0}
                         >
@@ -653,7 +669,7 @@ const Sales = () => {
 
 
 
-                    
+
                     <td className="p-3">
                       <select
                         value={row.itemName}
@@ -676,7 +692,7 @@ const Sales = () => {
                     <td className="p-3">
                       <div className="flex flex-col ">
                         <input
-                        placeholder="000"
+                          placeholder="000"
                           type="number"
                           min="0"
                           max={
@@ -765,15 +781,15 @@ const Sales = () => {
           <div className="self-stretch flex flex-col justify-start items-end gap-8">
             <div className="self-stretch px-4 flex flex-col justify-start items-start gap-12">
               <div className="self-stretch inline-flex justify-between items-start flex-wrap content-start">
-                <div className="w-96 flex justify-between items-center">
+                <div className=" flex justify-between items-center ">
                   <label
-                    className="w-24 justify-start text-slate-600/40 text-sm font-normal font-['Urbanist']"
+                    className="w-20 justify-start text-slate-600/40 text-xl font-normal font-['Urbanist'] "
                     htmlFor="netPayable"
                   >
-                    Net Payable
+                    Total:
                   </label>
-                  <div className="w-64 h-12 px-6 py-4 bg-gray-50 rounded-xl flex justify-start items-center gap-3">
-                    <div className="justify-start text-indigo-950 text-xl font-bold font-['Urbanist']">
+                  <div className="w-64 h-12 px-6 py-4 bg-gray-50 rounded-xl flex justify-start items-center">
+                    <div className="justify-start text-indigo-950 text-lg font-bold font-['Urbanist']">
                       ₹
                     </div>
                     <input
@@ -782,10 +798,32 @@ const Sales = () => {
                       name="netPayable"
                       readOnly
                       value={netPayable.toFixed(2)}
-                      className="w-full bg-transparent outline-none text-indigo-950 text-sm font-bold font-['Urbanist']"
+                      className=" p-1 w-full bg-transparent outline-none text-indigo-950 text-lg font-bold font-['Urbanist']"
                     />
                   </div>
                 </div>
+                <div className="w-94 flex justify-between items-center ">
+  <label
+    className="w-94 justify-start text-slate-600/40 text-xl font-normal font-['Urbanist']"
+    htmlFor="salesDifference"
+  >
+    Sales Difference
+  </label>
+  <div className="w-64 h-12 px-6 py-4 bg-gray-50 rounded-xl flex justify-start items-center">
+    <div className={`justify-start text-lg font-bold font-['Urbanist'] ${differenceTextColor}`}>
+      ₹
+    </div>
+    <input
+      type="text"
+      id="salesDifference"
+      name="salesDifference"
+      readOnly
+      value={salesDifference.toFixed(2)}
+      className={`pl-1 w-full bg-transparent outline-none text-lg font-bold font-['Urbanist'] ${differenceTextColor}`}
+    />
+  </div>
+</div>
+
               </div>
             </div>
           </div>
@@ -860,8 +898,8 @@ const Sales = () => {
                 {/* Uncomment if you want total row */}
                 <tr className="bg-white border-t border-slate-600/40 font-bold">
                   <td colSpan="4" />
-                  <td className="px-2.5 py-4">Total</td>
-                  <td className="px-2.5 py-4">
+                  <td className="px-2.5 py-4 ">Total</td>
+                  <td className="px-2.5 py-4 ">
                     ₹
                     {purchase?.items
                       ?.reduce((total, item) => {

@@ -59,6 +59,8 @@ export default function Sidebar() {
     "Individual Sales Report": "/individualsales",
     // "Route Sales Report": "/reports/expense",
     "Trial Sales Report": "/trail",
+    "Daily Sales Report": "/dailysales",
+    "Customer Report":"/customer-reports"
   };
 
   const vehicleItemRoutes = {

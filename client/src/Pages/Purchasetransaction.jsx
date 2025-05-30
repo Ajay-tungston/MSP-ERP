@@ -58,8 +58,12 @@ function Purchasetransaction() {
   const [itemList, setItemList] = useState([]);
   const [itemLoading, setItemLoading] = useState(false);
   const [itemInputFocused, setItemInputFocused] = useState(false);
-  const [showActionModal, setShowActionModal] = useState(false);
-
+  const [advanceAmount, setAdvanceAmount] = useState(0);
+  const [advanceLoading, setAdvanceLoading] = useState(false);
+  const [isAdvanceDeductionChecked, setIsAdvanceDeductionChecked] =
+    useState(false);
+  const [deductedAmount, setDeductedAmount] = useState(0);
+  console.log("edhgewdf", deductedAmount);
   const [purchaseCount, setPurchaseCount] = useState(1);
   const [submitLoading, setSubmitloading] = useState(false);
 
@@ -134,7 +138,6 @@ function Purchasetransaction() {
     }
   };
   useEffect(() => {
-
     fetchPurchaseCount();
   }, []);
 
@@ -146,10 +149,10 @@ function Purchasetransaction() {
   const handleKeyDown = (e, rowIndex, colIndex) => {
     if (e.key === "Enter") {
       e.preventDefault();
-  
+
       const row = inputRefs.current?.[rowIndex];
       if (!row) return;
-  
+
       // Try to find next enabled input in the same row
       for (let nextCol = colIndex + 1; nextCol < row.length; nextCol++) {
         const nextRef = row[nextCol];
@@ -158,13 +161,17 @@ function Purchasetransaction() {
           return;
         }
       }
-  
+
       // No more inputs in this row, move to the first input of the next row
       const nextRow = inputRefs.current?.[rowIndex + 1];
       if (nextRow) {
         for (let i = 0; i < nextRow.length; i++) {
           const nextRef = nextRow[i];
-          if (nextRef && nextRef.disabled !== true && nextRef.readOnly !== true) {
+          if (
+            nextRef &&
+            nextRef.disabled !== true &&
+            nextRef.readOnly !== true
+          ) {
             nextRef.focus();
             return;
           }
@@ -172,14 +179,33 @@ function Purchasetransaction() {
       }
     }
   };
-  
+
   // useEffect for setting up refs after rendering
   useEffect(() => {
     inputRefs.current = items.map(() =>
       [0, 1, 2, 3, 4, 5].map(() => React.createRef())
     );
   }, [items.length]);
-  
+
+  useEffect(() => {
+    setDeductedAmount(Number(selectedSupplier?.advanceDeducted) || 0);
+    if (!selectedSupplier?._id) return;
+
+    const fetchSupplierAdvance = async () => {
+      setAdvanceLoading(true);
+      try {
+        const response = await axiosInstance.get(
+          `/admin/supplier/advance/${selectedSupplier?._id}`
+        );
+        setAdvanceAmount(response?.data?.advanceAmount);
+      } catch (error) {
+        console.log(error);
+      } finally {
+        setAdvanceLoading(false);
+      }
+    };
+    fetchSupplierAdvance();
+  }, [selectedSupplier]);
 
   const totalQuantityInKg = items.reduce((acc, item) => {
     const qty = parseFloat(item.kg);
@@ -212,6 +238,30 @@ function Purchasetransaction() {
       supplierNameRef.current.focus();
       return;
     }
+
+    if (deductedAmount > advanceAmount) {
+      Swal.fire({
+        title: "Invalid Deduction Amount",
+        text: `You cannot deduct more than the available advance of ₹${advanceAmount?.toFixed(
+          2
+        )}`,
+        icon: "error",
+        confirmButtonText: "Okay",
+      });
+      return
+    } 
+     if (deductedAmount > (totalPrice - totalDeduction)) {
+      Swal.fire({
+        title: "Invalid Deduction Amount",
+        text: `You cannot deduct more than the total bill amount of ₹${(totalPrice - totalDeduction)?.toFixed(
+          2
+        )}`,
+        icon: "error",
+        confirmButtonText: "Okay",
+      });
+      return
+    }
+
     // Validate item rows
     for (let i = 0; i < items.length; i++) {
       const item = items[i];
@@ -255,6 +305,16 @@ function Purchasetransaction() {
         dateOfPurchase,
         marketFee,
       });
+      if (isAdvanceDeductionChecked) {
+        const response2 = await axiosInstance.post(`/admin/payment/add`, {
+          paymentType: "PaymentIn",
+          category: "supplier",
+          amount: deductedAmount,
+          supplier: selectedSupplier?._id,
+          date: new Date().toISOString(),
+        });
+        console.log(response2);
+      }
       if (isPrint) {
         const transaction = {
           selectedSupplier,
@@ -289,7 +349,7 @@ function Purchasetransaction() {
       setSelectedSupplier("");
       setItemSearch("");
       setItemList([]);
-      fetchPurchaseCount()
+      fetchPurchaseCount();
     } catch (error) {
       Swal.fire({
         title: "Something went wrong!",
@@ -309,7 +369,7 @@ function Purchasetransaction() {
           <OvalSpinner />
         </div>
       ) : (
-        <div className="w-full min-h-screen bg-white rounded-3xl p-6 overflow-x-hidden  shadow-md" >
+        <div className="w-full min-h-screen bg-white rounded-3xl p-6 overflow-x-hidden  shadow-md">
           <div className="max-w-screen-xl mx-auto flex flex-col gap-12">
             {/* Page Header */}
             <div className="pb-6 border-b border-gray-400">
@@ -522,7 +582,7 @@ function Purchasetransaction() {
                         }, 0); // Delay to allow Combobox selection to complete
                       }}
                     >
-                     <div className="relative w-full">
+                      <div className="relative w-full">
                         <ComboboxInput
                           onChange={(e) => setItemSearch(e.target.value)}
                           displayValue={(item) => item}
@@ -533,7 +593,8 @@ function Purchasetransaction() {
                           className="bg-white border-none outline-none placeholder:text-gray-400 w-full h-full"
                           // ⛔️ REMOVE handleKeyDown — let Combobox handle Enter key
                           ref={(el) => {
-                            if (!inputRefs.current[index]) inputRefs.current[index] = [];
+                            if (!inputRefs.current[index])
+                              inputRefs.current[index] = [];
                             inputRefs.current[index][1] = el;
                           }}
                         />
@@ -590,7 +651,8 @@ function Purchasetransaction() {
                     }}
                     onKeyDown={(e) => handleKeyDown(e, index, 2)}
                     ref={(el) => {
-                      if (!inputRefs.current[index]) inputRefs.current[index] = [];
+                      if (!inputRefs.current[index])
+                        inputRefs.current[index] = [];
                       inputRefs.current[index][2] = el;
                     }}
                     className="col-span-2 bg-white border-none outline-none placeholder:text-gray-400 w-full"
@@ -614,13 +676,13 @@ function Purchasetransaction() {
                     }}
                     onKeyDown={(e) => handleKeyDown(e, index, 3)}
                     ref={(el) => {
-                      if (!inputRefs.current[index]) inputRefs.current[index] = [];
+                      if (!inputRefs.current[index])
+                        inputRefs.current[index] = [];
                       inputRefs.current[index][3] = el;
                     }}
                     className="col-span-2 bg-white border-none outline-none placeholder:text-gray-400 w-full"
                     placeholder="Qty(Box)"
                   />
-
 
                   {/* Price */}
                   <input
@@ -633,7 +695,8 @@ function Purchasetransaction() {
                     onChange={(e) => handleInputChange(index, e)}
                     onKeyDown={(e) => handleKeyDown(e, index, 4)}
                     ref={(el) => {
-                      if (!inputRefs.current[index]) inputRefs.current[index] = [];
+                      if (!inputRefs.current[index])
+                        inputRefs.current[index] = [];
                       inputRefs.current[index][4] = el;
                     }}
                     className="col-span-2 bg-white border-none outline-none placeholder:text-gray-400 w-full"
@@ -651,7 +714,8 @@ function Purchasetransaction() {
                     readOnly
                     onKeyDown={(e) => handleKeyDown(e, index, 5)}
                     ref={(el) => {
-                      if (!inputRefs.current[index]) inputRefs.current[index] = [];
+                      if (!inputRefs.current[index])
+                        inputRefs.current[index] = [];
                       inputRefs.current[index][5] = el;
                     }}
                     className="col-span-2 bg-white border-none outline-none placeholder:text-gray-400 w-full"
@@ -721,8 +785,9 @@ function Purchasetransaction() {
                   // { label: " ($/KG)", value: "0" },
                   {
                     label: "Total Deductions",
-                    value: `₹ ${totalDeduction ? totalDeduction.toFixed(2) : 0
-                      }`,
+                    value: `₹ ${
+                      totalDeduction ? totalDeduction.toFixed(2) : 0
+                    }`,
                   },
                 ].map((label, idx) => (
                   <div
@@ -743,8 +808,21 @@ function Purchasetransaction() {
 
               <div className="flex flex-wrap gap-8">
                 {[
-                  { label: "Advance Deduction", value: "0" },
-                  { label: "Advance Amount", value: "0" },
+                  {
+                    label: "Advance Deduction",
+                    value: selectedSupplier
+                      ? `${deductedAmount ?? 0}`
+                      : "Select a supplier",
+                    prefix: "₹",
+                  },
+                  {
+                    label: "Advance Amount",
+                    value: selectedSupplier
+                      ? advanceLoading
+                        ? "Loading.."
+                        : `₹ ${advanceAmount ? advanceAmount?.toFixed(2) : 0}`
+                      : "select a supplier",
+                  },
                   {
                     label: "Net Payable",
                     value:
@@ -760,21 +838,56 @@ function Purchasetransaction() {
                   >
                     <label className="min-w-44 text-slate-500 text-xl">
                       {item.label}
+                      <br />
+                      {item.label === "Advance Deduction" && (
+                        <span
+                          className={`flex justify-end items-center ${
+                            isAdvanceDeductionChecked
+                              ? "text-slate-500"
+                              : "text-slate-400 "
+                          }`}
+                        >
+                          Deduct
+                          <input
+                            type="checkbox"
+                            checked={isAdvanceDeductionChecked}
+                            onChange={() =>
+                              setIsAdvanceDeductionChecked(
+                                !isAdvanceDeductionChecked
+                              )
+                            }
+                            className="ml-2 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded cursor-pointer"
+                          />
+                        </span>
+                      )}
                     </label>
+
                     <div className="w-full md:w-80 px-6 py-4 bg-gray-50 rounded-xl flex items-center gap-2">
                       {item.prefix && (
                         <span className="text-indigo-950 font-bold">
                           {item.prefix}
                         </span>
                       )}
-                      <span
-                        className={`text-xl ${item.label === "Net Payable"
+                      <input
+                        type="text"
+                        value={item.value}
+                        onChange={(e) => {
+                          if (item.label === "Advance Deduction") {
+                            setDeductedAmount(e.target.value);
+                          }
+                        }}
+                        readOnly={
+                          !(
+                            item.label === "Advance Deduction" &&
+                            selectedSupplier
+                          )
+                        }
+                        className={`text-xl bg-gray-50 outline-none w-full ${
+                          item.label === "Net Payable"
                             ? "text-indigo-950 font-bold"
                             : "text-gray-400"
-                          }`}
-                      >
-                        {item.value}
-                      </span>
+                        }`}
+                      />
                     </div>
                   </div>
                 ))}
@@ -786,13 +899,13 @@ function Purchasetransaction() {
                     Save
                   </button>
                   <button
-                    className=" text-[#4079ED] px-6 py-2 rounded border border-[#4079ED] bg-blue-50"
+                    className=" text-[#4667aa] px-6 py-2 rounded border border-[#4079ED] bg-blue-50"
                     onClick={() => handleSubmit(true)}
                   >
                     Print
                   </button>
                   <button
-                   className=" text-red-500 px-6 py-2 rounded border border-red-500 bg-red-50"
+                    className=" text-red-500 px-6 py-2 rounded border border-red-500 bg-red-50"
                     onClick={() => {
                       // You can clear the form or reset states here
                       setItems([
@@ -812,7 +925,7 @@ function Purchasetransaction() {
                       setDateOfPurchase("");
                     }}
                   >
-                 Clear
+                    Clear
                   </button>
                 </div>
               </div>

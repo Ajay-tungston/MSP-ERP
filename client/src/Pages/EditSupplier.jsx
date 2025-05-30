@@ -183,18 +183,7 @@ const EditSupplier = ({ supplierId, setEditPopup, fetchSuppliers }) => {
             />
           </div> */}
 
-          {/* Advance Deducted */}
-          
-          {/* <div className="flex items-center">
-            <label className="w-[172px] text-[#737791]">Advance Deducted</label>
-            <input
-              type="number"
-              name="advanceDeducted"
-              value={formData.advanceDeducted}
-              onChange={handleChange}
-              className="w-full sm:w-[350px] px-6 py-4 bg-gray-50 rounded-xl outline-none"
-            />
-          </div> */}
+         
 
           {/* Commission */}
           <div className="flex items-center">
@@ -219,6 +208,18 @@ const EditSupplier = ({ supplierId, setEditPopup, fetchSuppliers }) => {
               className="w-full sm:w-[350px] px-6 py-4 bg-gray-50 rounded-xl outline-none"
             />
           </div>
+           {/* Advance Deducted */}
+          
+         <div className="flex items-center">
+            <label className="w-[172px] text-[#737791]">Advance Deducted</label>
+            <input
+              type="number"
+              name="advanceDeducted"
+              value={formData.advanceDeducted}
+              onChange={handleChange}
+              className="w-full sm:w-[350px] px-6 py-4 bg-gray-50 rounded-xl outline-none"
+            />
+          </div> 
         </form>
 
         {/* Footer */}

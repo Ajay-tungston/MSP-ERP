@@ -4,7 +4,7 @@ import useAxiosPrivate from "../hooks/useAxiosPrivate";
 import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom";
 
-function AddSupplier({setPopup,fetchSuppliers}) {
+function AddSupplier({ setPopup, fetchSuppliers }) {
   const axiosPrivate = useAxiosPrivate();
   const navigate = useNavigate();
   // const safeOnClose = typeof onClose === "function" ? onClose : () => {};
@@ -18,7 +18,7 @@ function AddSupplier({setPopup,fetchSuppliers}) {
     advance: "",
     advanceDeducted: "",
     commission: "",
-    marketFee:""
+    marketFee: "",
   });
 
   // State to manage errors
@@ -90,12 +90,11 @@ function AddSupplier({setPopup,fetchSuppliers}) {
     if (!formData.marketFee.trim()) {
       newErrors.marketFee = "Market Fee is required.";
     }
-    
+
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
-    
 
     try {
       const response = await axiosPrivate.post("/admin/supplier/add", formData);
@@ -109,7 +108,7 @@ function AddSupplier({setPopup,fetchSuppliers}) {
           advance: "",
           advanceDeducted: "",
           commission: "",
-          marketFee:""
+          marketFee: "",
         });
         setResponseError("");
         Swal.fire({
@@ -117,7 +116,7 @@ function AddSupplier({setPopup,fetchSuppliers}) {
           icon: "success",
           draggable: true,
         });
-        fetchSuppliers()
+        fetchSuppliers();
         setPopup(false); // Navigate after successful submission
       }
     } catch (error) {
@@ -145,34 +144,32 @@ function AddSupplier({setPopup,fetchSuppliers}) {
       advance: "",
       advanceDeducted: "",
       commission: "",
-      marketFee:""
+      marketFee: "",
     });
     setErrors({
       supplierCode: "",
       supplierName: "",
       phone: "",
-     commission:"",
-     marketFee:"",
+      commission: "",
+      marketFee: "",
       requiredFields: "",
     });
     setSameAsPhone(false);
     setResponseError("");
-     setPopup(false);
+    setPopup(false);
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 ">
       <div className="w-full sm:w-[640px] lg:w-[1000px] xl:w-[1200px] bg-white rounded-[24px] p-8 sm:p-10 shadow-xl relative">
-
-
         {/* Header */}
         <div className="flex justify-between items-center pb-4 border-b border-gray-300">
-        <button
-          onClick={() => navigate("/suppliers")}
-          className="text-[#151d48] text-[24px] sm:text-[28px] md:text-[32px] font-bold font-['Urbanist'] leading-[44.80px] hover:opacity-80 transition-opacity text-left"
-        >
-          Add New Supplier
-        </button>
+          <button
+            onClick={() => navigate("/suppliers")}
+            className="text-[#151d48] text-[24px] sm:text-[28px] md:text-[32px] font-bold font-['Urbanist'] leading-[44.80px] hover:opacity-80 transition-opacity text-left"
+          >
+            Add New Supplier
+          </button>
           <button onClick={handleCancel}>
             <XCircleIcon className="w-6 h-6 text-gray-500 hover:text-red-500" />
           </button>
@@ -180,9 +177,7 @@ function AddSupplier({setPopup,fetchSuppliers}) {
 
         {/* Server-response error */}
         {responseError && (
-          <p className="mt-4 text-red-500 font-['Urbanist']">
-            {responseError}
-          </p>
+          <p className="mt-4 text-red-500 font-['Urbanist']">{responseError}</p>
         )}
 
         {/* Form */}
@@ -314,8 +309,53 @@ function AddSupplier({setPopup,fetchSuppliers}) {
             />
           </div> */}
 
+          {/* Commission */}
+          <div className="flex flex-col">
+            {errors.commission && (
+              <p className="text-red-500 mb-1">{errors.commission}</p>
+            )}
+            <div className="flex items-center">
+              <label className="w-[172px] text-[#737791]">
+                Commission <span className="text-red-500">*</span>
+              </label>
+              <input
+                name="commission"
+                type="number"
+                placeholder="0%"
+                value={formData.commission}
+                onChange={handleChange}
+                className={`w-full sm:w-[350px] px-6 py-4 bg-gray-50 rounded-xl outline-none ${
+                  errors.commission ? "border border-red-500" : ""
+                }`}
+              />
+            </div>
+          </div>
+
+          {/* marketfee */}
+          <div className="flex flex-col">
+            {errors.marketFee && (
+              <p className="text-red-500 mb-1">{errors.marketFee}</p>
+            )}
+            <div className="flex items-center">
+              <label className="w-[172px] text-[#737791]" htmlFor="marketFee">
+                Market Fee <span className="text-red-500">*</span>
+              </label>
+              <input
+                id="marketFee"
+                name="marketFee"
+                placeholder="for 1 box"
+                type="number"
+                className={`w-full sm:w-[350px] px-6 py-4 bg-gray-50 rounded-xl outline-none ${
+                  errors.marketFee ? "border border-red-500" : ""
+                }`}
+                value={formData.marketFee}
+                onChange={handleChange}
+              />
+            </div>
+          </div>
+          
           {/* Advance Deducted */}
-          {/* <div className="flex items-center">
+           <div className="flex items-center">
             <label className="w-[172px] text-[#737791]">
               Advance Deducted
             </label>
@@ -326,57 +366,7 @@ function AddSupplier({setPopup,fetchSuppliers}) {
               onChange={handleChange}
               className="w-full sm:w-[350px] px-6 py-4 bg-gray-50 rounded-xl outline-none"
             />
-          </div> */}
-
-          {/* Commission */}
-          <div className="flex flex-col">
-  {errors.commission && (
-    <p className="text-red-500 mb-1">{errors.commission}</p>
-  )}
-  <div className="flex items-center">
-    <label className="w-[172px] text-[#737791]">
-      Commission <span className="text-red-500">*</span>
-    </label>
-    <input
-      name="commission"
-      type="text"
-      placeholder="0%"
-      value={formData.commission}
-      onChange={handleChange}
-      className={`w-full sm:w-[350px] px-6 py-4 bg-gray-50 rounded-xl outline-none ${
-        errors.commission ? "border border-red-500" : ""
-      }`}
-    />
-  </div>
-</div>
-
-
-  {/* marketfee */}
-<div className="flex flex-col">
-  {errors.marketFee && (
-    <p className="text-red-500 mb-1">{errors.marketFee}</p>
-  )}
-  <div className="flex items-center">
-    <label
-      className="w-[172px] text-[#737791]"
-      htmlFor="marketFee"
-    >
-      Market Fee <span className="text-red-500">*</span>
-    </label>
-    <input
-      id="marketFee"
-      name="marketFee"
-      placeholder="for 1 box"
-      type="number"
-      className={`w-full sm:w-[350px] px-6 py-4 bg-gray-50 rounded-xl outline-none ${
-        errors.marketFee ? "border border-red-500" : ""
-      }`}
-      value={formData.marketFee}
-      onChange={handleChange}
-    />
-  </div>
-</div>
-
+          </div>
 
           {/* Required-fields error */}
           {errors.requiredFields && (
@@ -396,20 +386,16 @@ function AddSupplier({setPopup,fetchSuppliers}) {
             Cancel
           </button>
           <button
-            
             className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
             onClick={handleSubmit}
           >
             <PlusCircleIcon className="w-5 h-5" />
             Save
           </button>
-
-    
-
         </div>
       </div>
     </div>
   );
-};
+}
 
 export default AddSupplier;

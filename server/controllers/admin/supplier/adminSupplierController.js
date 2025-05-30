@@ -226,7 +226,7 @@ const getSupplierList = async (req, res) => {
         }
       : {};
     const suppliers = await Supplier.find(query).select(
-      "supplierName supplierCode commission marketFee address whatsapp"
+      "supplierName supplierCode commission marketFee address whatsapp advanceDeducted"
     );
     return res.status(200).json(suppliers);
   } catch (error) {
@@ -256,6 +256,7 @@ const updateSupplier = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
 const getSingleSupplier = async (req, res) => {
   const { id } = req.params;
 
@@ -272,6 +273,60 @@ const getSingleSupplier = async (req, res) => {
   }
 };
 
+const getSupplierAdvance = async (req, res) => {
+  try {
+    const supplierId  = req.params.id;
+
+    if (!supplierId) {
+      return res.status(400).json({ message: "Supplier ID is required." });
+    }
+
+    const supplier = await Supplier.findById(supplierId);
+    if (!supplier) {
+      return res.status(404).json({ message: "Supplier not found." });
+    }
+
+    const purchases = await PurchaseEntry.find({ supplier: supplierId }).lean();
+    const payments = await Payment.find({
+      supplier: supplierId,
+      paymentType: { $in: ["PaymentOut", "PaymentIn"] },
+      category: "supplier",
+    }).lean();
+
+    // let balance = supplier.openingBalance || 0;
+    let balance =0;
+
+    // Add purchases (increase what we owe)
+    purchases.forEach((purchase) => {
+      balance += purchase.netTotalAmount;
+    });
+
+    // Apply payments
+    payments.forEach((payment) => {
+      if (payment.paymentType === "PaymentOut") {
+        balance -= payment.amount; // We paid the supplier
+      } else if (payment.paymentType === "PaymentIn") {
+        balance += payment.amount; // Supplier returned money
+      }
+    });
+
+    let advanceAmount = 0;
+    if (balance < 0) {
+      advanceAmount = Math.abs(balance);
+    }
+
+    res.json({
+      supplierId,
+      supplierName: supplier.supplierName,
+      advanceAmount: Number(advanceAmount.toFixed(2)),
+      status: advanceAmount > 0 ? "Advance Given" : "No Advance",
+    });
+  } catch (err) {
+    console.error("Error in getSupplierAdvance:", err);
+    res.status(500).json({ message: "Failed to fetch supplier advance." });
+  }
+};
+
 
 module.exports = {
   addNewSupplier,
@@ -280,4 +335,5 @@ module.exports = {
   getSupplierList,
   updateSupplier,
   getSingleSupplier,
+  getSupplierAdvance
 };

@@ -47,13 +47,13 @@ import EditEmployee from "./Pages/EditEmployee";
 import EditItem from "./Pages/EditItem";
 import EditSupplier from "./Pages/EditSupplier";
 import Lender from "./Pages/Lender";
-
+import DailySalesReport from "./Pages/DailySalesReport";
 import AddPickup from "./Pages/AddPickup";
 import Report from "./Pages/Report";
 import Vehicle from "./Pages/Vehicle";
 import ErrorBoundary from "./Components/ErrorBoundary";
 import NotFound from "./Pages/NotFound";
-
+import CustomerReports from "./Pages/CustomerReports";
 function App() {
   return (
     <>
@@ -104,7 +104,8 @@ function App() {
                   path="/localsales-report"
                   element={<LocalsalesReport />}
                 />
-
+                   <Route path="/customer-reports" element={<CustomerReports />} />
+              <Route path="/dailysales" element={<DailySalesReport />} />
               <Route path="/trail" element={<TrialBalance />} />
               <Route path="/individualsales" element={<IndividualSales />} />
               <Route path="/vehicle" element={<Vehicle />} />

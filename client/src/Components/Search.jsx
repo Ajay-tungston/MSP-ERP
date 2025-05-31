@@ -38,7 +38,8 @@ const userName = localStorage.getItem("userName")
     "/paymentout":"Transaction",
     "/vehicle":"Vehicle",
     "/report":"Vehicle",
-    
+    "/dailysales":"Reports",
+    "/customer-reports":"Reports"
  
   };          
   const pageTitle = routeTitles[location.pathname] || "Page";

@@ -796,6 +796,7 @@ const getAllCustomerSalesByDate = async (req, res) => {
     res.json({
       date,
       customers: allCustomersSales,
+      totalCustomers: allCustomersSales.length,
     });
   } catch (error) {
     console.error("Error fetching all customer sales report:", error);

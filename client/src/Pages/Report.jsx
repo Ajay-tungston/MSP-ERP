@@ -65,7 +65,7 @@ function VehicleReport() {
   };
 
   return (
-    <div className="p-6 bg-white rounded-3xl  shadow-md">
+    <div className="p-6 bg-white rounded-3xl  shadow-md h-full">
       {/* Breadcrumbs */}
       <div className="flex items-center text-md text-[#737791] mb-1">
         Vehicle

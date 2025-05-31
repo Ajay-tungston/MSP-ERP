@@ -148,7 +148,7 @@ const CustomerReport = () => {
 
       <div className="p-4">
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200 text-sm">
+          <table className="min-w-full divide-y divide-gray-200 text-lg">
             <thead className="bg-[#F9FAFB] text-left text-gray-700 font-semibold">
               <tr>
                 <th className="p-4">Date</th>

@@ -105,10 +105,10 @@ const EditCustomerPage = ({customerId,setEditPopup,fetchCustomersDebounced}) => 
             {/* Form */}
             <div className="grid grid-cols-2 gap-x-20 gap-y-6 mt-6 text-[#05004e] text-xl">
               {/* No. */}
-              <div className="flex items-center">
+              {/* <div className="flex items-center">
                 <label className="w-[172px] text-[#737791]">No.</label>
                 <span className="font-bold">Auto Generated</span>
-              </div>
+              </div> */}
     
               {/* Customer Name */}
               <div className="flex items-center">
@@ -126,7 +126,7 @@ const EditCustomerPage = ({customerId,setEditPopup,fetchCustomersDebounced}) => 
     
               {/* Address */}
               <div className="flex items-center">
-                <label className="w-[172px] text-[#737791]">Address</label>
+                <label className="w-[172px] text-[#737791]">Address<span className="text-red-500">*</span></label>
                 <input
                   type="text"
                   value={formData.address}

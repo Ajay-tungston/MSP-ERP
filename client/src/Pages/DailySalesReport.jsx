@@ -109,7 +109,7 @@ setTotalCustomers(response.data?.totalCustomers || 0);
       <div className="bg-white mt-6 overflow-x-auto">
         <table className="w-full border-collapse text-gray-900">
           <thead>
-            <tr className="text-left text-gray-900 font-bold border-b-2 border-gray-200 bg-[#F9FAFB]">
+            <tr className="text-left text-lg text-gray-900 font-bold border-b-2 border-gray-200 bg-[#F9FAFB]">
               <th className="p-3">No.</th>
               <th className="p-3">Customer Name</th>
               <th className="p-3">Qty (Box)</th>
@@ -129,7 +129,7 @@ setTotalCustomers(response.data?.totalCustomers || 0);
               salesData.map((cust, index) => {
                 const { totalBox, totalKg } = calculateQuantities(cust.items || []);
                 return (
-                  <tr key={cust.customerId} className="border-b border-gray-200 hover:bg-gray-50 bg-white">
+                  <tr key={cust.customerId} className="border-b border-gray-200 hover:bg-gray-50 bg-white text-xl">
                     <td className="p-3">{index + 1}</td>
                     <td className="p-3">{cust.customerName}</td>
                     <td className="p-3">{totalBox.toFixed(2)}</td>

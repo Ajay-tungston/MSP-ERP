@@ -2,7 +2,8 @@ const validator = require("validator");
 const Customer = require("../../../models/Customer"); // Import your Customer model
 const getNextCounterNumber = require("../../../utils/counter");
 const Payment = require("../../../models/Payment")
-const SalesEntry= require("../../../models/SalesEntry")
+const SalesEntry= require("../../../models/SalesEntry");
+const { default: mongoose } = require("mongoose");
 const addNewCustomer = async (req, res) => {
   try {
     const {
@@ -306,9 +307,138 @@ const getSingleCustomer = async (req, res) => {
 };
 
 
+const getCustomerReport = async (req, res) => {
+  try {
+    const { customerId, startDate, endDate } = req.query;
+
+    if (!customerId || !startDate || !endDate) {
+      return res.status(400).json({ message: "customerId, startDate, and endDate are required" });
+    }
+
+    const customerObjectId = new mongoose.Types.ObjectId(customerId);
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    end.setHours(23, 59, 59, 999); // include entire end day
+
+    // 1. Get total previous sales
+    const previousSales = await SalesEntry.aggregate([
+      {
+        $match: {
+          dateOfSale: { $lt: start },
+          "customers.customer": customerObjectId,
+        },
+      },
+      { $unwind: "$customers" },
+      { $match: { "customers.customer": customerObjectId } },
+      {
+        $group: {
+          _id: null,
+          total: { $sum: "$customers.totalAmount" },
+        },
+      },
+    ]);
+    const previousSalesTotal = previousSales[0]?.total || 0;
+
+    // 2. Get total previous payments
+    const previousPayments = await Payment.aggregate([
+      {
+        $match: {
+          customer: customerObjectId,
+          category: "customer",
+          date: { $lt: start },
+        },
+      },
+      {
+        $group: {
+          _id: "$paymentType",
+          total: { $sum: "$amount" },
+        },
+      },
+    ]);
+
+    let paymentInBefore = 0;
+    let paymentOutBefore = 0;
+    previousPayments.forEach(p => {
+      if (p._id === "PaymentIn") paymentInBefore = p.total;
+      if (p._id === "PaymentOut") paymentOutBefore = p.total;
+    });
+
+    // 3. Get opening balance from Customer model
+    const customerDoc = await Customer.findById(customerObjectId).select("openingBalance");
+    const openingBalance = customerDoc?.openingBalance || 0;
+
+    // 4. Calculate final previous balance
+    const previousBalance = openingBalance + (previousSalesTotal - paymentInBefore + paymentOutBefore);
+
+    // 5. Get current period sales (combine customer duplicates per bill)
+    const sales = await SalesEntry.aggregate([
+      {
+        $match: {
+          dateOfSale: { $gte: start, $lte: end },
+          "customers.customer": customerObjectId,
+        },
+      },
+      { $unwind: "$customers" },
+      { $match: { "customers.customer": customerObjectId } },
+      {
+        $group: {
+          _id: "$transactionNumber",
+          dateOfSale: { $first: "$dateOfSale" },
+          totalAmount: { $sum: "$customers.totalAmount" },
+          discount: { $sum: "$customers.discount" },
+          items: { $push: "$customers.items" },
+        },
+      },
+      {
+        $project: {
+          transactionNumber: "$_id",
+          dateOfSale: 1,
+          totalAmount: 1,
+          discount: 1,
+          items: {
+            $reduce: {
+              input: "$items",
+              initialValue: [],
+              in: { $concatArrays: ["$$value", "$$this"] },
+            },
+          },
+        },
+      },
+      { $sort: { dateOfSale: 1 } },
+    ]);
+
+    // 6. Get current period payments
+    const payments = await Payment.find({
+      customer: customerObjectId,
+      category: "customer",
+      date: { $gte: start, $lte: end },
+    }).select("amount paymentType paymentMode date note");
+
+    const paymentIn = payments.filter(p => p.paymentType === "PaymentIn");
+    const paymentOut = payments.filter(p => p.paymentType === "PaymentOut");
+
+    // 7. Return response
+    return res.status(200).json({
+      customerId,
+      dateRange: { startDate, endDate },
+      openingBalance,
+      previousBalance,
+      sales,
+      paymentIn,
+      paymentOut,
+    });
+  } catch (err) {
+    console.error("Error in getCustomerReport:", err);
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+};
+
+
+
 module.exports = { addNewCustomer,
   getAllCustomers, 
   deleteCustomer,
   getCustomerNames,
   updateCustomer,
-  getSingleCustomer };
+  getSingleCustomer,getCustomerReport
+ };

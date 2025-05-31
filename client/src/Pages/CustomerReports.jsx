@@ -132,14 +132,12 @@ const CustomerReport = () => {
             <input
               type="date"
               value="2025-05-01"
-              disabled
               className="px-3 py-2 rounded-md border border-gray-200 text-gray-500 bg-gray-100"
             />
             <span className="text-gray-500">to</span>
             <input
               type="date"
               value="2025-05-31"
-              disabled
               className="px-3 py-2 rounded-md border border-gray-200 text-gray-500 bg-gray-100"
             />
           </div>

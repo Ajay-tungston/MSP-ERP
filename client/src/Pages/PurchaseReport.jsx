@@ -114,9 +114,9 @@ function PurchaseReport() {
   
 
      
-      <div className="p-6 shadow-md bg-white h-auto rounded-t-3xl px-6 pt-6 pb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mt-5">
+      <div className="p-6 shadow-md bg-white h-auto rounded-t-3xl px-6 pt-6 pb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
           <div className="flex flex-col">
-            <div className="flex items-center gap-2 text-slate-500 text-md font-normal">
+            <div className="flex items-center gap-2 text-[#737791] text-md font-normal">
               <span>Reports</span>
               <FaChevronRight />
               <span>Purchase Report</span>

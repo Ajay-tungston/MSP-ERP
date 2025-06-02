@@ -3,6 +3,7 @@ import {
   PieChart,
   Pie,
   Cell,
+  Area,
   ResponsiveContainer,
   BarChart,
   Bar,
@@ -11,6 +12,8 @@ import {
   Tooltip,
   LabelList,
   Label,
+  AreaChart,
+  CartesianGrid,
 } from "recharts";
 import useAxiosPrivate from "../hooks/useAxiosPrivate";
 import { format } from "date-fns";
@@ -22,6 +25,8 @@ const FinancialDashboard = () => {
   const axiosInstance = useAxiosPrivate();
   const [expenseData, setExpenseData] = useState([]);
   const [totalExpense, setTotalExpense] = useState(0);
+    const [kpiData, setKpiData] = useState([]);
+    console.log(kpiData)
   const [selectedMonth, setSelectedMonth] = useState(() => {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(
@@ -54,13 +59,11 @@ const FinancialDashboard = () => {
     const fetchExpenseSummary = async () => {
       try {
         const res = await axiosInstance.get(
-          `/admin/trialBalance/expense${
-            selectedMonth ? `?month=${selectedMonth}` : ""
+          `/admin/trialBalance/expense${selectedMonth ? `?month=${selectedMonth}` : ""
           }`
         );
         const res2 = await axiosInstance.get(
-          `/admin/trialBalance/coolie${
-            selectedMonth ? `?month=${selectedMonth}` : ""
+          `/admin/trialBalance/coolie${selectedMonth ? `?month=${selectedMonth}` : ""
           }`
         );
 
@@ -86,6 +89,32 @@ const FinancialDashboard = () => {
     { name: "Purchases", value: summary.purchases },
     { name: "Expenses", value: summary.expenses },
   ];
+
+  const todayData = [
+    { name: "Sales", value: summary.sales },
+    { name: "Purchases", value: summary.purchases },
+
+  ];
+  
+
+
+useEffect(() => {
+  const fetchKpi = async () => {
+  console.log("fhdcbhufb")
+
+    try {
+      const res = await axiosInstance.get("/admin/transaction/today");
+      console.log("📊 KPI DATA:", res.data); // 👈 Check format!
+      setKpiData(res.data);
+    } catch (err) {
+      console.error("❌ KPI Fetch Error:", err);
+    }
+  };
+
+  fetchKpi();
+}, []);
+
+
 
   useEffect(() => {
     const fetchRecentTransactions = async () => {
@@ -209,7 +238,7 @@ const FinancialDashboard = () => {
         <div className="bg-white rounded-2xl shadow-[0_0_10px_rgba(0,0,0,0.10)] p-6  w-full col-span-4">
           {/* <div className="flex justify-between items-center mb-4 w-full overflow-visible"> */}
           <h2 className="text-2xl font-semibold text-[#05004E] mb-4">
-          Overview
+            Overview
           </h2>
           <hr className="mb-4 border-gray-200" />
 
@@ -263,7 +292,7 @@ const FinancialDashboard = () => {
           <hr className="mb-4 border-gray-200" />
 
           {(expenseData[0]?.value || 0) > 0 ||
-          (expenseData[1]?.value || 0) > 0 ? (
+            (expenseData[1]?.value || 0) > 0 ? (
             <ResponsiveContainer
               width="100%"
               height={300}
@@ -334,58 +363,78 @@ const FinancialDashboard = () => {
         </div>
 
         {/* Recent Transactions */}
-        <div className="bg-white shadow-[0_0_10px_rgba(0,0,0,0.10)] rounded-2xl p-6 col-span-3">
+        {/* <div className="bg-white shadow-[0_0_10px_rgba(0,0,0,0.10)] rounded-2xl p-6 col-span-3">
           <h2 className="text-2xl font-semibold text-[#05004E] mb-4">
             Recent Transactions
           </h2>
           <hr className="mb-2 border-gray-200" />
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-gray-700">
-              <thead className=" text-gray-600 border-b border-b-gray-200 ">
-                <tr>
-                  <th className="py-2 px-4 text-base font-medium text-gray-800">
-                    Date
-                  </th>
-                  <th className="py-2 px-4 text-base font-medium text-gray-800">
-                    Module
-                  </th>
-                  <th className="py-2 px-4 text-base font-medium text-gray-800">
-                    Description
-                  </th>
-                  <th className="py-2 px-4 text-base font-medium text-gray-800 ">
-                    Amount
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {recentTransactions?.length > 0 ? (
-                  recentTransactions?.map((tx, idx) => (
-                    <tr key={idx} className=" even:bg-gray-100">
-                      <td className="py-2 px-4">
-                        {format(new Date(tx.date), "dd/MM/yyyy")}
-                      </td>
-                      <td className="py-2 px-4">{tx.module}</td>
-                      <td className="py-2 px-4">{tx.desc}</td>
-                      <td className="py-2 px-4 ">₹{tx.amount.toFixed(2)}</td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="5" className="text-center text-gray-500 py-6">
-                      No data available
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+          <div className="overflow-x-auto ">
+            <ResponsiveContainer width="100%" height={300}>
+              <AreaChart data={kpiData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="day" />
+                <YAxis />
+                <Tooltip />
+                <Area
+                  type="monotone"
+                  dataKey="NetReceivables"
+                  stroke="#4F46E5"
+                  fill="#4F46E5"
+                  fillOpacity={0.2}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="TotalCommission"
+                  stroke="#FACC15"
+                  fill="#FACC15"
+                  fillOpacity={0.1}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
           </div>
-        </div>
+        </div> */}
+
+
+        <div className="bg-white shadow-[0_0_10px_rgba(0,0,0,0.10)] rounded-2xl p-6 col-span-3">
+          <h2 className="text-2xl font-semibold text-[#05004E] mb-4">
+            Today's Purchase & Sales
+          </h2>
+          <hr className="mb-2 border-gray-200" />
+
+         {Array.isArray(kpiData) && kpiData.length > 0 ? (
+  <ResponsiveContainer width="100%" height={300}>
+    <AreaChart data={kpiData}>
+      <CartesianGrid strokeDasharray="3 3" />
+      <XAxis dataKey="label" />
+      <YAxis />
+      <Tooltip />
+      <Area
+        type="monotone"
+        dataKey="Purchase"
+        stroke="#4F46E5"
+        fill="#4F46E5"
+        fillOpacity={0.2}
+      />
+      <Area
+        type="monotone"
+        dataKey="Sales"
+        stroke="#FACC15"
+        fill="#FACC15"
+        fillOpacity={0.1}
+      />
+    </AreaChart>
+  </ResponsiveContainer>
+) : (
+  <p>Loading data...</p>
+)}
+
+</div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-4">
-        {/* KPI Chart */}
-        {/* <div className="bg-white shadow-[0_0_10px_rgba(0,0,0,0.15)] rounded-2xl p-4">
+      {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-4"> */}
+      {/* KPI Chart */}
+      {/* <div className="bg-white shadow-[0_0_10px_rgba(0,0,0,0.15)] rounded-2xl p-4">
           <h2 className="text-xl font-bold text-gray-800 mb-4">Key Performance Indicators</h2>
           <ResponsiveContainer width="100%" height={200}>
             <AreaChart data={kpiData}>
@@ -419,8 +468,8 @@ const FinancialDashboard = () => {
           </div>
         </div> */}
 
-        {/* Sales Summary */}
-        {/* <div className="bg-white shadow-xl rounded-2xl p-4">
+      {/* Sales Summary */}
+      {/* <div className="bg-white shadow-xl rounded-2xl p-4">
           <h2 className="text-xl font-bold text-gray-800 mb-4">Sales Summary</h2>
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={salesData} barSize={50}>
@@ -435,8 +484,8 @@ const FinancialDashboard = () => {
           </ResponsiveContainer>
         </div> */}
 
-        {/* Purchase Summary */}
-        {/* <div className="bg-white shadow-xl rounded-2xl p-4">
+      {/* Purchase Summary */}
+      {/* <div className="bg-white shadow-xl rounded-2xl p-4">
           <h2 className="text-xl font-bold text-gray-800 mb-4">Purchase Summary</h2>
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={purchaseData} barSize={50}>
@@ -450,7 +499,7 @@ const FinancialDashboard = () => {
             </BarChart>
           </ResponsiveContainer>
         </div> */}
-      </div>
+      {/* </div> */}
     </div>
   );
 };

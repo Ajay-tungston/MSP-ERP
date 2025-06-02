@@ -63,7 +63,7 @@ const CustomerReport = () => {
   };
 
   return (
-    <div className="p-6 bg-white rounded-md shadow-sm h-full">
+    <div className="p-6 bg-white rounded-3xl shadow-sm h-full">
       <div className="flex justify-between items-start flex-wrap gap-4">
         <div>
           <p className="text-md text-[#737791] flex items-center gap-1">
@@ -128,19 +128,21 @@ const CustomerReport = () => {
             Print
           </button>
           <div className="flex items-center gap-2">
-            <label className="mb-1">Date Range</label>
+              <span className="text-[#73779166] text-xl">Date Range</span>
             <input
               type="date"
               value="2025-05-01"
               disabled
-              className="px-3 py-2 rounded-md border border-gray-200 text-gray-500 bg-gray-100"
+                placeholder="DD/MM/YYYY"
+              className="px-3 py-2 rounded-md border border-gray-200  bg-gray-100"
             />
-            <span className="text-gray-500">to</span>
+               <span className=" text-[#73779166] text-xl">To</span>
             <input
               type="date"
               value="2025-05-31"
               disabled
-              className="px-3 py-2 rounded-md border border-gray-200 text-gray-500 bg-gray-100"
+                placeholder="DD/MM/YYYY"
+              className="px-3 py-2 rounded-md border border-gray-200  bg-gray-100"
             />
           </div>
         </div>

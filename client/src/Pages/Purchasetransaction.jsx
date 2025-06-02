@@ -239,7 +239,7 @@ function Purchasetransaction() {
       return;
     }
 
-    if (deductedAmount > advanceAmount) {
+    if (isAdvanceDeductionChecked&&deductedAmount > advanceAmount) {
       Swal.fire({
         title: "Invalid Deduction Amount",
         text: `You cannot deduct more than the available advance of ₹${advanceAmount?.toFixed(
@@ -250,7 +250,7 @@ function Purchasetransaction() {
       });
       return
     } 
-     if (deductedAmount > (totalPrice - totalDeduction)) {
+     if (isAdvanceDeductionChecked&&deductedAmount > (totalPrice - totalDeduction)) {
       Swal.fire({
         title: "Invalid Deduction Amount",
         text: `You cannot deduct more than the total bill amount of ₹${(totalPrice - totalDeduction)?.toFixed(

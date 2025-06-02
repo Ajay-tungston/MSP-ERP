@@ -1,8 +1,8 @@
 const validator = require("validator");
 const Customer = require("../../../models/Customer"); // Import your Customer model
 const getNextCounterNumber = require("../../../utils/counter");
-const Payment = require("../../../models/Payment")
-const SalesEntry= require("../../../models/SalesEntry");
+const Payment = require("../../../models/Payment");
+const SalesEntry = require("../../../models/SalesEntry");
 const { default: mongoose } = require("mongoose");
 const addNewCustomer = async (req, res) => {
   try {
@@ -15,13 +15,13 @@ const addNewCustomer = async (req, res) => {
       discountApplied = "manual",
       openingBalance = 0,
       routeCustomer = false,
-      routeAddress = ""
+      routeAddress = "",
     } = req.body;
 
     // Validate required fields
     if (!customerName || !phone || !address) {
       return res.status(400).json({
-        message: "Customer name, phone, and address are required."
+        message: "Customer name, phone, and address are required.",
       });
     }
 
@@ -32,74 +32,84 @@ const addNewCustomer = async (req, res) => {
       customerName.length > 100
     ) {
       return res.status(400).json({
-        message: "Customer name should be alphanumeric and between 3 to 100 characters long."
+        message:
+          "Customer name should be alphanumeric and between 3 to 100 characters long.",
       });
     }
 
     // Validate address
     if (address.length < 5 || address.length > 200) {
-      return res.status(400).json({ 
-        message: "Address must be between 5 and 200 characters long." 
+      return res.status(400).json({
+        message: "Address must be between 5 and 200 characters long.",
       });
     }
 
     // Validate phone number
-    if (!validator.isMobilePhone(phone, "any", { strictMode: false }) || phone.length !== 10) {
-      return res.status(400).json({ 
-        message: "Invalid phone number format. It must be 10 digits." 
+    if (
+      !validator.isMobilePhone(phone, "any", { strictMode: false }) ||
+      phone.length !== 10
+    ) {
+      return res.status(400).json({
+        message: "Invalid phone number format. It must be 10 digits.",
       });
     }
 
     // Validate WhatsApp number
-    if (whatsapp && (!validator.isMobilePhone(whatsapp, "any", { strictMode: false }) || whatsapp.length !== 10)) {
-      return res.status(400).json({ 
-        message: "Invalid WhatsApp number format. It must be 10 digits." 
+    if (
+      whatsapp &&
+      (!validator.isMobilePhone(whatsapp, "any", { strictMode: false }) ||
+        whatsapp.length !== 10)
+    ) {
+      return res.status(400).json({
+        message: "Invalid WhatsApp number format. It must be 10 digits.",
       });
     }
 
     // Validate discount
     if (isNaN(discount) || discount < 0 || discount > 100) {
-      return res.status(400).json({ 
-        message: "Discount must be a valid number between 0 and 100." 
+      return res.status(400).json({
+        message: "Discount must be a valid number between 0 and 100.",
       });
     }
 
     // Validate discountApplied
     if (!["weekly", "monthly", "yearly", "manual"].includes(discountApplied)) {
-      return res.status(400).json({ 
-        message: "Invalid discount applied type. Must be 'weekly', 'monthly', 'yearly', or 'manual'." 
+      return res.status(400).json({
+        message:
+          "Invalid discount applied type. Must be 'weekly', 'monthly', 'yearly', or 'manual'.",
       });
     }
 
     // Validate openingBalance
     if (isNaN(openingBalance)) {
-      return res.status(400).json({ 
-        message: "Opening balance must be a valid number." 
+      return res.status(400).json({
+        message: "Opening balance must be a valid number.",
       });
     }
 
     // Validate routeCustomer and routeAddress
     if (typeof routeCustomer !== "boolean") {
-      return res.status(400).json({ 
-        message: "routeCustomer must be true or false." 
+      return res.status(400).json({
+        message: "routeCustomer must be true or false.",
       });
     }
 
     if (routeCustomer && !routeAddress.trim()) {
-      return res.status(400).json({ 
-        message: "Route address is required for route customers." 
+      return res.status(400).json({
+        message: "Route address is required for route customers.",
       });
     }
 
     // Check for existing customer (by name or phone)
-    const existingCustomer = await Customer.findOne({ 
-      $or: [{ customerName }, { phone }] 
+    const existingCustomer = await Customer.findOne({
+      $or: [{ customerName }, { phone }],
     });
-    
+
     if (existingCustomer) {
-      const field = existingCustomer.customerName === customerName ? "name" : "phone";
-      return res.status(400).json({ 
-        message: `Customer with this ${field} already exists.` 
+      const field =
+        existingCustomer.customerName === customerName ? "name" : "phone";
+      return res.status(400).json({
+        message: `Customer with this ${field} already exists.`,
       });
     }
 
@@ -113,28 +123,28 @@ const addNewCustomer = async (req, res) => {
       discountApplied,
       openingBalance,
       routeCustomer,
-      routeAddress: routeCustomer ? routeAddress : ""
+      routeAddress: routeCustomer ? routeAddress : "",
     });
 
     await newCustomer.save();
 
     return res.status(201).json({
       message: "Customer added successfully",
-      customer: newCustomer
+      customer: newCustomer,
     });
-
   } catch (error) {
     console.error("Error adding customer:", error);
-    
-    if (error.code === 11000) { // MongoDB duplicate key error
-      return res.status(400).json({ 
-        message: "A customer with this phone number already exists." 
+
+    if (error.code === 11000) {
+      // MongoDB duplicate key error
+      return res.status(400).json({
+        message: "A customer with this phone number already exists.",
       });
     }
-    
-    return res.status(500).json({ 
+
+    return res.status(500).json({
       message: "Internal Server Error",
-      error: process.env.NODE_ENV === "development" ? error.message : undefined
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
     });
   }
 };
@@ -159,7 +169,10 @@ const getAllCustomers = async (req, res) => {
 
     const totalPromise = Customer.countDocuments(searchQuery);
 
-    const [customers, total] = await Promise.all([customersPromise, totalPromise]);
+    const [customers, total] = await Promise.all([
+      customersPromise,
+      totalPromise,
+    ]);
 
     const totalPages = Math.ceil(total / limit);
 
@@ -175,12 +188,9 @@ const getAllCustomers = async (req, res) => {
   }
 };
 
+// Make sure to export all controllers as needed
 
-
- // Make sure to export all controllers as needed
-
-
- const deleteCustomer = async (req, res) => {
+const deleteCustomer = async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -209,13 +219,12 @@ const getAllCustomers = async (req, res) => {
     // No references found, safe to delete
     await Customer.findByIdAndDelete(id);
     return res.status(200).json({ message: "Customer deleted successfully." });
-
   } catch (error) {
     console.error("Error deleting customer:", error);
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
-const escapeRegex = (string) => string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const escapeRegex = (string) => string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 const getCustomerNames = async (req, res) => {
   try {
@@ -223,48 +232,53 @@ const getCustomerNames = async (req, res) => {
     const filter = {};
 
     if (q && q.trim()) {
-      filter.customerName = { 
-        $regex: escapeRegex(q.trim()), 
-        $options: "i" 
+      filter.customerName = {
+        $regex: escapeRegex(q.trim()),
+        $options: "i",
       };
     }
 
-    const customers = await Customer.find(filter, "customerName address whatsapp openingBalance")
+    const customers = await Customer.find(
+      filter,
+      "customerName address whatsapp openingBalance"
+    )
       .sort({ customerName: 1 })
       .limit(100) // Prevent excessive results
       .lean() // Faster if just converting to objects
       .exec();
-    const customerList = customers.map(c => ({
+    const customerList = customers.map((c) => ({
       id: c._id,
       name: c.customerName,
-      address:c.address,
-      whatsapp:c?.whatsapp,
-      openingBalance:c.openingBalance
+      address: c.address,
+      whatsapp: c?.whatsapp,
+      openingBalance: c.openingBalance,
     }));
-    return res.status(200).json({ 
+    return res.status(200).json({
       success: true,
       count: customerList.length,
-      customers: customerList 
+      customers: customerList,
     });
   } catch (error) {
     console.error("Error fetching customer names:", error);
-    return res.status(500).json({ 
+    return res.status(500).json({
       success: false,
       message: "Internal Server Error",
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
     });
   }
 };
 
 const updateCustomer = async (req, res) => {
   try {
-    const { customerId } = req.params;  // Get the customerId from the request parameters
-    const updates = req.body;  // Get the updates from the request body
+    const { customerId } = req.params; // Get the customerId from the request parameters
+    const updates = req.body; // Get the updates from the request body
 
     // Make sure the customer exists before attempting to update
     const customer = await Customer.findById(customerId);
     if (!customer) {
-      return res.status(404).json({ message: `Customer with ID ${customerId} not found` });
+      return res
+        .status(404)
+        .json({ message: `Customer with ID ${customerId} not found` });
     }
 
     // Apply the updates to the customer document
@@ -277,13 +291,14 @@ const updateCustomer = async (req, res) => {
     // Save the updated customer document to the database
     await customer.save();
 
-    return res.status(200).json({ message: 'Customer updated successfully', customer });
+    return res
+      .status(200)
+      .json({ message: "Customer updated successfully", customer });
   } catch (error) {
-    console.error('Error updating customer:', error);
-    return res.status(500).json({ message: 'Internal Server Error' });
+    console.error("Error updating customer:", error);
+    return res.status(500).json({ message: "Internal Server Error" });
   }
 };
-
 
 const getSingleCustomer = async (req, res) => {
   try {
@@ -291,7 +306,9 @@ const getSingleCustomer = async (req, res) => {
 
     // Validate customerId
     if (!customerId || customerId === "undefined") {
-      return res.status(400).json({ message: "Invalid or missing customer ID" });
+      return res
+        .status(400)
+        .json({ message: "Invalid or missing customer ID" });
     }
 
     const customer = await Customer.findById(customerId);
@@ -306,21 +323,22 @@ const getSingleCustomer = async (req, res) => {
   }
 };
 
-
 const getCustomerReport = async (req, res) => {
   try {
-    const { customerId, startDate, endDate } = req.query;
+    const { customerId, startDate, endDate, page = 1, limit = 20 } = req.query;
 
     if (!customerId || !startDate || !endDate) {
-      return res.status(400).json({ message: "customerId, startDate, and endDate are required" });
+      return res
+        .status(400)
+        .json({ message: "customerId, startDate, and endDate are required" });
     }
 
     const customerObjectId = new mongoose.Types.ObjectId(customerId);
     const start = new Date(startDate);
     const end = new Date(endDate);
-    end.setHours(23, 59, 59, 999); // include entire end day
+    end.setHours(23, 59, 59, 999);
 
-    // 1. Get total previous sales
+    // --- 1. Previous Sales Total ---
     const previousSales = await SalesEntry.aggregate([
       {
         $match: {
@@ -339,7 +357,7 @@ const getCustomerReport = async (req, res) => {
     ]);
     const previousSalesTotal = previousSales[0]?.total || 0;
 
-    // 2. Get total previous payments
+    // --- 2. Previous Payments Total ---
     const previousPayments = await Payment.aggregate([
       {
         $match: {
@@ -355,23 +373,29 @@ const getCustomerReport = async (req, res) => {
         },
       },
     ]);
-
-    let paymentInBefore = 0;
-    let paymentOutBefore = 0;
-    previousPayments.forEach(p => {
+    let paymentInBefore = 0,
+      paymentOutBefore = 0;
+    previousPayments.forEach((p) => {
       if (p._id === "PaymentIn") paymentInBefore = p.total;
       if (p._id === "PaymentOut") paymentOutBefore = p.total;
     });
 
-    // 3. Get opening balance from Customer model
-    const customerDoc = await Customer.findById(customerObjectId).select("openingBalance");
+    // --- 3. Opening Balance ---
+    const customerDoc = await Customer.findById(customerObjectId).select(
+      "openingBalance"
+    );
     const openingBalance = customerDoc?.openingBalance || 0;
+    const previousBalance =
+      openingBalance +
+      (previousSalesTotal - paymentInBefore + paymentOutBefore);
 
-    // 4. Calculate final previous balance
-    const previousBalance = openingBalance + (previousSalesTotal - paymentInBefore + paymentOutBefore);
+    // --- 4. Pagination Setup ---
+    const pageNum = parseInt(page);
+    const pageLimit = parseInt(limit);
+    const skip = (pageNum - 1) * pageLimit;
 
-    // 5. Get current period sales (combine customer duplicates per bill)
-    const sales = await SalesEntry.aggregate([
+    // --- 5. Count Total Items (Before Pagination) ---
+    const countResult = await SalesEntry.aggregate([
       {
         $match: {
           dateOfSale: { $gte: start, $lte: end },
@@ -381,51 +405,153 @@ const getCustomerReport = async (req, res) => {
       { $unwind: "$customers" },
       { $match: { "customers.customer": customerObjectId } },
       {
-        $group: {
-          _id: "$transactionNumber",
-          dateOfSale: { $first: "$dateOfSale" },
-          totalAmount: { $sum: "$customers.totalAmount" },
-          discount: { $sum: "$customers.discount" },
-          items: { $push: "$customers.items" },
+        $project: {
+          date: "$dateOfSale",
         },
       },
       {
-        $project: {
-          transactionNumber: "$_id",
-          dateOfSale: 1,
-          totalAmount: 1,
-          discount: 1,
-          items: {
-            $reduce: {
-              input: "$items",
-              initialValue: [],
-              in: { $concatArrays: ["$$value", "$$this"] },
+        $unionWith: {
+          coll: "payments",
+          pipeline: [
+            {
+              $match: {
+                customer: customerObjectId,
+                category: "customer",
+                date: { $gte: start, $lte: end },
+              },
             },
-          },
+            {
+              $project: {
+                date: "$date",
+              },
+            },
+          ],
         },
       },
-      { $sort: { dateOfSale: 1 } },
+      {
+        $count: "total",
+      },
+    ]);
+    const totalItems = countResult[0]?.total || 0;
+    const totalPages = Math.ceil(totalItems / pageLimit);
+
+    // --- 6. Paginated Timeline ---
+    const timeline = await SalesEntry.aggregate([
+      {
+        $match: {
+          dateOfSale: { $gte: start, $lte: end },
+          "customers.customer": customerObjectId,
+        },
+      },
+      { $unwind: "$customers" },
+      { $match: { "customers.customer": customerObjectId } },
+      {
+        $project: {
+          _id: 0,
+          type: { $literal: "sale" },
+          transactionNumber: "$transactionNumber",
+          date: "$dateOfSale",
+          amount: "$customers.totalAmount",
+          discount: "$customers.discount",
+          items: "$customers.items",
+        },
+      },
+      {
+        $unionWith: {
+          coll: "payments",
+          pipeline: [
+            {
+              $match: {
+                customer: customerObjectId,
+                category: "customer",
+                date: { $gte: start, $lte: end },
+              },
+            },
+            {
+              $project: {
+                _id: 0,
+                type: { $literal: "payment" },
+                date: "$date",
+                amount: "$amount",
+                paymentType: "$paymentType",
+                paymentMode: "$paymentMode",
+                note: "$note",
+              },
+            },
+          ],
+        },
+      },
+      { $sort: { date: 1 } },
+      { $skip: skip },
+      { $limit: pageLimit },
+    ]);
+    // --- 7. Summary for Entire Range (not paginated) ---
+    const summaryResults = await SalesEntry.aggregate([
+      {
+        $match: {
+          dateOfSale: { $gte: start, $lte: end },
+          "customers.customer": customerObjectId,
+        },
+      },
+      { $unwind: "$customers" },
+      { $match: { "customers.customer": customerObjectId } },
+      {
+        $project: {
+          amount: "$customers.totalAmount",
+        },
+      },
+      {
+        $unionWith: {
+          coll: "payments",
+          pipeline: [
+            {
+              $match: {
+                customer: customerObjectId,
+                category: "customer",
+                date: { $gte: start, $lte: end },
+              },
+            },
+            {
+              $project: {
+                amount: "$amount",
+                paymentType: "$paymentType",
+              },
+            },
+          ],
+        },
+      },
     ]);
 
-    // 6. Get current period payments
-    const payments = await Payment.find({
-      customer: customerObjectId,
-      category: "customer",
-      date: { $gte: start, $lte: end },
-    }).select("amount paymentType paymentMode date note");
+    let totalDebit = 0;
+    let totalCredit = 0;
 
-    const paymentIn = payments.filter(p => p.paymentType === "PaymentIn");
-    const paymentOut = payments.filter(p => p.paymentType === "PaymentOut");
+    summaryResults.forEach((entry) => {
+      if (entry.paymentType === "PaymentOut") {
+        totalDebit += entry.amount;
+      } else if (entry.paymentType === "PaymentIn") {
+        totalCredit += entry.amount;
+      } else {
+        totalDebit += entry.amount; // for sales
+      }
+    });
 
-    // 7. Return response
+    const closingBalance = previousBalance + totalDebit - totalCredit;
+
     return res.status(200).json({
       customerId,
       dateRange: { startDate, endDate },
       openingBalance,
       previousBalance,
-      sales,
-      paymentIn,
-      paymentOut,
+      timeline, // paginated
+      page: pageNum,
+      limit: pageLimit,
+      totalItems,
+      totalPages,
+      summaryTotals: {
+        totalDebit,
+        totalCredit,
+        closingBalance,
+      },
     });
   } catch (err) {
     console.error("Error in getCustomerReport:", err);
@@ -433,12 +559,12 @@ const getCustomerReport = async (req, res) => {
   }
 };
 
-
-
-module.exports = { addNewCustomer,
-  getAllCustomers, 
+module.exports = {
+  addNewCustomer,
+  getAllCustomers,
   deleteCustomer,
   getCustomerNames,
   updateCustomer,
-  getSingleCustomer,getCustomerReport
- };
+  getSingleCustomer,
+  getCustomerReport,
+};

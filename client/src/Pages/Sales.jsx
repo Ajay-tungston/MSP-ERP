@@ -117,8 +117,8 @@ const Sales = () => {
   // Then modify your customers filtering logic:
   const filteredCustomers = searchTerm
     ? customers.filter((c) =>
-      c.label.toLowerCase().includes(searchTerm.toLowerCase())
-    )
+        c.label.toLowerCase().includes(searchTerm.toLowerCase())
+      )
     : customers;
 
   // Sort the filtered results alphabetically
@@ -179,13 +179,13 @@ const Sales = () => {
       rs.map((r, i) =>
         i === idx
           ? {
-            ...r,
-            itemName: pi.item.itemName,
-            itemId: pi.item._id,
-            unitPrice: pi.unitPrice,
-            quantityType: pi.quantityType,
-            remainingQuantity: pi.remainingQuantity,
-          }
+              ...r,
+              itemName: pi.item.itemName,
+              itemId: pi.item._id,
+              unitPrice: pi.unitPrice,
+              quantityType: pi.quantityType,
+              remainingQuantity: pi.remainingQuantity,
+            }
           : r
       )
     );
@@ -383,151 +383,34 @@ const Sales = () => {
     });
   };
 
-  const purchaseTotal = purchase?.items?.reduce((total, item) => {
-    const remainingQuantity = item.remainingQuantity ?? 0;
-    const unitPrice = parseFloat(item.unitPrice ?? 0);
-    const quantityType = item.quantityType;
-  
-    if (quantityType === "kg" || quantityType === "box") {
-      return total + remainingQuantity * unitPrice;
-    }
-    return total;
-  }, 0) || 0;
-  
+  const purchaseTotal =
+    purchase?.items?.reduce((total, item) => {
+      const remainingQuantity = item.remainingQuantity ?? 0;
+      const unitPrice = parseFloat(item.unitPrice ?? 0);
+      const quantityType = item.quantityType;
+
+      if (quantityType === "kg" || quantityType === "box") {
+        return total + remainingQuantity * unitPrice;
+      }
+      return total;
+    }, 0) || 0;
+
   const salesDifference = netPayable - purchaseTotal;
-  
+
   // Conditionally set text color
-  const differenceTextColor = salesDifference < 0 ? "text-red-600" : "text-blue-600";
-  
+  const differenceTextColor =
+    salesDifference < 0 ? "text-red-600" : "text-blue-600";
 
   return (
     <div className="w-full min-h-screen bg-[#EEEEEE] p-6 md:p-8">
       <div className="flex flex-col lg:flex-row gap-6">
-        {/* <div className="w-[665px] h-full left-[1200px] top-[148px] absolute bg-[#c92222]">
-          <div className="w-[653px] left-[6px] top-[176px] absolute inline-flex flex-col justify-start items-start">
-            <div className="self-stretch px-2.5 py-4 bg-[#6fbe08] outline-[0.20px] outline-offset-[-0.20px] outline-slate-600/40 inline-flex justify-start items-center gap-[5px]">
-              <div className="flex-1 max-w-16 justify-center text-indigo-950 text-sm font-bold font-['Urbanist'] tracking-wide">
-                No.
-              </div>
-              <div className="min-w-32 justify-center text-indigo-950 text-sm font-bold font-['Urbanist'] tracking-wide">
-                Item name
-              </div>
-              <div className="min-w-32 justify-center text-indigo-950 text-sm font-bold font-['Urbanist'] tracking-wide">
-                Qty (KG)
-              </div>
-              <div className="min-w-32 justify-center text-indigo-950 text-sm font-bold font-['Urbanist'] tracking-wide">
-                Qty (Box)
-              </div>
-              <div className="min-w-32 justify-center text-indigo-950 text-sm font-bold font-['Urbanist'] tracking-wide">
-                Unit Price
-              </div>
-              <div className="w-20 justify-center text-indigo-950 text-sm font-bold font-['Urbanist'] tracking-wide">
-                Total
-              </div>
-            </div>
-
-            {purchase?.items?.map((item, index) => {
-              const remainingQuantity = item.remainingQuantity ?? 0; // Use remainingQuantity field
-              const unitPrice = parseFloat(item.unitPrice ?? 0);
-              const quantityType = item.quantityType; // Assuming it can be "kg" or "box"
-
-              // Calculate the total based on the quantity type
-              let total = 0;
-              if (quantityType === "kg") {
-                total = remainingQuantity * unitPrice;
-              } else if (quantityType === "box") {
-                total = remainingQuantity * unitPrice;
-              }
-
-              return (
-                <div
-                  key={item._id}
-                  className="self-stretch px-2.5 py-4 bg-white outline-[0.20px] outline-offset-[-0.20px] outline-slate-600/40 inline-flex justify-start items-center gap-[5px]"
-                >
-                  <div className="min-w-8 justify-center text-indigo-950 text-sm font-normal font-['Urbanist'] tracking-wide">
-                    {index + 1}
-                  </div>
-                  <div className="min-w-32 justify-center text-indigo-950 text-sm font-normal font-['Urbanist'] tracking-wide">
-                    {item?.item?.itemName || "-"}
-                  </div>
-                  <div className="min-w-32 justify-center text-indigo-950 text-sm font-normal font-['Urbanist'] tracking-wide">
-                    {quantityType === "kg" ? remainingQuantity + " kg" : "-"}
-                  </div>
-                  <div className="min-w-32 justify-center text-indigo-950 text-sm font-normal font-['Urbanist'] tracking-wide">
-                    {quantityType === "box" ? remainingQuantity + " box" : "-"}
-                  </div>
-                  <div className="min-w-32 justify-center text-indigo-950 text-sm font-normal font-['Urbanist'] tracking-wide">
-                    ₹{unitPrice.toFixed(2)}
-                  </div>
-                  <div className="w-20 justify-center text-indigo-950 text-sm font-normal font-['Urbanist'] tracking-wide">
-                    ₹{total.toFixed(2)}
-                  </div>
-                </div>
-              );
-            })}
-
-            {/* Add total row */}
-        {/* <div className="self-stretch px-2.5 py-4 bg-white outline-[0.20px] outline-offset-[-0.20px] outline-slate-600/40 inline-flex justify-start items-center gap-[5px]">
-          <div className="min-w-8 justify-center text-indigo-950 text-sm font-bold font-['Urbanist'] tracking-wide">
-        
-          </div>
-          <div className="min-w-32 justify-center text-indigo-950 text-sm font-bold font-['Urbanist'] tracking-wide">
-   
-          </div>
-          <div className="min-w-32 justify-center text-indigo-950 text-sm font-bold font-['Urbanist'] tracking-wide">
-        
-          </div>
-          <div className="min-w-32 justify-center text-indigo-950 text-sm font-bold font-['Urbanist'] tracking-wide">
-          
-          </div>
-          <div className="min-w-32 justify-center text-indigo-950 text-sm font-bold font-['Urbanist'] tracking-wide">
-            Total
-          </div>
-          <div className="w-20 justify-center text-indigo-950 text-sm font-bold font-['Urbanist'] tracking-wide">
-            ₹
-            {purchase?.items
-              ?.reduce((total, item) => {
-                const remainingQuantity = item.remainingQuantity ?? 0;
-                const unitPrice = parseFloat(item.unitPrice ?? 0);
-                const quantityType = item.quantityType;
-
-                if (quantityType === "kg") {
-                  return total + remainingQuantity * unitPrice;
-                } else if (quantityType === "box") {
-                  return total + remainingQuantity * unitPrice;
-                }
-                return total;
-              }, 0)
-              .toFixed(2)}
-          </div>
-        </div> */}
-        {/* </div> */}
-
-        {/* <div className="w-96 pb-6 left-[6px] top-[122px] absolute border-b border-none inline-flex justify-start items-center gap-2.5">
-            <div className="justify-start text-indigo-950 text-3xl font-bold font-['Urbanist'] leading-10">
-              Item list
-            </div>
-          </div> */}
-        {/* </div> */}
-        {/* <div className="w-[865px] h-full left-[329px] top-[148px] absolute bg-[#270909] shadow-[0px_4px_5.800000190734863px_0px_rgba(0,0,0,0.25)] overflow-y-scroll "> */}
-        {/* <div className="w-[782px] left-[44px] top-[80px] absolute inline-flex flex-col justify-start items-start gap-2.5">
-            <div className="inline-flex justify-start items-center gap-3">
-              <div className="justify-start text-slate-500 text-xl font-normal font-['Urbanist']">
-                Transactions <span></span>Sales
-              </div>
-            </div>
-            <div className="self-stretch flex flex-col justify-start items-start gap-11">
-              <div className="self-stretch pb-12 border-b border-zinc-100 inline-flex justify-start items-center gap-2.5">
-                <div className="justify-start text-indigo-950 text-3xl font-bold font-['Urbanist'] leading-10">
-                  Sales register
-                </div>
-              </div>
-            </div>
-          </div> */}
         <div className="w-full lg:w-2/3 bg-white rounded-xl p-6 shadow">
-          <div className="text-slate-500 text-xl mb-2">Transactions &gt; Sales</div>
-          <h2 className="text-3xl font-bold text-indigo-950 mb-6">Sales register</h2>
-
+          <div className="text-slate-500 text-xl mb-2">
+            Transactions &gt; Sales
+          </div>
+          <h2 className="text-3xl font-bold text-indigo-950 mb-6">
+            Sales register
+          </h2>
 
           {/* </div> */}
           {/* <div className="w-[851px] left-[337px] top-[324px] absolute inline-flex flex-col justify-start items-start bf gap-3.5">
@@ -539,7 +422,7 @@ const Sales = () => {
                   <th className="p-3">No.</th>
                   <th className="p-3">Customer</th>
                   <th className="p-3">Item name</th>
-                  <th className="p-3">Qty (KG)</th>
+                  <th className="p-3">Qty</th>
                   <th className="p-3">Unit</th>
                   <th className="p-3">Unit Price</th>
                   <th className="p-3">Subtotal</th>
@@ -548,13 +431,8 @@ const Sales = () => {
               </thead>
               <tbody>
                 {rows.map((row, index) => (
-                  <tr
-                    key={index}
-                    className="border-t "
-                  >
-                    <td className="p-3 ">
-                      {String(row.id).padStart(3, "0")}
-                    </td>
+                  <tr key={index} className="border-t ">
+                    <td className="p-3 ">{String(row.id).padStart(3, "0")}</td>
                     <td
                       ref={(el) => (wrapperRefs.current[index] = el)}
                       className="p-3  relative"
@@ -570,8 +448,9 @@ const Sales = () => {
                         <span>{row.customerLabel || "Select"}</span>
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
-                          className={`h-4 w-4 text-slate-500 ml-2 transition-transform ${activeCustomerIndex === index ? "rotate-180" : ""
-                            }`}
+                          className={`h-4 w-4 text-slate-500 ml-2 transition-transform ${
+                            activeCustomerIndex === index ? "rotate-180" : ""
+                          }`}
                           fill="none"
                           viewBox="0 0 24 24"
                           stroke="currentColor"
@@ -587,9 +466,7 @@ const Sales = () => {
 
                       {activeCustomerIndex === index && (
                         <div
-
                           className="absolute top-12 left-0 right-0 bg-[#fff] rounded shadow-lg z-10"
-
                           onKeyDown={(e) => handleKeyDown(e, index)}
                           tabIndex={0}
                         >
@@ -619,7 +496,10 @@ const Sales = () => {
                               ref={inputRef}
                             />
                           </div>
-                          <ul className="max-h-40 overflow-y-auto" ref={resultsListRef}>
+                          <ul
+                            className="max-h-40 overflow-y-auto"
+                            ref={resultsListRef}
+                          >
                             {loading ? (
                               <li className="flex items-center gap-2 px-2 py-2 text-gray-500 text-sm">
                                 <svg
@@ -653,10 +533,11 @@ const Sales = () => {
                                 <li
                                   key={c.value}
                                   onClick={() => handleCustomerSelect(index, c)}
-                                  className={`px-2 py-1 cursor-pointer transition-colors duration-200 ${selectedCustomerIndex === i
-                                    ? "bg-orange-600 text-white"
-                                    : "hover:bg-orange-600 hover:text-white"
-                                    }`}
+                                  className={`px-2 py-1 cursor-pointer transition-colors duration-200 ${
+                                    selectedCustomerIndex === i
+                                      ? "bg-orange-600 text-white"
+                                      : "hover:bg-orange-600 hover:text-white"
+                                  }`}
                                 >
                                   {c.label}
                                 </li>
@@ -667,13 +548,12 @@ const Sales = () => {
                       )}
                     </td>
 
-
-
-
                     <td className="p-3">
                       <select
                         value={row.itemName}
-                        onChange={(e) => handleItemChange(index, e.target.value)}
+                        onChange={(e) =>
+                          handleItemChange(index, e.target.value)
+                        }
                         className="w-20 bg-transparent outline-none text-slate-900 "
                       >
                         <option value="" disabled>
@@ -681,7 +561,10 @@ const Sales = () => {
                         </option>
                         {purchase?.items
                           ?.map((item) => item.item.itemName)
-                          .filter((value, index, self) => self.indexOf(value) === index)
+                          .filter(
+                            (value, index, self) =>
+                              self.indexOf(value) === index
+                          )
                           .map((itemName, idx) => (
                             <option key={idx} value={itemName}>
                               {itemName}
@@ -701,10 +584,13 @@ const Sales = () => {
                               : undefined
                           }
                           value={row.quantity}
-                          onChange={(e) => handleQuantityChange(index, e.target.value)}
+                          onChange={(e) =>
+                            handleQuantityChange(index, e.target.value)
+                          }
                           disabled={!row.itemId}
-                          className={`p-3 outline-none  ${row.error ? "border-b border-red-500" : ""
-                            }`}
+                          className={`p-3 outline-none  ${
+                            row.error ? "border-b border-red-500" : ""
+                          }`}
                         />
                         {row.error && (
                           <span className="text-red-500 text-xs mt-1 ">
@@ -717,7 +603,10 @@ const Sales = () => {
                       <select
                         value={row.quantityType}
                         onChange={(e) =>
-                          handleQuantityTypeChange(index, e.target.value.toLowerCase())
+                          handleQuantityTypeChange(
+                            index,
+                            e.target.value.toLowerCase()
+                          )
                         }
                         className="p-3"
                       >
@@ -741,7 +630,10 @@ const Sales = () => {
                       />
                     </td>
                     <td className="p-3">
-                      ₹{calculateSubtotal(row.quantity, row.unitPrice).toFixed(2)}
+                      ₹
+                      {calculateSubtotal(row.quantity, row.unitPrice).toFixed(
+                        2
+                      )}
                     </td>
                     <td className="p-3">
                       <TrashIcon
@@ -777,7 +669,6 @@ const Sales = () => {
             </div>
           </div>
 
-
           <div className="self-stretch flex flex-col justify-start items-end gap-8">
             <div className="self-stretch px-4 flex flex-col justify-start items-start gap-12">
               <div className="self-stretch inline-flex justify-between items-start flex-wrap content-start">
@@ -803,27 +694,28 @@ const Sales = () => {
                   </div>
                 </div>
                 <div className="w-94 flex justify-between items-center ">
-  <label
-    className="w-94 justify-start text-slate-600/40 text-xl font-normal font-['Urbanist']"
-    htmlFor="salesDifference"
-  >
-    Sales Difference
-  </label>
-  <div className="w-64 h-12 px-6 py-4 bg-gray-50 rounded-xl flex justify-start items-center">
-    <div className={`justify-start text-lg font-bold font-['Urbanist'] ${differenceTextColor}`}>
-      ₹
-    </div>
-    <input
-      type="text"
-      id="salesDifference"
-      name="salesDifference"
-      readOnly
-      value={salesDifference.toFixed(2)}
-      className={`pl-1 w-full bg-transparent outline-none text-lg font-bold font-['Urbanist'] ${differenceTextColor}`}
-    />
-  </div>
-</div>
-
+                  <label
+                    className="w-94 justify-start text-slate-600/40 text-xl font-normal font-['Urbanist']"
+                    htmlFor="salesDifference"
+                  >
+                    Sales Difference
+                  </label>
+                  <div className="w-64 h-12 px-6 py-4 bg-gray-50 rounded-xl flex justify-start items-center">
+                    <div
+                      className={`justify-start text-lg font-bold font-['Urbanist'] ${differenceTextColor}`}
+                    >
+                      ₹
+                    </div>
+                    <input
+                      type="text"
+                      id="salesDifference"
+                      name="salesDifference"
+                      readOnly
+                      value={salesDifference.toFixed(2)}
+                      className={`pl-1 w-full bg-transparent outline-none text-lg font-bold font-['Urbanist'] ${differenceTextColor}`}
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -851,7 +743,9 @@ const Sales = () => {
         </div>
         {/* Right Panel - Item List */}
         <div className="w-full lg:w-1/3 bg-white rounded-xl p-6 shadow">
-          <h3 className="text-2xl font-semibold text-indigo-950 mb-4">Item list</h3>
+          <h3 className="text-2xl font-semibold text-indigo-950 mb-4">
+            Item list
+          </h3>
 
           <div className="overflow-x-auto">
             <table className="w-full text-left border border-gray-200">
@@ -884,10 +778,14 @@ const Sales = () => {
                       <td className="p-3">{index + 1}</td>
                       <td className="p-3">{item?.item?.itemName || "-"}</td>
                       <td className="p-3">
-                        {quantityType === "kg" ? `${remainingQuantity} kg` : "-"}
+                        {quantityType === "kg"
+                          ? `${remainingQuantity} kg`
+                          : "-"}
                       </td>
                       <td className="p-3">
-                        {quantityType === "box" ? `${remainingQuantity} box` : "-"}
+                        {quantityType === "box"
+                          ? `${remainingQuantity} box`
+                          : "-"}
                       </td>
                       <td className="p-3">₹{unitPrice.toFixed(2)}</td>
                       <td className="p-3">₹{total.toFixed(2)}</td>
@@ -919,7 +817,6 @@ const Sales = () => {
             </table>
           </div>
         </div>
-
       </div>
     </div>
     // </div>

@@ -196,16 +196,16 @@ function LocalsalesReport() {
                   <span className="text-gray-600 text-lg font-semibold">Previous</span>
                 </button>
                 <button
-                  className={`px-6 py-3 rounded-xl border ${currentPage === totalPages ? "opacity-30 cursor-not-allowed" : "hover:bg-gray-100"}`}
+                  className={`px-6 py-3 rounded-xl border border-gray-400 ${currentPage === totalPages ? " cursor-not-allowed" : "hover:bg-gray-100"}`}
                   onClick={handleNext}
                   disabled={currentPage === totalPages}
                 >
-                  <span className="text-blue-800 text-lg font-semibold">Next</span>
+                  <span className="text-blue-500 text-lg font-semibold">Next</span>
                 </button>
               </div>
             </div>
 
-            <div className="bg-[#F0FDFA] px-6 py-4 rounded-xl flex flex-wrap justify-between mt-8 border border-gray-200">
+            <div className="bg-[#F0FDFA] px-6 py-4  flex flex-wrap justify-between mt-8 border border-gray-200">
               Grand Total: ₹{garndTotal?.toFixed(2)}
             </div>
           </>

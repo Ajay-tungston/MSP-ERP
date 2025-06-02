@@ -426,7 +426,7 @@ useEffect(() => {
     </AreaChart>
   </ResponsiveContainer>
 ) : (
-  <p>Loading data...</p>
+  <p className="text-center text-gray-500 text-xl">Loading data...</p>
 )}
 
 </div>

@@ -635,73 +635,60 @@ function Purchasetransaction() {
 
                   {/* Quantity */}
                   {/* KG Input */}
-                  <input
-                    type="number"
-                    name="kg"
-                    value={item.kg}
-                    disabled={
-                      !itemList.some(
-                        (option) => option.itemName === item.name
-                      ) || !!item.box
-                    }
-                    onChange={(e) => {
-                      const updatedItems = [...items];
-                      updatedItems[index].kg = e.target.value;
-                      setItems(updatedItems);
-                    }}
-                    onKeyDown={(e) => handleKeyDown(e, index, 2)}
-                    ref={(el) => {
-                      if (!inputRefs.current[index])
-                        inputRefs.current[index] = [];
-                      inputRefs.current[index][2] = el;
-                    }}
-                    className="col-span-2 bg-white border-none outline-none placeholder:text-gray-400 w-full"
-                    placeholder="Qty(Kg)"
-                  />
+              <input
+  type="number"
+  name="kg"
+  value={item.kg}
+  disabled={
+    !itemList.some((option) => option.itemName === item.name) || !!item.box
+  }
+  onChange={(e) => handleInputChange(index, e)}
+  onKeyDown={(e) => handleKeyDown(e, index, 2)}
+  ref={(el) => {
+    if (!inputRefs.current[index]) inputRefs.current[index] = [];
+    inputRefs.current[index][2] = el;
+  }}
+  className="col-span-2 bg-white border-none outline-none placeholder:text-gray-400 w-full"
+  placeholder="Qty(Kg)"
+/>
 
                   {/* BOX Input */}
-                  <input
-                    type="number"
-                    name="box"
-                    value={item.box}
-                    disabled={
-                      !itemList.some(
-                        (option) => option.itemName === item.name
-                      ) || !!item.kg
-                    }
-                    onChange={(e) => {
-                      const updatedItems = [...items];
-                      updatedItems[index].box = e.target.value;
-                      setItems(updatedItems);
-                    }}
-                    onKeyDown={(e) => handleKeyDown(e, index, 3)}
-                    ref={(el) => {
-                      if (!inputRefs.current[index])
-                        inputRefs.current[index] = [];
-                      inputRefs.current[index][3] = el;
-                    }}
-                    className="col-span-2 bg-white border-none outline-none placeholder:text-gray-400 w-full"
-                    placeholder="Qty(Box)"
-                  />
+                 <input
+  type="number"
+  name="box"
+  value={item.box}
+  disabled={
+    !itemList.some((option) => option.itemName === item.name) || !!item.kg
+  }
+  onChange={(e) => handleInputChange(index, e)}
+  onKeyDown={(e) => handleKeyDown(e, index, 3)}
+  ref={(el) => {
+    if (!inputRefs.current[index]) inputRefs.current[index] = [];
+    inputRefs.current[index][3] = el;
+  }}
+  className="col-span-2 bg-white border-none outline-none placeholder:text-gray-400 w-full"
+  placeholder="Qty(Box)"
+/>
+
 
                   {/* Price */}
-                  <input
-                    type="number"
-                    name="price"
-                    disabled={
-                      !itemList.some((option) => option.itemName === item.name)
-                    }
-                    value={item.price}
-                    onChange={(e) => handleInputChange(index, e)}
-                    onKeyDown={(e) => handleKeyDown(e, index, 4)}
-                    ref={(el) => {
-                      if (!inputRefs.current[index])
-                        inputRefs.current[index] = [];
-                      inputRefs.current[index][4] = el;
-                    }}
-                    className="col-span-2 bg-white border-none outline-none placeholder:text-gray-400 w-full"
-                    placeholder="Unit Price"
-                  />
+                <input
+  type="number"
+  name="price"
+  value={item.price}
+  disabled={
+    !itemList.some((option) => option.itemName === item.name)
+  }
+  onChange={(e) => handleInputChange(index, e)}
+  onKeyDown={(e) => handleKeyDown(e, index, 4)}
+  ref={(el) => {
+    if (!inputRefs.current[index]) inputRefs.current[index] = [];
+    inputRefs.current[index][4] = el;
+  }}
+  className="col-span-2 bg-white border-none outline-none placeholder:text-gray-400 w-full"
+  placeholder="Unit Price"
+/>
+
 
                   {/* Total (Read Only) */}
                   <input

@@ -129,10 +129,10 @@ const AddEmployeeModal = ({ onClose ,setPopup,fetchEmployee}) => {
         {/* Form */}
         <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-x-20 gap-y-6 mt-6 text-[#05004e] text-xl">
           {/* No. */}
-          <div className="flex items-center">
+          {/* <div className="flex items-center">
             <label className="w-[172px] text-[#737791]">No.</label>
             <span className="font-bold">Auto Generated</span>
-          </div>
+          </div> */}
 
           {/* Employee Name */}
           <div className="flex flex-col">

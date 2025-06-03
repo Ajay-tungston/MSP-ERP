@@ -150,10 +150,10 @@ const EditEmployeeModal = ({ employeeId, setEditPopup,fetchEmployee }) => {
         {responseError && <p className="text-red-500 mt-4">{responseError}</p>}
 
         <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-x-20 gap-y-6 mt-6 text-[#05004e] text-xl">
-          <div className="flex items-center">
+          {/* <div className="flex items-center">
             <label className="w-[172px] text-[#737791]">No.</label>
             <span className="font-bold">Auto Generated</span>
-          </div>
+          </div> */}
 
           <div className="flex flex-col">
             {errors.employeeName && <p className="text-red-500 text-sm mb-2">{errors.employeeName}</p>}

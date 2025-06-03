@@ -85,7 +85,7 @@ const [search, setSearch] = useState("");
   };
   return (
     <>
-    <div className="p-4 rounded-lg shadow-sm bg-white  h-full">
+    <div className="p-4 rounded-3xl shadow-sm bg-white  h-full">
       {/* Breadcrumb */}
       <nav className="flex items-center gap-x-2 text-md text-[#737791] mb-4">
         <span>Transactions</span>
@@ -209,7 +209,7 @@ const [search, setSearch] = useState("");
             <button
               onClick={handlePrevious}
               disabled={currentPage === 1}
-              className={`px-4 py-2 border border-gray-300 rounded-lg ${
+              className={`px-6 py-3 border border-gray-300 rounded-lg text-gray-200${
                 currentPage === 1
                   ? "text-gray-300 cursor-not-allowed"
                   : "hover:bg-gray-100"
@@ -220,9 +220,9 @@ const [search, setSearch] = useState("");
             <button
               onClick={handleNext}
               disabled={currentPage === totalPages}
-              className={`px-4 py-2 border border-gray-300 rounded-lg text-[#4079ED]${
+              className={`px-6 py-3 border border-gray-300 rounded-lg text-blue-500 ${
                 currentPage === totalPages
-                  ? "cursor-not-allowed text-[#4079ED]"
+                  ? "cursor-not-allowed text-blue-500"
                   : "hover:bg-gray-100"
               }`}
             >

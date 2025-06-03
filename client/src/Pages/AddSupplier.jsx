@@ -186,10 +186,10 @@ function AddSupplier({ setPopup, fetchSuppliers }) {
           className="grid grid-cols-2 gap-x-20 gap-y-6 mt-6 text-[#05004e] text-xl font-['Urbanist']"
         >
           {/* No. */}
-          <div className="flex items-center">
+          {/* <div className="flex items-center">
             <label className="w-[172px] text-[#737791]">No.</label>
             <div className="font-bold">Auto Generated</div>
-          </div>
+          </div> */}
 
           {/* Supplier Code */}
           <div className="flex flex-col">

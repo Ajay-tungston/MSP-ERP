@@ -163,7 +163,7 @@ const TransactionTable = ({
 
         {/* Pagination Controls */}
         {!isLoading && transactionsWithBalance.length > 0 && (
-          <div className="flex justify-between items-center mt-4 text-sm text-gray-700">
+          <div className="flex justify-between items-center mt-4 text-gray-700">
             <div>
               Page {page} of {pagination.totalPages} 
               {pagination.totalTransactions && (
@@ -174,7 +174,7 @@ const TransactionTable = ({
               <button
                 onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
                 disabled={page === 1}
-                className={`px-4 py-2 border border-gray-300 rounded-lg 
+                className={`px-6 py-3 border border-gray-300 rounded-lg 
                  text-gray-300 cursor-not-allowed
                     hover:bg-gray-100
                 }`}
@@ -184,9 +184,9 @@ const TransactionTable = ({
               <button
                 onClick={() => setPage((prev) => Math.min(prev + 1, pagination.totalPages))}
                 disabled={page === pagination.totalPages}
-                className={`px-4 py-2 border border-gray-300 rounded-lg 
+                className={`px-6 py-3 border border-gray-300 rounded-lg 
               
-                  text-[#4079ED] cursor-not-allowed
+                  text-blue-500 cursor-not-allowed
                      hover:bg-gray-100
                 }`}
               >
@@ -198,6 +198,6 @@ const TransactionTable = ({
       </div>
     </div>
   );
-};
+};        
 
 export default TransactionTable;

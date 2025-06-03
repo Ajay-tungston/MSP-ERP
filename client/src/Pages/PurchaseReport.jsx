@@ -114,9 +114,9 @@ function PurchaseReport() {
   
 
      
-      <div className="p-6 shadow-md bg-white h-auto rounded-t-3xl px-6 pt-6 pb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mt-5">
+      <div className="p-6 shadow-md bg-white h-auto rounded-t-3xl px-6 pt-6 pb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
           <div className="flex flex-col">
-            <div className="flex items-center gap-2 text-slate-500 text-md font-normal">
+            <div className="flex items-center gap-2 text-[#737791] text-md font-normal">
               <span>Reports</span>
               <FaChevronRight />
               <span>Purchase Report</span>
@@ -228,11 +228,11 @@ function PurchaseReport() {
         </div>
    {/* Pagination */}
    {!noReports && (
-          <div className="w-full px-6 py-3 border-b border-gray-200 flex flex-wrap justify-between items-center text-xl font-['Urbanist'] ">
+          <div className="w-full px-6 py-3  flex flex-wrap justify-between items-center text-xl font-['Urbanist'] ">
             <div className="text-slate-900">Page {currentPage} of {totalPages}</div>
             <div className="flex gap-4">
               <button
-                className={`w-40 px-6 py-2 rounded-2xl outline outline-gray-300/30 ${
+                className={`px-6 py-3 rounded-xl outline outline-gray-300/30 ${
                   currentPage === 1 ? "text-gray-300 cursor-not-allowed" : "text-blue-500"
                 }`}
                 onClick={handlePrevious}
@@ -241,7 +241,7 @@ function PurchaseReport() {
                 Previous
               </button>
               <button
-                className={`w-40 px-6 py-2 rounded-2xl outline outline-gray-300/30 ${
+                className={` px-6 py-3 rounded-xl outline outline-gray-700/30 ${
                   currentPage === totalPages ? "text-gray-300 cursor-not-allowed" : "text-blue-500"
                 }`}
                 onClick={handleNext}

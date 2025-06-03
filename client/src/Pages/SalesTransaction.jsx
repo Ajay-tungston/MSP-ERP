@@ -173,13 +173,13 @@ const SalesRegister = () => {
           </tbody>
         </table>
       </div>
-      <div className="flex justify-between items-center mt-[73px] text-gray-600 ml-10 mr-30">
+      <div className="flex justify-between items-center mt-[73px] ml-10 mr-30">
         <span>Page {currentPage} of {totalPages}</span>
         <div className="flex space-x-2">
           <button
             onClick={handlePrevious}
             disabled={currentPage === 1}
-            className={`px-4 py-2 border border-gray-300 rounded-lg ${currentPage === 1
+            className={`px-6 py-3 border border-gray-300 rounded-lg text-gray-300 ${currentPage === 1
               ? "text-gray-300 cursor-not-allowed"
               : "hover:bg-gray-100"
               }`}
@@ -189,8 +189,8 @@ const SalesRegister = () => {
           <button
             onClick={handleNext}
             disabled={currentPage === totalPages}
-            className={`px-4 py-2 border border-gray-300 rounded-lg ${currentPage === totalPages
-              ? "text-[#4079ED] cursor-not-allowed"
+            className={`px-6 py-3 border border-gray-300 rounded-lg text-blue-500 ${currentPage === totalPages
+              ? "text-blue-500 cursor-not-allowed"
               : "hover:bg-gray-100"
               }`}
           >

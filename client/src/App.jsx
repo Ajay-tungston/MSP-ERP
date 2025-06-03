@@ -104,12 +104,12 @@ function App() {
                   path="/localsales-report"
                   element={<LocalsalesReport />}
                 />
-                   <Route path="/customer-reports" element={<CustomerReports />} />
-              <Route path="/dailysales" element={<DailySalesReport />} />
-              <Route path="/trail" element={<TrialBalance />} />
-              <Route path="/individualsales" element={<IndividualSales />} />
-              <Route path="/vehicle" element={<Vehicle />} />
-              <Route path="/report" element={<Report />} />
+                <Route path="/customer-reports" element={<CustomerReports />} />
+                <Route path="/dailysales" element={<DailySalesReport />} />
+                <Route path="/trail" element={<TrialBalance />} />
+                <Route path="/individualsales" element={<IndividualSales />} />
+                <Route path="/vehicle" element={<Vehicle />} />
+                <Route path="/report" element={<Report />} />
 
                 {/* <Route path='/whatsapp' element={<Whatsapp />} /> */}
 

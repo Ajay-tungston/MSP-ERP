@@ -8,11 +8,11 @@ const getRecentTransactions = async (req, res) => {
   try {
     const sales = await Sale.find().sort({ dateOfSale: -1 }).limit(2);
     const purchases = await Purchase.find().sort({ dateOfPurchase: -1 }).limit(2).populate("supplier");
-    const expenses = await Payment.find({category:"expense"}).populate("expense").sort({ date: -1 }).limit(2);
+    const expenses = await Payment.find({ category: "expense" }).populate("expense").sort({ date: -1 }).limit(2);
     const formattedSales = sales.map((s) => ({
       date: s.dateOfSale,
       module: "Sales",
-      desc: `bill no: ${s.transactionNumber}` ||  "--",
+      desc: `bill no: ${s.transactionNumber}` || "--",
       amount: s.totalAmount || 0,
     }));
 
@@ -124,4 +124,63 @@ const getExpenseSummary = async (req, res) => {
   }
 };
 
-  module.exports = {getRecentTransactions ,getNetProfit,getExpenseSummary};
+const generateTimeSlots = () => {
+  const slots = [];
+  for (let i = 0; i < 24; i += 3) {
+    const label = new Date(0, 0, 0, i).toLocaleTimeString("en-US", {
+      hour: "numeric",
+      hour12: true,
+    });
+    slots.push({ label, start: i, end: i + 3 });
+  }
+  return slots;
+};
+
+getTodayKPI = async (req, res) => {
+  try {
+    const now = new Date();
+    const todayStart = new Date(now.setHours(0, 0, 0, 0));
+    const tomorrowStart = new Date(todayStart);
+    tomorrowStart.setDate(todayStart.getDate() + 1);
+
+    const purchaseEntries = await Purchase.find({
+      dateOfPurchase: { $gte: todayStart, $lt: tomorrowStart },
+    });
+
+    const salesEntries = await Sale.find({
+      dateOfSale: { $gte: todayStart, $lt: tomorrowStart },
+    });
+
+    const slots = generateTimeSlots();
+    const kpiData = slots.map(({ label, start, end }) => {
+      const slotStart = new Date(todayStart);
+      slotStart.setHours(start, 0, 0, 0);
+      const slotEnd = new Date(todayStart);
+      slotEnd.setHours(end, 0, 0, 0);
+
+      const purchaseSum = purchaseEntries
+        .filter((p) => p.dateOfPurchase >= slotStart && p.dateOfPurchase < slotEnd)
+        .reduce((acc, cur) => acc + (cur.netTotalAmount || 0), 0);
+
+      const salesSum = salesEntries
+        .filter((s) => s.dateOfSale >= slotStart && s.dateOfSale < slotEnd)
+        .reduce((acc, cur) => acc + (cur.totalAmount || 0), 0);
+
+     return {
+    label,
+    Purchase: Number(purchaseSum.toFixed(2)),
+    Sales: Number(salesSum.toFixed(2)),
+  };
+});
+
+    // Add 12 AM again at end for smoother graph loop
+    kpiData.push({ ...kpiData[0] });
+
+    res.json(kpiData);
+  } catch (error) {
+    console.error("KPI Error:", error);
+    res.status(500).json({ message: "Server error", error });
+  }
+};
+
+module.exports = { getRecentTransactions, getNetProfit, getExpenseSummary, getTodayKPI };

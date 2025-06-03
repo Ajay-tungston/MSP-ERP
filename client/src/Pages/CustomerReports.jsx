@@ -215,14 +215,14 @@ const CustomerReport = () => {
             Print
           </button>
           <div className="flex items-center gap-2">
-            <label className="mb-1">Date Range</label>
+              <span className="text-[#73779166] text-xl">Date Range</span>
             <input
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
               className="px-3 py-2 rounded-md border border-gray-100 text-gray-500 bg-gray-100"
             />
-            <span className="text-gray-500">to</span>
+               <span className=" text-[#73779166] text-xl">To</span>
             <input
               type="date"
               value={endDate}
@@ -235,7 +235,7 @@ const CustomerReport = () => {
 
       <div className="p-4">
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200 text-sm">
+          <table className="min-w-full divide-y divide-gray-200 text-lg">
             <thead className="bg-[#F9FAFB] text-left text-gray-700 font-semibold">
               <tr>
                 <th className="p-4">Date</th>

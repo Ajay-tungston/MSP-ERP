@@ -242,7 +242,6 @@ const IndividualReports = () => {
     printWindow.document.close();
   };
 
-  //   const handleSingleEntryPrint = (entry, supplierName, startDate, endDate) => {
   //     const printWindow = window.open("", "_blank");
   //     const style = `
   //           <style>
@@ -545,17 +544,17 @@ const IndividualReports = () => {
           <div className="flex gap-4">
             <button
               onClick={goToPreviousPage}
-              className={`px-6 py-3 rounded-xl border ${currentPage === 1 ? "opacity-30 cursor-not-allowed" : "hover:bg-gray-100"}`}
+              className={`px-6 py-3 rounded-xl border ${currentPage === 1 ? "border-gray-200 cursor-not-allowed" : "hover:bg-gray-100"}`}
               disabled={currentPage === 1}
             >
-              <span className="text-gray-600 text-lg font-semibold">Previous</span>
+              <span className="text-gray-400 text-lg font-semibold">Previous</span>
             </button>
             <button
               onClick={goToNextPage}
-              className={`px-6 py-3 rounded-xl border ${currentPage === totalPages ? "opacity-30 cursor-not-allowed" : "hover:bg-gray-100"}`}
+              className={`px-6 py-3 rounded-xl border ${currentPage === totalPages ? "border-gray-200 cursor-not-allowed" : "hover:bg-gray-100"}`}
               disabled={currentPage === totalPages}
             >
-              <span className="text-blue-800 text-lg font-semibold">Next</span>
+              <span className="text-blue-500 text-lg font-semibold">Next</span>
             </button>
           </div>
         </div>

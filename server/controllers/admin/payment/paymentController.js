@@ -168,17 +168,6 @@ const addPayment = async (req, res) => {
     if (note && note.length > 100) {
       return res.status(400).json({ message: "max note length is 100" });
     }
-    // if (category === "customer" || category === "supplier") {
-    //   console.log(entity);
-    //   const isIncoming = paymentType === "PaymentIn";
-    //   const delta = isIncoming ? -amount : amount;
-    //   entity.previousBalance = entity.openingBalance;
-    //   entity.openingBalance += delta;
-    //   console.log(entity);
-    //   console.log(amount);
-    //   await entity.save();
-    // }
-
     // Create and Save Payment
     const newPayment = new Payment({
       paymentType,

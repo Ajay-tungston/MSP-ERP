@@ -37,7 +37,6 @@ setTotalCustomers(response.data?.totalCustomers || 0);
       setLoading(false);
     }
   };
-  console.log("dhfiud", salesData)
   useEffect(() => {
     if (date) fetchData();
   }, [date]);

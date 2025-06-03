@@ -9,7 +9,6 @@ const validator = require("validator");
 const createPurchaseEntry = async (req, res) => {
   //added validation in schema
   try {
-    console.log(req.body);
     const { supplierId, items, dateOfPurchase, marketFee } = req.body;
     if (!supplierId || !items || !dateOfPurchase || !marketFee) {
       return res.status(400).json({ error: "all feilds are required" });
@@ -305,7 +304,6 @@ const getSupplierPurchaseReport = async (req, res) => {
     const { supplierId, startDate=new Date().toLocaleDateString("en-CA")
     , endDate=new Date().toLocaleDateString("en-CA")
   ,  page = 1, limit = 10  } = req.query;
-console.log(req.query)
     if (!supplierId || !startDate || !endDate) {
       return res.status(400).json({ error: "supplierId, startDate, and endDate are required" });
     }

@@ -10,6 +10,8 @@ import {
 import OvalSpinner from "../Components/spinners/OvalSpinner";
 import { debounce } from "lodash";
 import useAxiosPrivate from "../hooks/useAxiosPrivate";
+import { handleCustomerReportPrint } from "../utils/customerReportPrint";
+import Swal from "sweetalert2";
 
 const CustomerReport = () => {
   const [customerSearch, setcustomerSearch] = useState("");
@@ -29,6 +31,7 @@ const CustomerReport = () => {
     totalCredit: 0,
     closingBalance: 0,
   });
+  const [printLoading, setPrintLoading] = useState(false);
   const limit = 20;
 
   const customerNameRef = useRef(null);
@@ -62,6 +65,58 @@ const CustomerReport = () => {
     };
   }, [customerSearch, debouncedFetchCustomer]);
 
+  const mergeCustomerReportData = (data, startDate) => {
+    const mergedEntries = [];
+
+    // Opening Balance row
+    if (currentPage === 1) {
+      mergedEntries.push({
+        date: new Date(startDate),
+        type: "opening",
+        description: "Opening Balance",
+        debit: 0,
+        credit: 0,
+        balance: data.previousBalance || 0,
+        formattedDate: new Date(startDate).toLocaleDateString("en-GB"),
+      });
+    }
+
+    let runningBalance = data.previousBalance || 0;
+
+    data.timeline.forEach((entry) => {
+      let debit = 0;
+      let credit = 0;
+      let description = "";
+
+      if (entry.type === "sale") {
+        debit = entry.amount;
+        description = `Invoice #${entry.transactionNumber}`;
+      } else if (entry.type === "payment") {
+        if (entry.paymentType === "PaymentIn") {
+          credit = entry.amount;
+          description = "Payment Received";
+        } else if (entry.paymentType === "PaymentOut") {
+          debit = entry.amount;
+          description = "Payment Made";
+        }
+      }
+
+      runningBalance += debit - credit;
+
+      mergedEntries.push({
+        date: new Date(entry.date),
+        type: entry.type,
+        description,
+        debit,
+        credit,
+        balance: runningBalance,
+        formattedDate: new Date(entry.date).toLocaleDateString("en-GB"),
+      });
+    });
+
+    return mergedEntries;
+  };
+
   useEffect(() => {
     if (!selectedCustomer?.id) return;
 
@@ -72,57 +127,10 @@ const CustomerReport = () => {
           `/admin/customer/getCustomerReport?customerId=${selectedCustomer.id}&startDate=${startDate}&endDate=${endDate}&page=${currentPage}&limit=${limit}`
         );
         const data = response?.data;
-        console.log("wfgerhf", response);
-        setTotalPages(data?.totalPages);
+        setTotalPages(data?.totalPages || 1);
         setSummary(data?.summaryTotals);
-        const mergedEntries = [];
-
-        // Opening Balance row
-        mergedEntries.push({
-          date: new Date(startDate),
-          type: "opening",
-          description: "Opening Balance",
-          debit: 0,
-          credit: 0,
-          balance: data.previousBalance || 0,
-          formattedDate: new Date(startDate).toLocaleDateString("en-GB"),
-        });
-
-        // Iterate over the backend's unified timeline array
-        let runningBalance = data.previousBalance || 0;
-
-        data.timeline.forEach((entry) => {
-          let debit = 0;
-          let credit = 0;
-          let description = "";
-
-          if (entry.type === "sale") {
-            debit = entry.amount;
-            description = `Invoice #${entry.transactionNumber}`;
-          } else if (entry.type === "payment") {
-            if (entry.paymentType === "PaymentIn") {
-              credit = entry.amount;
-              description = "Payment Received";
-            } else if (entry.paymentType === "PaymentOut") {
-              debit = entry.amount;
-              description = "Payment Made";
-            }
-          }
-
-          runningBalance += debit - credit;
-
-          mergedEntries.push({
-            date: new Date(entry.date),
-            type: entry.type,
-            description,
-            debit,
-            credit,
-            balance: runningBalance,
-            formattedDate: new Date(entry.date).toLocaleDateString("en-GB"),
-          });
-        });
-
-        setReportRows(mergedEntries);
+        const merged = mergeCustomerReportData(data, startDate);
+        setReportRows(merged);
       } catch (error) {
         console.error("Error fetching report:", error);
       } finally {
@@ -133,8 +141,41 @@ const CustomerReport = () => {
     fetchReport();
   }, [startDate, endDate, selectedCustomer, currentPage]);
 
+  const handlePrint = async () => {
+    setPrintLoading(true);
+    try {
+      const response = await axiosInstance.get(
+        `/admin/customer/getCustomerReport?customerId=${selectedCustomer.id}&startDate=${startDate}&endDate=${endDate}&noPagination=true`
+      );
+      const data = response?.data;
+      const merged = mergeCustomerReportData(data, startDate);
+
+      handleCustomerReportPrint({
+        selectedCustomer,
+        startDate,
+        endDate,
+        reportRows: merged,
+        summary: data?.summaryTotals,
+      });
+    } catch (error) {
+      console.error("Error generating print report:", error);
+      Swal.fire({
+        icon: "error",
+        title: "Failed to fetch report",
+        text: "Something went wrong!",
+      });
+    } finally {
+      setPrintLoading(false);
+    }
+  };
+
   return (
     <div className="p-6 bg-white rounded-md shadow-sm min-h-full ">
+       {printLoading && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/50 backdrop-blur-sm">
+        <OvalSpinner />
+      </div>
+    )}
       <div className="flex justify-between items-start flex-wrap gap-4">
         <div>
           <p className="text-md text-[#737791] flex items-center gap-1">
@@ -147,7 +188,7 @@ const CustomerReport = () => {
           {/* Searchable Dropdown */}
           <div className="relative mb-4">
             <div className="flex items-center gap-2">
-              <label className="text-lg font-medium text-gray-700 whitespace-nowrap">
+              <label className="text-lg font-medium text-[#73779166] whitespace-nowrap">
                 Select Customer:
               </label>
               <div className="relative">
@@ -210,24 +251,28 @@ const CustomerReport = () => {
 
         {/* Print + Dates */}
         <div className="flex flex-col items-center gap-8">
-          <button className="flex items-center gap-2 px-4 py-2 bg-gray-50 hover:bg-gray-100 text-sm text-gray-900 font-medium rounded-md shadow border border-gray-200">
-            <BsPrinter className="text-lg" />
+          
+          <button
+            className={`${reportRows?.length > 0?"cursor-pointer":"cursor-not-allowed"} flex items-center gap-2 px-4 py-2 bg-gray-50 hover:bg-gray-100 text-lg text-gray-900 font-bold rounded-lg shadow-sm drop-shadow-sm `}
+            onClick={handlePrint}
+          >
+            <BsPrinter className="text-xl" />
             Print
           </button>
           <div className="flex items-center gap-2">
-              <span className="text-[#73779166] text-xl">Date Range</span>
+            <span className="text-[#73779166] text-xl">Date Range</span>
             <input
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="px-3 py-2 rounded-md border border-gray-100 text-gray-500 bg-gray-100"
+              className="px-3 py-2 cursor-pointer rounded-md border border-gray-100 text-gray-500 bg-gray-100"
             />
-               <span className=" text-[#73779166] text-xl">To</span>
+            <span className=" text-[#73779166] text-xl">To</span>
             <input
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
-              className="px-3 py-2 rounded-md border border-gray-100 text-gray-500 bg-gray-100"
+              className="px-3 py-2 cursor-pointer rounded-md border border-gray-100 text-gray-500 bg-gray-100"
             />
           </div>
         </div>

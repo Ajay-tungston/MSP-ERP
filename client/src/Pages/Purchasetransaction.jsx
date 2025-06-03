@@ -63,7 +63,6 @@ function Purchasetransaction() {
   const [isAdvanceDeductionChecked, setIsAdvanceDeductionChecked] =
     useState(false);
   const [deductedAmount, setDeductedAmount] = useState(0);
-  console.log("edhgewdf", deductedAmount);
   const [purchaseCount, setPurchaseCount] = useState(1);
   const [submitLoading, setSubmitloading] = useState(false);
 
@@ -313,7 +312,6 @@ function Purchasetransaction() {
           supplier: selectedSupplier?._id,
           date: new Date().toISOString(),
         });
-        console.log(response2);
       }
       if (isPrint) {
         const transaction = {

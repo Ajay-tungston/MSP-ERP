@@ -325,12 +325,19 @@ const getSingleCustomer = async (req, res) => {
 
 const getCustomerReport = async (req, res) => {
   try {
-    const { customerId, startDate, endDate, page = 1, limit = 20 } = req.query;
+    const {
+      customerId,
+      startDate,
+      endDate,
+      page = 1,
+      limit = 20,
+      noPagination = false,
+    } = req.query;
 
     if (!customerId || !startDate || !endDate) {
-      return res
-        .status(400)
-        .json({ message: "customerId, startDate, and endDate are required" });
+      return res.status(400).json({
+        message: "customerId, startDate, and endDate are required",
+      });
     }
 
     const customerObjectId = new mongoose.Types.ObjectId(customerId);
@@ -380,7 +387,7 @@ const getCustomerReport = async (req, res) => {
       if (p._id === "PaymentOut") paymentOutBefore = p.total;
     });
 
-    // --- 3. Opening Balance ---
+    // --- 3. Opening Balance & Previous Balance ---
     const customerDoc = await Customer.findById(customerObjectId).select(
       "openingBalance"
     );
@@ -389,54 +396,49 @@ const getCustomerReport = async (req, res) => {
       openingBalance +
       (previousSalesTotal - paymentInBefore + paymentOutBefore);
 
-    // --- 4. Pagination Setup ---
+    // --- 4. Count Total Items (for pagination only) ---
+    let totalItems = 0;
+    let totalPages = 0;
     const pageNum = parseInt(page);
     const pageLimit = parseInt(limit);
     const skip = (pageNum - 1) * pageLimit;
 
-    // --- 5. Count Total Items (Before Pagination) ---
-    const countResult = await SalesEntry.aggregate([
-      {
-        $match: {
-          dateOfSale: { $gte: start, $lte: end },
-          "customers.customer": customerObjectId,
+    if (noPagination !== "true") {
+      const countResult = await SalesEntry.aggregate([
+        {
+          $match: {
+            dateOfSale: { $gte: start, $lte: end },
+            "customers.customer": customerObjectId,
+          },
         },
-      },
-      { $unwind: "$customers" },
-      { $match: { "customers.customer": customerObjectId } },
-      {
-        $project: {
-          date: "$dateOfSale",
+        { $unwind: "$customers" },
+        { $match: { "customers.customer": customerObjectId } },
+        {
+          $project: { date: "$dateOfSale" },
         },
-      },
-      {
-        $unionWith: {
-          coll: "payments",
-          pipeline: [
-            {
-              $match: {
-                customer: customerObjectId,
-                category: "customer",
-                date: { $gte: start, $lte: end },
+        {
+          $unionWith: {
+            coll: "payments",
+            pipeline: [
+              {
+                $match: {
+                  customer: customerObjectId,
+                  category: "customer",
+                  date: { $gte: start, $lte: end },
+                },
               },
-            },
-            {
-              $project: {
-                date: "$date",
-              },
-            },
-          ],
+              { $project: { date: "$date" } },
+            ],
+          },
         },
-      },
-      {
-        $count: "total",
-      },
-    ]);
-    const totalItems = countResult[0]?.total || 0;
-    const totalPages = Math.ceil(totalItems / pageLimit);
+        { $count: "total" },
+      ]);
+      totalItems = countResult[0]?.total || 0;
+      totalPages = Math.ceil(totalItems / pageLimit);
+    }
 
-    // --- 6. Paginated Timeline ---
-    const timeline = await SalesEntry.aggregate([
+    // --- 5. Timeline (paginated or full based on noPagination) ---
+    const timelineAggregation = [
       {
         $match: {
           dateOfSale: { $gte: start, $lte: end },
@@ -482,10 +484,15 @@ const getCustomerReport = async (req, res) => {
         },
       },
       { $sort: { date: 1 } },
-      { $skip: skip },
-      { $limit: pageLimit },
-    ]);
-    // --- 7. Summary for Entire Range (not paginated) ---
+    ];
+
+    if (noPagination !== "true") {
+      timelineAggregation.push({ $skip: skip }, { $limit: pageLimit });
+    }
+
+    const timeline = await SalesEntry.aggregate(timelineAggregation);
+
+    // --- 6. Summary for the full date range (not paginated) ---
     const summaryResults = await SalesEntry.aggregate([
       {
         $match: {
@@ -531,33 +538,42 @@ const getCustomerReport = async (req, res) => {
       } else if (entry.paymentType === "PaymentIn") {
         totalCredit += entry.amount;
       } else {
-        totalDebit += entry.amount; // for sales
+        totalDebit += entry.amount; // sales
       }
     });
 
     const closingBalance = previousBalance + totalDebit - totalCredit;
 
-    return res.status(200).json({
+    // --- 7. Final Response ---
+    const response = {
       customerId,
       dateRange: { startDate, endDate },
       openingBalance,
       previousBalance,
-      timeline, // paginated
-      page: pageNum,
-      limit: pageLimit,
-      totalItems,
-      totalPages,
+      timeline,
       summaryTotals: {
         totalDebit,
         totalCredit,
         closingBalance,
       },
-    });
+    };
+
+    if (noPagination !== "true") {
+      response.page = pageNum;
+      response.limit = pageLimit;
+      response.totalItems = totalItems;
+      response.totalPages = totalPages;
+    }
+
+    return res.status(200).json(response);
   } catch (err) {
     console.error("Error in getCustomerReport:", err);
-    res.status(500).json({ message: "Server error", error: err.message });
+    res
+      .status(500)
+      .json({ message: "Server error", error: err.message });
   }
 };
+
 
 module.exports = {
   addNewCustomer,

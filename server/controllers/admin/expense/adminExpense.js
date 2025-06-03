@@ -34,7 +34,6 @@ exports.getExpenses = async (req, res) => {
 exports.createExpense = async (req, res) => {
   try {
     const { expense, amount } = req.body;
-    console.log(req.body);
 
     const newExpense = new Expense({ expense, amount });
     await newExpense.save();

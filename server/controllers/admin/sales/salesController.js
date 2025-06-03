@@ -178,7 +178,6 @@ const createSaleTransaction = async (req, res) => {
       sessionData.purchaseEntry.items = sessionData.originalPurchaseItems;
       try {
         await sessionData.purchaseEntry.save();
-        console.log("Rolled back purchase entry changes.");
       } catch (rollbackErr) {
         console.error("Rollback failed:", rollbackErr);
       }

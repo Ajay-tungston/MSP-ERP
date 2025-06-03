@@ -58,13 +58,11 @@ const getCashbookData = async (req, res) => {
     const allTransactions = [];
     sales.forEach(s => allTransactions.push({ ...s, type: 'sale', date: s.dateOfSale }));
     purchases.forEach(p => allTransactions.push({ ...p, type: 'purchase', date: p.dateOfPurchase }));
-    console.log("before=",payments)
     payments.forEach(p => allTransactions.push({ 
       ...p, 
       type: p.paymentType.toLowerCase(), // 'paymentin' or 'paymentout'
       date: p.date 
     }));
-    console.log("after=",payments)
 
     expenses.forEach(e => allTransactions.push({ ...e, type: 'expense', date: e.date }));
 

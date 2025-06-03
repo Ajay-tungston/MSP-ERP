@@ -43,7 +43,6 @@ const getAllVehicles = async (req, res) => {
     .skip((page - 1) * limit)
     .limit(Number(limit));
     
-    console.log(vehicles)
     return res.status(200).json({
       data: vehicles,
       currentPage: Number(page),

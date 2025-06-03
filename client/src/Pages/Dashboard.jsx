@@ -26,7 +26,6 @@ const FinancialDashboard = () => {
   const [expenseData, setExpenseData] = useState([]);
   const [totalExpense, setTotalExpense] = useState(0);
     const [kpiData, setKpiData] = useState([]);
-    console.log(kpiData)
   const [selectedMonth, setSelectedMonth] = useState(() => {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(
@@ -100,11 +99,9 @@ const FinancialDashboard = () => {
 
 useEffect(() => {
   const fetchKpi = async () => {
-  console.log("fhdcbhufb")
 
     try {
       const res = await axiosInstance.get("/admin/transaction/today");
-      console.log("📊 KPI DATA:", res.data); // 👈 Check format!
       setKpiData(res.data);
     } catch (err) {
       console.error("❌ KPI Fetch Error:", err);

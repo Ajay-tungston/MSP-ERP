@@ -119,7 +119,7 @@ const IndividualReports = () => {
       alert("Please select a supplier before printing.");
       return;
     }
-    setPrintLoading(true)
+    setPrintLoading(true);
     try {
       const response = await axiosInstance.get(
         `admin/purchase/supplier/report?startDate=${startDate}&endDate=${endDate}&supplierId=${selectedSupplier._id}&noPagination=true`
@@ -141,9 +141,8 @@ const IndividualReports = () => {
       });
       console.error("Error fetching print data", error);
       console.error("Error details:", error.response?.data || error.message);
-    }
-    finally {
-      setPrintLoading(false)
+    } finally {
+      setPrintLoading(false);
     }
   };
   const openPurchaseRegisterPrintPage = (
@@ -198,8 +197,8 @@ const IndividualReports = () => {
       html += `
                 <tr>
                     <td>${new Date(entry.dateOfPurchase).toLocaleDateString(
-        "en-GB"
-      )}</td>
+                      "en-GB"
+                    )}</td>
                     <td>${entry.totalKg}</td>
                     <td>${entry.totalBox}</td>
                     <td>${entry.commissionPaid?.toFixed(2)}</td>
@@ -215,16 +214,20 @@ const IndividualReports = () => {
         </table>
     
         <div>
-            <strong>Total Net Amount:</strong> ${totalStats?.netTotalAmount?.toFixed(2) || "0.00"
-      }<br>
-            <strong>Total Commission:</strong> ${totalStats?.totalCommission?.toFixed(2) || "0.00"
-      }<br>
+            <strong>Total Net Amount:</strong> ${
+              totalStats?.netTotalAmount?.toFixed(2) || "0.00"
+            }<br>
+            <strong>Total Commission:</strong> ${
+              totalStats?.totalCommission?.toFixed(2) || "0.00"
+            }<br>
             <strong>Total Qty (KG):</strong> ${totalStats?.totalKg || 0}<br>
             <strong>Total Qty (Box):</strong> ${totalStats?.totalBox || 0}<br>
-            <strong>Total Gross Amount:</strong> ${totalStats?.grossTotalAmount?.toFixed(2) || "0.00"
-      }<br>
-                   <strong>Total Expense:</strong> ${totalStats?.totalMarketFee?.toFixed(2) || "0.00"
-      }<br>
+            <strong>Total Gross Amount:</strong> ${
+              totalStats?.grossTotalAmount?.toFixed(2) || "0.00"
+            }<br>
+                   <strong>Total Expense:</strong> ${
+                     totalStats?.totalMarketFee?.toFixed(2) || "0.00"
+                   }<br>
         </div>
     
         <script>
@@ -241,66 +244,6 @@ const IndividualReports = () => {
     printWindow.document.write(html);
     printWindow.document.close();
   };
-
-  //     const printWindow = window.open("", "_blank");
-  //     const style = `
-  //           <style>
-  //             body { font-family: sans-serif; padding: 20px; }
-  //             table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-  //             th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-  //             th { background-color: #f0f0f0; }
-  //           </style>
-  //         `;
-
-  //     const html = `
-  //           <html>
-  //             <head>
-  //               <title>Purchase Entry</title>
-  //               ${style}
-  //             </head>
-  //             <body>
-  //               <h2>Individual Purchase Entry</h2>
-  //               <p><strong>Supplier:</strong> ${supplierName}</p>
-  //               <p><strong>Date Range:</strong> ${startDate} to ${endDate}</p>
-  //               <hr />
-  //               <table>
-  //                 <tr>
-  //                   <th>Date</th>
-  //                   <th>Qty (KG)</th>
-  //                   <th>Qty (Box)</th>
-  //                   <th>Commission</th>
-  //                   <th>Gross Total</th>
-  //                   <th>Market Fee</th>
-
-  //                   <th>Net Total</th>
-  //                 </tr>
-  //                 <tr>
-  //                   <td>${new Date(entry.dateOfPurchase).toLocaleDateString(
-  //                     "en-GB"
-  //                   )}</td>
-  //                   <td>${entry.totalKg}</td>
-  //                   <td>${entry.totalBox}</td>
-  //                   <td>${entry.commissionPaid?.toFixed(2)}</td>
-  //                   <td>${entry.grossTotalAmount?.toFixed(2)}</td>
-  //                   <td>${entry.marketFee?.toFixed(2) || "0.00"}</td>
-
-  //                   <td>${entry.netTotalAmount?.toFixed(2)}</td>
-  //                 </tr>
-  //               </table>
-
-  //               <script>
-  //                 window.onload = function() {
-  //                   window.print();
-  //                   setTimeout(() => window.close(), 1000);
-  //                 };
-  //               </script>
-  //             </body>
-  //           </html>
-  //         `;
-
-  //     printWindow.document.write(html);
-  //     printWindow.document.close();
-  //   };
 
   const [watsappLoading, setWatsappLoading] = useState(false);
   const handleSendViaWhatsApp = async (purchaseData, supplier, date) => {
@@ -332,8 +275,9 @@ const IndividualReports = () => {
         }
       );
 
-      const whatsappUrl = `https://wa.me/${supplier?.whatsapp
-        }?text=${encodeURIComponent(`Your purchase bill:\n${data.fileUrl}`)}`;
+      const whatsappUrl = `https://wa.me/${
+        supplier?.whatsapp
+      }?text=${encodeURIComponent(`Your purchase bill:\n${data.fileUrl}`)}`;
       window.open(whatsappUrl, "_blank");
     } catch (err) {
       console.error("Failed to send PDF:", err);
@@ -345,10 +289,11 @@ const IndividualReports = () => {
   const Stat = ({ label, value }) => (
     <div className="flex items-center gap-3 min-w-[150px] my-2">
       <span className="text-slate-500 text-xl">{label}</span>
-      <span className="text-slate-900 text-xl font-bold">{value || "0.00"}</span>
+      <span className="text-slate-900 text-xl font-bold">
+        {value || "0.00"}
+      </span>
     </div>
   );
-
 
   return (
     <>
@@ -357,7 +302,9 @@ const IndividualReports = () => {
         <div className="fixed inset-0 bg-white/60 backdrop-blur-sm z-50 flex items-center justify-center">
           <div className="flex flex-col items-center">
             <div className="w-10 h-10 border-4 border-green-500 border-t-transparent rounded-full animate-spin mb-3"></div>
-            <p className="text-gray-700 text-sm font-medium">Sending via WhatsApp...</p>
+            <p className="text-gray-700 text-sm font-medium">
+              Sending via WhatsApp...
+            </p>
           </div>
         </div>
       )}
@@ -373,7 +320,9 @@ const IndividualReports = () => {
           <div className="flex items-center gap-2 text-[#737791] text-md ">
             Reports <FaChevronRight /> Individual Purchase Report
           </div>
-          <div className="  text-3xl font-bold text-[#151D48]">Individual Purchase Report</div>
+          <div className="  text-3xl font-bold text-[#151D48]">
+            Individual Purchase Report
+          </div>
         </div>
 
         {/* Actions */}
@@ -383,7 +332,7 @@ const IndividualReports = () => {
           {/* Supplier Search */}
           <Combobox
             value={selectedSupplier}
-              autoComplete="off"
+            autoComplete="off"
             onChange={(value) => {
               setSearchTeam(value.supplierName);
               setSelectedSupplier(value);
@@ -393,8 +342,10 @@ const IndividualReports = () => {
             <div className="relative w-64 bg-gray-50 rounded-2xl px-3 flex items-center h-14">
               <BsSearch className="text-gray-500" />
               <ComboboxInput
-                displayValue={(supplier) => supplier?.supplierName || searchTerm}
-                    autoComplete="off"
+                displayValue={(supplier) =>
+                  supplier?.supplierName || searchTerm
+                }
+                autoComplete="off"
                 onChange={(e) => {
                   setSearchTeam(e.target.value);
                   setSelectedSupplier(null);
@@ -411,7 +362,9 @@ const IndividualReports = () => {
                       key={supplier._id}
                       value={supplier}
                       className={({ active }) =>
-                        `px-4 py-2 text-base cursor-pointer text-slate-600 ${active ? "bg-gray-100" : ""}`
+                        `px-4 py-2 text-base cursor-pointer text-slate-600 ${
+                          active ? "bg-gray-100" : ""
+                        }`
                       }
                     >
                       {supplier.supplierName}
@@ -431,7 +384,9 @@ const IndividualReports = () => {
                   className="bg-gray-100 hover:bg-gray-200 px-6 py-3 rounded-xl flex items-center gap-3"
                 >
                   <BsPrinter className="text-2xl text-indigo-950" />
-                  <span className="text-indigo-950 text-xl font-bold">Print</span>
+                  <span className="text-indigo-950 text-xl font-bold">
+                    Print
+                  </span>
                 </button>
               </div>
             )}
@@ -446,7 +401,7 @@ const IndividualReports = () => {
               }}
               className="w-52 px-4 py-3 bg-gray-50 rounded-xl text-zinc-700 text-xl outline-none"
             />
-    <label className="text-[#73779166] text-xl">To</label>
+            <label className="text-[#73779166] text-xl">To</label>
             <input
               type="date"
               value={endDate}
@@ -486,12 +441,15 @@ const IndividualReports = () => {
                 </tr>
               ) : reportsData?.length === 0 ? (
                 <tr>
-                  <td colSpan="11" className="text-center py-10 text-gray-400 text-lg">
+                  <td
+                    colSpan="11"
+                    className="text-center py-10 text-gray-400 text-lg"
+                  >
                     No reports available for the selected date range.
                   </td>
                 </tr>
               ) : (
-                reportsData.map((entry, index) => {
+                reportsData?.map((entry, index) => {
                   const transaction = {
                     selectedSupplier,
                     purchaseCount: entry?.purchaseNumber,
@@ -512,22 +470,52 @@ const IndividualReports = () => {
                   };
 
                   return (
-                    <tr key={entry._id} className="border-b border-gray-200 text-xl text-slate-900">
+                    <tr
+                      key={entry._id}
+                      className="border-b border-gray-200 text-xl text-slate-900"
+                    >
                       <td className="py-3 px-4">{index + 1}</td>
-                      <td className="py-3 px-4">{new Date(entry.dateOfPurchase).toLocaleDateString("en-GB")}</td>
+                      <td className="py-3 px-4">
+                        {new Date(entry.dateOfPurchase).toLocaleDateString(
+                          "en-GB"
+                        )}
+                      </td>
                       <td className="py-3 px-4">{entry.totalKg}</td>
                       <td className="py-3 px-4">{entry.totalBox}</td>
-                      <td className="py-3 px-4">₹{entry.commissionPaid?.toFixed(2)}</td>
-                      <td className="py-3 px-4">₹{entry.grossTotalAmount?.toFixed(2)}</td>
-                      <td className="py-3 px-4">₹{entry.marketFee?.toFixed(2) || "0.00"}</td>
-                      <td className="py-3 px-4">₹{entry.netTotalAmount?.toFixed(2)}</td>
-                      <td className="py-3 px-4 cursor-pointer " onClick={() => handlePurchasePrint(transaction)}>
+                      <td className="py-3 px-4">
+                        ₹{entry.commissionPaid?.toFixed(2)}
+                      </td>
+                      <td className="py-3 px-4">
+                        ₹{entry.grossTotalAmount?.toFixed(2)}
+                      </td>
+                      <td className="py-3 px-4">
+                        ₹{entry.marketFee?.toFixed(2) || "0.00"}
+                      </td>
+                      <td className="py-3 px-4">
+                        ₹{entry.netTotalAmount?.toFixed(2)}
+                      </td>
+                      <td
+                        className="py-3 px-4 cursor-pointer "
+                        onClick={() => handlePurchasePrint(transaction)}
+                      >
                         <BsPrinter />
                       </td>
-                      <td className="py-3 px-4 cursor-pointer text-blue-700" onClick={() => navigate(`/edit-puchase/${entry?._id}`)}>
+                      <td
+                        className="py-3 px-4 cursor-pointer text-blue-700"
+                        onClick={() => navigate(`/edit-puchase/${entry?._id}`)}
+                      >
                         <TbPencilMinus />
                       </td>
-                      <td className="py-3 px-4 cursor-pointer text-green-600" onClick={() => handleSendViaWhatsApp(transaction, selectedSupplier, entry?.dateOfPurchase)}>
+                      <td
+                        className="py-3 px-4 cursor-pointer text-green-600"
+                        onClick={() =>
+                          handleSendViaWhatsApp(
+                            transaction,
+                            selectedSupplier,
+                            entry?.dateOfPurchase
+                          )
+                        }
+                      >
                         <FaWhatsapp />
                       </td>
                     </tr>
@@ -539,38 +527,67 @@ const IndividualReports = () => {
         </div>
 
         {/* Pagination */}
-        <div className="flex justify-between items-center pt-6">
-          <span className="text-xl text-slate-900">Page {currentPage} of {totalPages}</span>
-          <div className="flex gap-4">
-            <button
-              onClick={goToPreviousPage}
-              className={`px-6 py-3 rounded-xl border ${currentPage === 1 ? "border-gray-200 cursor-not-allowed" : "hover:bg-gray-100"}`}
-              disabled={currentPage === 1}
-            >
-              <span className="text-gray-400 text-lg font-semibold">Previous</span>
-            </button>
-            <button
-              onClick={goToNextPage}
-              className={`px-6 py-3 rounded-xl border ${currentPage === totalPages ? "border-gray-200 cursor-not-allowed" : "hover:bg-gray-100"}`}
-              disabled={currentPage === totalPages}
-            >
-              <span className="text-blue-500 text-lg font-semibold">Next</span>
-            </button>
-          </div>
-        </div>
+        {reportsData?.length > 0 && (
+          <>
+            <div className="flex justify-between items-center pt-6">
+              <span className="text-xl text-slate-900">
+                Page {currentPage} of {totalPages}
+              </span>
+              <div className="flex gap-4">
+                <button
+                  onClick={goToPreviousPage}
+                  className={`px-6 py-3 rounded-xl border ${
+                    currentPage === 1
+                      ? "border-gray-200 cursor-not-allowed"
+                      : "hover:bg-gray-100"
+                  }`}
+                  disabled={currentPage === 1}
+                >
+                  <span className="text-gray-400 text-lg font-semibold">
+                    Previous
+                  </span>
+                </button>
+                <button
+                  onClick={goToNextPage}
+                  className={`px-6 py-3 rounded-xl border ${
+                    currentPage === totalPages
+                      ? "border-gray-200 cursor-not-allowed"
+                      : "hover:bg-gray-100"
+                  }`}
+                  disabled={currentPage === totalPages}
+                >
+                  <span className="text-blue-500 text-lg font-semibold">
+                    Next
+                  </span>
+                </button>
+              </div>
+            </div>
 
-        {/* Stats */}
-        <div className="bg-[#F0FDFA] px-6 py-4  flex flex-wrap justify-between mt-8 border border-gray-200">
-          <Stat label="Total" value={totalStats?.netTotalAmount?.toFixed(2)} />
-          <Stat label="Commission" value={totalStats?.totalCommission?.toFixed(2)} />
-          <Stat label="Qty (Kg)" value={totalStats?.totalKg} />
-          <Stat label="Qty (Box)" value={totalStats?.totalBox} />
-          <Stat label="Expenses" value={totalStats?.totalMarketFee?.toFixed(2)} />
-          <Stat label="Gross Total" value={totalStats?.grossTotalAmount?.toFixed(2)} />
-        </div>
+            {/* Stats */}
+            <div className="bg-[#F0FDFA] px-6 py-4  flex flex-wrap justify-between mt-8 border border-gray-200">
+              <Stat
+                label="Total"
+                value={totalStats?.netTotalAmount?.toFixed(2)}
+              />
+              <Stat
+                label="Commission"
+                value={totalStats?.totalCommission?.toFixed(2)}
+              />
+              <Stat label="Qty (Kg)" value={totalStats?.totalKg} />
+              <Stat label="Qty (Box)" value={totalStats?.totalBox} />
+              <Stat
+                label="Expenses"
+                value={totalStats?.totalMarketFee?.toFixed(2)}
+              />
+              <Stat
+                label="Gross Total"
+                value={totalStats?.grossTotalAmount?.toFixed(2)}
+              />
+            </div>
+          </>
+        )}
       </div>
     </>
-
   );
 };
 

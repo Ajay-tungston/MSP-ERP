@@ -17,6 +17,7 @@ const useLogout = () => {
 
       dispatch(logout()); 
       navigate("/login");
+      localStorage.removeItem("userName")
     } catch (error) {
       console.log("Logout failed:", error);
     }

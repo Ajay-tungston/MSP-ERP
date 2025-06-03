@@ -5,7 +5,7 @@ import { XCircleIcon, PlusCircleIcon } from "@heroicons/react/24/solid";
 import useAxiosPrivate from "../hooks/useAxiosPrivate";
 
 
-const AddEmployeeModal = ({ onClose ,setPopup}) => {
+const AddEmployeeModal = ({ onClose ,setPopup,fetchEmployee}) => {
   const navigate = useNavigate();
   const axiosPrivate = useAxiosPrivate();
   const safeOnClose = typeof onClose === "function" ? onClose : () => {};
@@ -98,6 +98,7 @@ const AddEmployeeModal = ({ onClose ,setPopup}) => {
         icon: "success",
         confirmButtonColor: "#2563EB",
       });
+      fetchEmployee()
       handleCancel();
     } catch (error) {
       if (error?.response?.status === 400) {
@@ -128,10 +129,10 @@ const AddEmployeeModal = ({ onClose ,setPopup}) => {
         {/* Form */}
         <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-x-20 gap-y-6 mt-6 text-[#05004e] text-xl">
           {/* No. */}
-          <div className="flex items-center">
+          {/* <div className="flex items-center">
             <label className="w-[172px] text-[#737791]">No.</label>
             <span className="font-bold">Auto Generated</span>
-          </div>
+          </div> */}
 
           {/* Employee Name */}
           <div className="flex flex-col">
@@ -140,9 +141,10 @@ const AddEmployeeModal = ({ onClose ,setPopup}) => {
               <label className="w-[172px] text-[#737791]">Employee Name <span className="text-red-500">*</span></label>
               <input
                 value={employeeName}
+                     autoComplete="off"
                 onChange={(e) => setEmployeeName(e.target.value)}
                 placeholder="Enter here"
-                className="w-[300px] px-4 py-3 bg-gray-50 rounded-xl outline-none text-[#a1a5b6]"
+                className="w-[300px] px-4 py-3 bg-gray-50 rounded-xl outline-none "
               />
             </div>
           </div>
@@ -154,9 +156,10 @@ const AddEmployeeModal = ({ onClose ,setPopup}) => {
               <label className="w-[172px] text-[#737791]">Address</label>
               <input
                 value={address}
+                     autoComplete="off"
                 onChange={(e) => setAddress(e.target.value)}
                 placeholder="Enter here"
-                className="w-[300px] px-4 py-3 bg-gray-50 rounded-xl outline-none text-[#a1a5b6]"
+                className="w-[300px] px-4 py-3 bg-gray-50 rounded-xl outline-none "
               />
             </div>
           </div>
@@ -168,9 +171,10 @@ const AddEmployeeModal = ({ onClose ,setPopup}) => {
               <label className="w-[172px] text-[#737791]">Phone <span className="text-red-500">*</span></label>
               <input
                 value={phone}
+                     autoComplete="off"
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="Enter here"
-                className="w-[300px] px-4 py-3 bg-gray-50 rounded-xl outline-none text-[#a1a5b6]"
+                className="w-[300px] px-4 py-3 bg-gray-50 rounded-xl outline-none "
               />
             </div>
           </div>
@@ -185,7 +189,7 @@ const AddEmployeeModal = ({ onClose ,setPopup}) => {
                   value={whatsapp}
                   onChange={(e) => setWhatsapp(e.target.value)}
                   placeholder="Enter here"
-                  className="w-[300px] px-4 py-3 bg-gray-50 rounded-xl outline-none text-[#a1a5b6]"
+                  className="w-[300px] px-4 py-3 bg-gray-50 rounded-xl outline-none "
                 />
                 <div className="flex items-center gap-2">
                   <input
@@ -194,7 +198,7 @@ const AddEmployeeModal = ({ onClose ,setPopup}) => {
                     onChange={handleSameAsPhoneChange}
                     className="checkbox w-4 h-4 rounded border-2 border-gray-300 focus:ring-0 checked:border-blue-500 checked:bg-blue-500"
                   />
-                  <label className="text-[#a1a5b6] text-base">Same as Phone</label>
+                  <label className=" text-base">Same as Phone</label>
                 </div>
               </div>
             </div>
@@ -204,12 +208,13 @@ const AddEmployeeModal = ({ onClose ,setPopup}) => {
           <div className="flex items-center">
             <label className="w-[172px] text-[#737791]">Opening Balance</label>
             <div className="w-[300px] flex items-center px-4 py-3 bg-gray-50 rounded-xl">
-              <span className="mr-2 font-bold text-[#05004e]">$</span>
+              <span className="mr-2 font-bold text-[#05004e]">₹</span>
               <input
                 value={openingBalance}
+                     autoComplete="off"
                 onChange={(e) => setOpeningBalance(e.target.value)}
                 placeholder="Enter here"
-                className="w-full bg-transparent outline-none text-[#a1a5b6]"
+                className="w-full bg-transparent outline-none "
               />
             </div>
           </div>
@@ -223,7 +228,7 @@ const AddEmployeeModal = ({ onClose ,setPopup}) => {
                 type="date"
                 value={joiningDate}
                 onChange={(e) => setJoiningDate(e.target.value)}
-                className="w-[300px] px-4 py-3 bg-gray-50 rounded-xl outline-none text-[#a1a5b6]"
+                className="w-[300px] px-4 py-3 bg-gray-50 rounded-xl outline-none "
               />
             </div>
           </div>
@@ -234,12 +239,13 @@ const AddEmployeeModal = ({ onClose ,setPopup}) => {
             <div className="flex items-center">
               <label className="w-[172px] text-[#737791]">Salary <span className="text-red-500">*</span></label>
               <div className="w-[300px] flex items-center px-4 py-3 bg-gray-50 rounded-xl gap-3">
-                <span className="font-bold text-[#05004e]">$</span>
+                <span className="font-bold text-[#05004e]">₹</span>
                 <input
                   value={salary}
+                       autoComplete="off"
                   onChange={(e) => setSalary(e.target.value)}
                   placeholder="Enter here"
-                  className="w-full outline-none text-[#a1a5b6]"
+                  className="w-full outline-none "
                 />
               </div>
             </div>

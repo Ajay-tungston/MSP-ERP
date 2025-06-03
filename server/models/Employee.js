@@ -24,6 +24,14 @@ const employeeSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
+  advance:{
+    type:Number,
+    default:0,
+  },
+  loan:{
+    type:Number,
+    default:0,
+  },
   joiningDate: {
     type: Date,
     required: true,

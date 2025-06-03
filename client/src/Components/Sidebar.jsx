@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from "react-router-dom";
 import {
   FiSearch,
   FiBell,
@@ -8,67 +8,70 @@ import {
   FiChevronRight,
   FiClock,
   FiPrinter,
-
 } from "react-icons/fi";
 import { IoCube } from "react-icons/io5";
-import { FaWhatsapp } from "react-icons/fa";
+// import { FaWhatsapp } from "react-icons/fa";
 import { BiBarChartSquare } from "react-icons/bi";
 import { IoDocumentTextOutline } from "react-icons/io5";
 import { PiSignOutFill } from "react-icons/pi";
 import useLogout from "../hooks/useLogout";
 import { RiPieChartFill } from "react-icons/ri";
+import { PiVanFill } from "react-icons/pi";
+
 
 export default function Sidebar() {
   const [isMasterOpen, setIsMasterOpen] = useState(true);
   const [isTransactionOpen, setIsTransactionOpen] = useState(false);
   const [isReportsOpen, setIsReportsOpen] = useState(false);
-  const [isPrintOpen, setIsPrintOpen] = useState(false);
+  const [isVehicleOpen, setIsVehicleOpen] = useState(false);
 
-  const [selectedItem, setSelectedItem] = useState();
+  const [selectedItem, setSelectedItem] = useState("");
   const [selectedMainItem, setSelectedMainItem] = useState("Dashboard");
 
-  const logOut=useLogout()
+  const logOut = useLogout();
 
   const masterItemRoutes = {
-    "Customer": "/mastercustomer",
-    "Route Customer": "/route-customer",
-    "Supplier": "/supplier",
-    "Employee": "/employee",
-    "Item": "/item",
-    "Expenses": "/expenses",
-    "Company expenses": "/company-expenses",
-    "Other expenses": "/other-expenses",
-    "Commission": "/commission",
-    "Company": "/company"
+    Customer: "/mastercustomer",
+    // "Route Customer": "/route-customer",
+    Supplier: "/supplier",
+    Employee: "/employee",
+    Item: "/item",
+    Expenses: "/expenses",
+    Lender: "/lender",
+    // Commission: "/commission",
+    Company: "/company",
+   
   };
 
   const transactionItemRoutes = {
-    "Purchase": "/purchase-transaction",
-    "Sales": "/sales-transaction",
+    Purchase: "/purchase-transaction",
+    Sales: "/sales-transaction",
     "Payment In": "/payment/in",
     "Payment Out": "/payment/out",
-    "Route": "/transactions/returns",
-    "Cashbook": "/cashbook"
+    // "Route": "/transactions/returns",
+    Cashbook: "/cashbook",
   };
 
   const reportItemRoutes = {
     "Purchase Report": "/purchase-report",
     "Ind.Purchase Report": "/individual-report",
     "Local Sales Report": "/localsales-report",
-    "Individual Sales Report":"/individualsales",
-    "Route Sales Report": "/reports/expense",
-    "Trial Sales Report": "/trail"
+    "Individual Sales Report": "/individualsales",
+    // "Route Sales Report": "/reports/expense",
+    "Trial Sales Report": "/trail",
+    "Daily Sales Report": "/dailysales",
+    "Customer Report":"/customer-reports"
   };
 
-  const printItemRoutes = {
-    "Individual Sales": "/print/invoice",
-    "Route Sales": "/print/daily-summary",
-    "Weekly Route Sales": "/print/customer-copy",
+  const vehicleItemRoutes = {
+    "Vehicle": "/vehicle",
+    "Report":"/report",
+
   };
 
   const navigate = useNavigate();
   const menuItems = [
-    { label: "WhatsApp", icon: <FaWhatsapp />, path: "/whatsapp" },
+    // { label: "WhatsApp", icon: <FaWhatsapp />, path: "/whatsapp" },
     {
       label: (
         <span className="text-red-600" onClick={logOut}>
@@ -77,37 +80,47 @@ export default function Sidebar() {
       ),
       noHover: true,
       icon: <PiSignOutFill className="text-red-600" />,
-      onClick: () => { /* logout logic */ }
-    }
+      onClick: () => {
+        /* logout logic */
+      },
+    },
   ];
 
   const masterItems = Object.keys(masterItemRoutes);
 
   return (
-    <div className="flex h-screen bg-[#F9FAFB]">
+    <div className="flex h-screen bg-[#F9FAFB] pt-0">
       <div className="flex flex-col min-h-screen w-full lg:w-[313px] bg-white shadow-lg rounded-[24px] p-4 lg:p-6 overflow-hidden">
         {/* Logo */}
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 rounded-lg overflow-hidden flex items-center justify-center">
-            <img src="/images/logo.jpg" alt="Company Logo" className="w-full h-full object-cover" />
+          <div className="w-18 h-18 rounded-lg overflow-hidden flex items-center justify-center">
+            <img
+              src="images/msplogo1.png"
+              alt="Company Logo"
+              className="w-full h-full object-cover"
+            />
           </div>
-          <span className="text-lg font-semibold">Company Name</span>
+          <span className="text-2xl font-semibold text-[#151D48]">M.S. Pareekutty Sons</span>
         </div>
 
         {/* Dashboard */}
         <div
-          className={`rounded-lg p-3 mb-4 flex items-center cursor-pointer transition ${selectedMainItem === "Dashboard" ? "bg-indigo-500 text-white" : "text-gray-500 hover:bg-indigo-500 hover:text-white"}`}
+          className={`rounded-lg p-3 mb-4 flex items-center cursor-pointer transition ${
+            selectedMainItem === "Dashboard"
+              ? "bg-indigo-500 text-white"
+              : "text-gray-500 hover:bg-indigo-500 hover:text-white"
+          }`}
           onClick={() => {
             setSelectedMainItem("Dashboard");
             setIsMasterOpen(false);
             setIsTransactionOpen(false);
             setIsReportsOpen(false);
-            setIsPrintOpen(false);
+            setIsVehicleOpen(false);
             navigate("/");
           }}
         >
           <span className="flex items-center gap-3">
-          <RiPieChartFill /> Dashboard
+            <RiPieChartFill /> Dashboard
           </span>
         </div>
 
@@ -115,17 +128,21 @@ export default function Sidebar() {
         <div className="flex flex-col gap-3 scrollbar-hide">
           {/* Master */}
           <div
-            className={`rounded-lg p-3 flex items-center justify-between cursor-pointer transition ${selectedMainItem === "Master" ? "bg-indigo-500 text-white" : "text-gray-500 hover:bg-indigo-500 hover:text-white"}`}
+            className={`rounded-lg p-3 flex items-center justify-between cursor-pointer transition ${
+              selectedMainItem === "Master"
+                ? "bg-indigo-500 text-white"
+                : "text-gray-500 hover:bg-indigo-500 hover:text-white"
+            }`}
             onClick={() => {
               setSelectedMainItem("Master");
               setIsMasterOpen(!isMasterOpen);
               setIsTransactionOpen(false);
               setIsReportsOpen(false);
-              setIsPrintOpen(false);
+              setIsVehicleOpen(false);
             }}
           >
             <span className="flex items-center gap-3">
-            <IoCube /> Master
+              <IoCube /> Master
             </span>
             {isMasterOpen ? <FiChevronDown /> : <FiChevronRight />}
           </div>
@@ -134,13 +151,23 @@ export default function Sidebar() {
               {masterItems.map((item, index) => (
                 <div
                   key={index}
-                  className={`flex items-center gap-3 cursor-pointer transition ${selectedItem === item ? "text-indigo-500 font-bold" : "hover:text-indigo-500 hover:font-bold"}`}
+                  className={`flex items-center gap-3 cursor-pointer transition ${
+                    selectedItem === item
+                      ? "text-indigo-500 font-bold"
+                      : "hover:text-indigo-500 hover:font-bold"
+                  }`}
                   onClick={() => {
                     setSelectedItem(item);
                     navigate(masterItemRoutes[item]);
                   }}
                 >
-                  <span className={`w-2.5 h-2.5 border rounded-full ${selectedItem === item ? "bg-indigo-500 border-indigo-500" : "border-gray-500"}`}></span>
+                  <span
+                    className={`w-2.5 h-2.5 border rounded-full ${
+                      selectedItem === item
+                        ? "bg-indigo-500 border-indigo-500"
+                        : "border-gray-500"
+                    }`}
+                  ></span>
                   {item}
                 </div>
               ))}
@@ -149,17 +176,21 @@ export default function Sidebar() {
 
           {/* Transactions */}
           <div
-            className={`rounded-lg p-3 flex items-center justify-between cursor-pointer transition ${selectedMainItem === "Transactions" ? "bg-indigo-500 text-white" : "text-gray-500 hover:bg-indigo-500 hover:text-white"}`}
+            className={`rounded-lg p-3 flex items-center justify-between cursor-pointer transition ${
+              selectedMainItem === "Transactions"
+                ? "bg-indigo-500 text-white"
+                : "text-gray-500 hover:bg-indigo-500 hover:text-white"
+            }`}
             onClick={() => {
               setSelectedMainItem("Transactions");
               setIsTransactionOpen(!isTransactionOpen);
               setIsMasterOpen(false);
               setIsReportsOpen(false);
-              setIsPrintOpen(false);
+              setIsVehicleOpen(false);
             }}
           >
             <span className="flex items-center gap-3">
-            <BiBarChartSquare /> Transactions
+              <BiBarChartSquare /> Transactions
             </span>
             {isTransactionOpen ? <FiChevronDown /> : <FiChevronRight />}
           </div>
@@ -168,13 +199,23 @@ export default function Sidebar() {
               {Object.keys(transactionItemRoutes).map((item, index) => (
                 <div
                   key={index}
-                  className={`flex items-center gap-3 cursor-pointer transition ${selectedItem === item ? "text-indigo-500 font-bold" : "hover:text-indigo-500 hover:font-bold"}`}
+                  className={`flex items-center gap-3 cursor-pointer transition ${
+                    selectedItem === item
+                      ? "text-indigo-500 font-bold"
+                      : "hover:text-indigo-500 hover:font-bold"
+                  }`}
                   onClick={() => {
                     setSelectedItem(item);
                     navigate(transactionItemRoutes[item]);
                   }}
                 >
-                  <span className={`w-2.5 h-2.5 border rounded-full ${selectedItem === item ? "bg-indigo-500 border-indigo-500" : "border-gray-500"}`}></span>
+                  <span
+                    className={`w-2.5 h-2.5 border rounded-full ${
+                      selectedItem === item
+                        ? "bg-indigo-500 border-indigo-500"
+                        : "border-gray-500"
+                    }`}
+                  ></span>
                   {item}
                 </div>
               ))}
@@ -183,17 +224,22 @@ export default function Sidebar() {
 
           {/* Reports */}
           <div
-            className={`rounded-lg p-3 flex items-center justify-between cursor-pointer transition ${selectedMainItem === "Reports" ? "bg-indigo-500 text-white" : "text-gray-500 hover:bg-indigo-500 hover:text-white"}`}
+            className={`rounded-lg p-3 flex items-center justify-between cursor-pointer transition ${
+              selectedMainItem === "Reports"
+                ? "bg-indigo-500 text-white"
+                : "text-gray-500 hover:bg-indigo-500 hover:text-white"
+            }`}
             onClick={() => {
               setSelectedMainItem("Reports");
               setIsReportsOpen(!isReportsOpen);
               setIsMasterOpen(false);
               setIsTransactionOpen(false);
-              setIsPrintOpen(false);
+              setIsVehicleOpen(false);
             }}
           >
             <span className="flex items-center gap-3">
-            <IoDocumentTextOutline />Reports
+              <IoDocumentTextOutline />
+              Reports
             </span>
             {isReportsOpen ? <FiChevronDown /> : <FiChevronRight />}
           </div>
@@ -202,13 +248,23 @@ export default function Sidebar() {
               {Object.keys(reportItemRoutes).map((item, index) => (
                 <div
                   key={index}
-                  className={`flex items-center gap-3 cursor-pointer transition ${selectedItem === item ? "text-indigo-500 font-bold" : "hover:text-indigo-500 hover:font-bold"}`}
+                  className={`flex items-center gap-3 cursor-pointer transition ${
+                    selectedItem === item
+                      ? "text-indigo-500 font-bold"
+                      : "hover:text-indigo-500 hover:font-bold"
+                  }`}
                   onClick={() => {
                     setSelectedItem(item);
                     navigate(reportItemRoutes[item]);
                   }}
                 >
-                  <span className={`w-2.5 h-2.5 border rounded-full ${selectedItem === item ? "bg-indigo-500 border-indigo-500" : "border-gray-500"}`}></span>
+                  <span
+                    className={`w-2.5 h-2.5 border rounded-full ${
+                      selectedItem === item
+                        ? "bg-indigo-500 border-indigo-500"
+                        : "border-gray-500"
+                    }`}
+                  ></span>
                   {item}
                 </div>
               ))}
@@ -217,29 +273,29 @@ export default function Sidebar() {
 
           {/* Print */}
           <div
-            className={`rounded-lg p-3 flex items-center justify-between cursor-pointer transition ${selectedMainItem === "Print" ? "bg-indigo-500 text-white" : "text-gray-500 hover:bg-indigo-500 hover:text-white"}`}
+            className={`rounded-lg p-3 flex items-center justify-between cursor-pointer transition ${selectedMainItem === "vehicle" ? "bg-indigo-500 text-white" : "text-gray-500 hover:bg-indigo-500 hover:text-white"}`}
             onClick={() => {
-              setSelectedMainItem("Print");
-              setIsPrintOpen(!isPrintOpen);
+              setSelectedMainItem("vehicle");
+              setIsVehicleOpen(!isVehicleOpen);
               setIsMasterOpen(false);
               setIsTransactionOpen(false);
               setIsReportsOpen(false);
             }}
           >
             <span className="flex items-center gap-3">
-              <FiPrinter /> Print
+            <PiVanFill />Vehicle
             </span>
-            {isPrintOpen ? <FiChevronDown /> : <FiChevronRight />}
+            {isVehicleOpen ? <FiChevronDown /> : <FiChevronRight />}
           </div>
-          {isPrintOpen && (
+          {isVehicleOpen && (
             <div className="flex flex-col pl-6 gap-3 text-gray-500">
-              {Object.keys(printItemRoutes).map((item, index) => (
+              {Object.keys(vehicleItemRoutes).map((item, index) => (
                 <div
                   key={index}
                   className={`flex items-center gap-3 cursor-pointer transition ${selectedItem === item ? "text-indigo-500 font-bold" : "hover:text-indigo-500 hover:font-bold"}`}
                   onClick={() => {
                     setSelectedItem(item);
-                    navigate(printItemRoutes[item]);
+                    navigate(vehicleItemRoutes[item]);
                   }}
                 >
                   <span className={`w-2.5 h-2.5 border rounded-full ${selectedItem === item ? "bg-indigo-500 border-indigo-500" : "border-gray-500"}`}></span>
@@ -277,12 +333,24 @@ export default function Sidebar() {
             ))}
           </div>
         </div>
+        <div className="absolute  px-12 bottom-5 flex items-center opacity-30">
+          {/* ml-[2%] */}
+          <div>
+            <img className="w-6" src="images/Layer 2.png" />
+          </div>
+          <div className="ml-1">
+            <p className="text-gray-500 text-xs ">
+              Designed by <br />
+              <span className="text-[#F48211] font-extrabold">
+                Tungston Labs
+              </span>
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* Main Content */}
-      <main className="flex-1 p-6">
-        {/* Content Goes Here */}
-      </main>
+      <main className="flex-1  p-6">{/* Content Goes Here */}</main>
     </div>
   );
 }

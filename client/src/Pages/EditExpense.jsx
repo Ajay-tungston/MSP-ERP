@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { XCircleIcon, PlusCircleIcon } from '@heroicons/react/24/outline';
+import { XCircleIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
 import useAxiosPrivate from "../hooks/useAxiosPrivate";
 import Swal from "sweetalert2";
 
@@ -85,7 +85,7 @@ const EditExpenseForm = ({ setPopup, initialData, refreshExpenses }) => {
             />
           </div>
 
-          <div className="flex items-center gap-4">
+          {/* <div className="flex items-center gap-4">
             <label className="w-40 text-xl text-gray-600">Date <span className="text-red-500">*</span></label>
             <input
               type="date"
@@ -93,7 +93,7 @@ const EditExpenseForm = ({ setPopup, initialData, refreshExpenses }) => {
               onChange={(e) => setDate(e.target.value)}
               className="w-full sm:w-[350px] h-14 px-6 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
-          </div>
+          </div> */}
         </div>
 
         <div className="flex justify-end gap-4 mt-12">
@@ -109,7 +109,7 @@ const EditExpenseForm = ({ setPopup, initialData, refreshExpenses }) => {
             onClick={handleSave}
             className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
           >
-            <PlusCircleIcon className="w-5 h-5" />
+            <CheckCircleIcon className="w-5 h-5" />
             Update
           </button>
         </div>

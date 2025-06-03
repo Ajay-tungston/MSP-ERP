@@ -6,7 +6,14 @@ const PurchaseEntry = require("../../../models/PurchaseEntry");
 const getNextCounterNumber = require("../../../utils/counter");
 
 const mongoose = require("mongoose");
+const Payment = require("../../../models/Payment");
+
 const createSaleTransaction = async (req, res) => {
+  const sessionData = {
+    originalPurchaseItems: null,
+    purchaseEntry: null,
+  };
+
   try {
     const sales = Array.isArray(req.body) ? req.body : [req.body];
     if (sales.length === 0) {
@@ -15,24 +22,25 @@ const createSaleTransaction = async (req, res) => {
         .json({ message: "At least one sale block is required" });
     }
 
-    // Get next transaction number
-    const transactionNumber = await getNextCounterNumber("saleTransaction");
-
-    // Build customer blocks
     const customersArray = [];
     let grandTotal = 0;
-let purchaseDta
+    let purchaseDta;
+
     for (const saleData of sales) {
       const { customer: customerId, discount = 0, items, purchase } = saleData;
       const purchaseEntry = await PurchaseEntry.findById(purchase);
+      if (!purchaseEntry) throw new Error("Purchase entry not found");
 
-      if (!purchaseEntry) {
-        throw new Error("Purchase entry not found");
+      // Save original purchase state for rollback
+      if (!sessionData.originalPurchaseItems) {
+        sessionData.originalPurchaseItems = JSON.parse(
+          JSON.stringify(purchaseEntry.items)
+        );
+        sessionData.purchaseEntry = purchaseEntry;
       }
-      purchaseDta=purchase
-    
 
-      // Validate customer block
+      purchaseDta = purchase;
+
       if (!mongoose.isValidObjectId(customerId)) {
         return res
           .status(400)
@@ -100,85 +108,26 @@ let purchaseDta
             .status(404)
             .json({ message: `Supplier ${supplierId} not found` });
         }
-        //for updating purchase schema
-        const purchaseItem = purchaseEntry.items.find(
-          (i) =>
-            i.item.toString() === itemId &&
-          i.quantityType === quantityType
-        );
 
+        const purchaseItem = purchaseEntry.items.find(
+          (i) => i.item.toString() === itemId && i.quantityType === quantityType
+        );
 
         if (!purchaseItem) {
           throw new Error("Item not found in purchase entry");
         }
 
-        // Update sold and remaining quantities
+        // Check and apply sale quantity
         purchaseItem.soldQuantity += quantity;
-        purchaseItem.remainingQuantity = purchaseItem.quantity - purchaseItem.soldQuantity;
+        purchaseItem.remainingQuantity =
+          purchaseItem.quantity - purchaseItem.soldQuantity;
 
-        // Ensure values are within valid bounds
         if (purchaseItem.remainingQuantity < 0) {
           throw new Error("Sold quantity exceeds available quantity");
         }
 
-        // Update completion status
         purchaseItem.isCompleted = purchaseItem.remainingQuantity === 0;
-
-        // Save the changes
         await purchaseEntry.save();
-        // const updatedPurchase = await PurchaseEntry.findOneAndUpdate(
-        //   {
-        //     supplier: supplier._id,
-        //     "items.item": item._id,
-        //     "items.quantityType": quantityType,
-        //     "items.remainingQuantity": { $gte: quantity }
-        //   },
-        //   {
-        //     $inc: {
-        //       "items.$[elem].soldQuantity": quantity,
-        //       "items.$[elem].remainingQuantity": -quantity
-        //     }
-        //   },
-        //   {
-        //     arrayFilters: [
-        //       {
-        //         "elem.item": item._id,
-        //         "elem.quantityType": quantityType
-        //       }
-        //     ],
-        //     new: true
-        //   }
-        // );
-
-        // if (!updatedPurchase) {
-        //   return res.status(400).json({
-        //     message: `Insufficient ${quantityType} stock for item ${item._id}`
-        //   });
-        // }
-
-        // const sub = updatedPurchase.items.find(
-        //   pi => pi.item.equals(item._id) && pi.quantityType === quantityType
-        // );
-        // if (sub.remainingQuantity === 0 && !sub.isCompleted) {
-        //   await PurchaseEntry.updateOne(
-        //     {
-        //       _id: updatedPurchase._id,
-        //       "items._id": sub._id,
-        //       "items.quantityType": quantityType
-        //     },
-        //     { $set: { "items.$.isCompleted": true } }
-        //   );
-        // }
-
-        // const fresh = await PurchaseEntry.findById(updatedPurchase._id).select("items isCompleted");
-        // if (!fresh.isCompleted && fresh.items.every(i => i.isCompleted)) {
-        //   await PurchaseEntry.updateOne(
-        //     { _id: updatedPurchase._id },
-        //     { $set: { isCompleted: true } }
-        //   );
-        // }
-
-        
 
         const totalCost = quantity * unitPrice;
         customerTotal += totalCost;
@@ -203,6 +152,8 @@ let purchaseDta
       grandTotal += customerTotal - discount;
     }
 
+    const transactionNumber = await getNextCounterNumber("saleTransaction");
+
     const saleDoc = new SalesEntry({
       transactionNumber,
       dateOfSale: sales[0].dateOfSale
@@ -210,7 +161,7 @@ let purchaseDta
         : new Date(),
       totalAmount: grandTotal,
       status: "completed",
-      purchase:purchaseDta,
+      purchase: purchaseDta,
       customers: customersArray,
     });
 
@@ -221,7 +172,18 @@ let purchaseDta
       .json({ message: "Sales transaction saved", sale: saleDoc });
   } catch (err) {
     console.error("Sale creation error:", err);
-    return res.status(err.status || 500).json({
+
+    // Manual rollback if purchaseEntry was modified
+    if (sessionData.originalPurchaseItems && sessionData.purchaseEntry) {
+      sessionData.purchaseEntry.items = sessionData.originalPurchaseItems;
+      try {
+        await sessionData.purchaseEntry.save();
+      } catch (rollbackErr) {
+        console.error("Rollback failed:", rollbackErr);
+      }
+    }
+
+    return res.status(500).json({
       message: err.message || "Internal server error",
     });
   }
@@ -303,13 +265,12 @@ const getCustomerSalesReport = async (req, res) => {
     const matchStage = {
       "customers.customer": custObjId,
     };
-    
+
     if (startDate || endDate) {
       matchStage.dateOfSale = {};
       if (startDate) matchStage.dateOfSale.$gte = new Date(startDate);
       if (endDate) matchStage.dateOfSale.$lte = new Date(endDate);
     }
-    
 
     const pipeline = [
       // 1) Match sales containing the customer and (optional) date range
@@ -349,35 +310,35 @@ const getCustomerSalesReport = async (req, res) => {
           dateOfSale: 1,
           customer: "$customers.customer",
           discount: "$customers.discount",
-      
+
           item: {
             _id: { $arrayElemAt: ["$itemInfo._id", 0] },
             itemName: { $arrayElemAt: ["$itemInfo.itemName", 0] },
           },
-      
+
           supplier: {
             _id: { $arrayElemAt: ["$supplierInfo._id", 0] },
             supplierName: { $arrayElemAt: ["$supplierInfo.supplierName", 0] },
           },
-      
+
           quantityKg: {
             $cond: [
               { $eq: ["$customers.items.quantityType", "kg"] },
               "$customers.items.quantity",
-              0
-            ]
+              0,
+            ],
           },
           quantityBox: {
             $cond: [
               { $eq: ["$customers.items.quantityType", "box"] },
               "$customers.items.quantity",
-              0
-            ]
+              0,
+            ],
           },
-          
+
           unitPrice: "$customers.items.unitPrice",
           totalCost: "$customers.items.totalCost",
-        }
+        },
       },
 
       // 7) Facet for pagination + total count
@@ -411,7 +372,9 @@ const getCustomerSalesByDate = async (req, res) => {
     const { customerId, date } = req.query;
 
     if (!customerId || !date) {
-      return res.status(400).json({ message: 'Customer ID and date are required' });
+      return res
+        .status(400)
+        .json({ message: "Customer ID and date are required" });
     }
 
     const startOfDay = new Date(date);
@@ -420,120 +383,108 @@ const getCustomerSalesByDate = async (req, res) => {
 
     // Find all transactions on the given date
     const transactions = await SalesEntry.find({
-      dateOfSale: { $gte: startOfDay, $lte: endOfDay }
+      dateOfSale: { $gte: startOfDay, $lte: endOfDay },
     })
-    .populate('customers.customer')
-    .populate('customers.items.item')
-    .populate('customers.items.supplier');
+      .populate("customers.customer")
+      .populate("customers.items.item")
+      .populate("customers.items.supplier");
 
     let report = [];
     let entryNo = 1;
+    let dailyTotal = 0;
 
-    transactions.forEach(transaction => {
-      transaction.customers.forEach(customerEntry => {
+    transactions.forEach((transaction) => {
+      transaction.customers.forEach((customerEntry) => {
         if (customerEntry.customer._id.toString() === customerId) {
-          customerEntry.items.forEach(item => {
+          dailyTotal += customerEntry.totalAmount;
+
+          customerEntry.items.forEach((item) => {
             report.push({
               No: entryNo++,
-              Date: transaction.dateOfSale.toISOString().split('T')[0],
-              Item: item.item.itemName || "N/A", 
-              Supplier: item.supplier.supplierName || "N/A", 
-              'Qty (KG)': item.quantityType === "kg" ? item.quantity : "-",
-              'Qty (Box)': item.quantityType === "box" ? item.quantity : "-",
+              Date: transaction.dateOfSale.toISOString().split("T")[0],
+              Item: item.item.itemName || "N/A",
+              Supplier: item.supplier.supplierName || "N/A",
+              "Qty (KG)": item.quantityType === "kg" ? item.quantity : "-",
+              "Qty (Box)": item.quantityType === "box" ? item.quantity : "-",
               Price: item.unitPrice,
-              Total: item.totalCost
+              Total: item.totalCost,
+              supplierCode: item.supplier.supplierCode,
             });
           });
         }
       });
     });
 
-    res.json(report);
+    // 2️⃣ STEP 2: Calculate previous total sales (BEFORE selected date)
+    const salesBeforeDate = await SalesEntry.find({
+      dateOfSale: { $lt: startOfDay },
+      "customers.customer": customerId,
+    });
+
+    let totalSalesBefore = 0;
+    salesBeforeDate.forEach((sale) => {
+      sale.customers.forEach((cust) => {
+        if (cust.customer.toString() === customerId) {
+          totalSalesBefore += cust.totalAmount;
+        }
+      });
+    });
+
+    // 3️⃣ STEP 3: Calculate total payments before the selected date
+    const paymentsBeforeDate = await Payment.find({
+      customer: customerId,
+      paymentType: "PaymentIn",
+      date: { $lt: startOfDay },
+    });
+
+    let totalPaymentsBefore = 0;
+    paymentsBeforeDate.forEach((pay) => {
+      totalPaymentsBefore += pay.amount;
+    });
+
+    // 4️⃣ STEP 4: Correct previous balance
+    const previousBalance = totalSalesBefore - totalPaymentsBefore;
+
+    // 5️⃣ STEP 5: Get today's payment (for display)
+    const paymentsToday = await Payment.find({
+      customer: customerId,
+      paymentType: "PaymentIn",
+      date: { $gte: startOfDay, $lte: endOfDay },
+    });
+
+    let dailyReceipts = 0;
+    paymentsToday.forEach((pay) => {
+      dailyReceipts += pay.amount;
+    });
+
+    res.json({
+      report,
+      dailyTotal,
+      previousBalance,
+      dailyReceipts,
+      grossTotal: previousBalance + dailyTotal - dailyReceipts,
+    });
   } catch (error) {
-    console.error('Error fetching sales report:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error("Error fetching sales report:", error);
+    res.status(500).json({ message: "Server error" });
   }
 };
-
-// const getSalesEntriesByDate = async (req, res) => {
-//   try {
-//     const {
-//       page = 1,
-//       limit = 10,
-//       startDate,
-//       endDate
-//     } = req.query;
-
-//     if (!startDate || !endDate) {
-//       return res.status(400).json({ error: "Start date and end date are required" });
-//     }
-
-//     const start = new Date(startDate);
-//     const end = new Date(endDate);
-//     end.setHours(23, 59, 59, 999); // Include full end date
-
-//     const filter = {
-//       dateOfSale: { $gte: start, $lte: end }
-//     };
-
-//     const total = await SalesEntry.countDocuments(filter);
-//     const salesEntries = await SalesEntry.find(filter)
-//       .skip((page - 1) * limit)
-//       .limit(parseInt(limit))
-//       .sort({ dateOfSale: -1 }).populate({
-//         path: "purchase",
-//         select: "supplier",
-//         populate: {
-//           path: "supplier",
-//           select: "supplierName", 
-//         },
-//       });
-
-//     // Add totalKg and totalBox to each entry
-//     const enhancedEntries = salesEntries.map((entry) => {
-//       let totalKg = 0;
-//       let totalBox = 0;
-
-//       entry.customers.forEach((customer) => {
-//         customer.items.forEach((item) => {
-//           if (item.quantityType === "kg") {
-//             totalKg += item.quantity;
-//           } else if (item.quantityType === "box") {
-//             totalBox += item.quantity;
-//           }
-//         });
-//       });
-
-//       // Return entry as a plain object and attach the new fields
-//       return {
-//         ...entry.toObject(),
-//         totalKg,
-//         totalBox
-//       };
-//     });
-
-//     res.json({
-//       total,
-//       page: parseInt(page),
-//       limit: parseInt(limit),
-//       totalPages: Math.ceil(total / limit),
-//       data: enhancedEntries,
-//     });
-//   } catch (error) {
-//     console.error("Error fetching sales entries:", error);
-//     res.status(500).json({ error: "Server error" });
-//   }
-// };
-
-
 
 //for sales report
 const getSalesEntriesByDate = async (req, res) => {
   try {
-    const { startDate, endDate, page = 1, limit = 10, paginate = "true" } = req.query;
+    const {
+      startDate,
+      endDate,
+      page = 1,
+      limit = 10,
+      paginate = "true",
+    } = req.query;
 
     if (!startDate || !endDate) {
-      return res.status(400).json({ error: "Start date and end date are required" });
+      return res
+        .status(400)
+        .json({ error: "Start date and end date are required" });
     }
 
     const start = new Date(startDate);
@@ -552,8 +503,8 @@ const getSalesEntriesByDate = async (req, res) => {
           from: "customers",
           localField: "customers.customer",
           foreignField: "_id",
-          as: "customerInfo"
-        }
+          as: "customerInfo",
+        },
       },
       { $unwind: "$customerInfo" },
       {
@@ -562,18 +513,26 @@ const getSalesEntriesByDate = async (req, res) => {
           customerName: { $first: "$customerInfo.customerName" },
           totalKg: {
             $sum: {
-              $cond: [{ $eq: ["$customers.items.quantityType", "kg"] }, "$customers.items.quantity", 0]
-            }
+              $cond: [
+                { $eq: ["$customers.items.quantityType", "kg"] },
+                "$customers.items.quantity",
+                0,
+              ],
+            },
           },
           totalBox: {
             $sum: {
-              $cond: [{ $eq: ["$customers.items.quantityType", "box"] }, "$customers.items.quantity", 0]
-            }
+              $cond: [
+                { $eq: ["$customers.items.quantityType", "box"] },
+                "$customers.items.quantity",
+                0,
+              ],
+            },
           },
-          totalAmount: { $sum: "$customers.items.totalCost" }
-        }
+          totalAmount: { $sum: "$customers.items.totalCost" },
+        },
       },
-      { $sort: { customerName: 1 } }
+      { $sort: { customerName: 1 } },
     ];
 
     if (shouldPaginate) {
@@ -582,9 +541,9 @@ const getSalesEntriesByDate = async (req, res) => {
         {
           $facet: {
             metadata: [{ $count: "total" }],
-            data: [{ $skip: skip }, { $limit: parseInt(limit) }]
-          }
-        }
+            data: [{ $skip: skip }, { $limit: parseInt(limit) }],
+          },
+        },
       ];
 
       const result = await SalesEntry.aggregate(paginatedPipeline);
@@ -596,21 +555,30 @@ const getSalesEntriesByDate = async (req, res) => {
         page: parseInt(page),
         limit: parseInt(limit),
         totalPages: Math.ceil(total / limit),
-        data
+        data,
       });
     } else {
       const data = await SalesEntry.aggregate(basePipeline);
 
-      const grandTotalKg = data.reduce((sum, entry) => sum + (entry.totalKg || 0), 0);
-      const grandTotalBox = data.reduce((sum, entry) => sum + (entry.totalBox || 0), 0);
-      const grandTotalAmount = data.reduce((sum, entry) => sum + (entry.totalAmount || 0), 0);
+      const grandTotalKg = data.reduce(
+        (sum, entry) => sum + (entry.totalKg || 0),
+        0
+      );
+      const grandTotalBox = data.reduce(
+        (sum, entry) => sum + (entry.totalBox || 0),
+        0
+      );
+      const grandTotalAmount = data.reduce(
+        (sum, entry) => sum + (entry.totalAmount || 0),
+        0
+      );
 
       return res.json({
         total: data.length,
         grandTotalKg,
         grandTotalBox,
         grandTotalAmount,
-        data
+        data,
       });
     }
   } catch (error) {
@@ -619,10 +587,227 @@ const getSalesEntriesByDate = async (req, res) => {
   }
 };
 
+//need to check
+
+// const createSaleTransaction = async (req, res) => {
+//   const session = await mongoose.startSession();
+//   try {
+//     await session.withTransaction(async () => {
+//       const sales = Array.isArray(req.body) ? req.body : [req.body];
+//       if (sales.length === 0) {
+//         throw new Error("At least one sale block is required");
+//       }
+
+//       const transactionNumber = await getNextCounterNumber("saleTransaction");
+//       const customersArray = [];
+//       let grandTotal = 0;
+//       let purchaseDta;
+
+//       for (const saleData of sales) {
+//         const { customer: customerId, discount = 0, items, purchase } = saleData;
+
+//         const purchaseEntry = await PurchaseEntry.findById(purchase).session(session);
+//         if (!purchaseEntry) throw new Error("Purchase entry not found");
+//         purchaseDta = purchase;
+
+//         const customer = await Customer.findById(customerId).session(session);
+//         if (!customer) throw new Error(`Customer ${customerId} not found`);
+
+//         let customerTotal = 0;
+//         const lineItems = [];
+
+//         for (const itm of items) {
+//           const { item: itemId, supplier: supplierId, quantityType, quantity, unitPrice } = itm;
+
+//           const item = await Item.findById(itemId).session(session);
+//           const supplier = await Supplier.findById(supplierId).session(session);
+//           const purchaseItem = purchaseEntry.items.find(
+//             (i) => i.item.toString() === itemId && i.quantityType === quantityType
+//           );
+
+//           if (!purchaseItem) throw new Error("Item not found in purchase entry");
+
+//           const projectedSold = purchaseItem.soldQuantity + quantity;
+//           const projectedRemaining = purchaseItem.quantity - projectedSold;
+//           if (projectedRemaining < 0) {
+//             throw new Error("Sold quantity exceeds available quantity");
+//           }
+
+//           purchaseItem.soldQuantity = projectedSold;
+//           purchaseItem.remainingQuantity = projectedRemaining;
+//           purchaseItem.isCompleted = projectedRemaining === 0;
+
+//           const totalCost = quantity * unitPrice;
+//           customerTotal += totalCost;
+
+//           lineItems.push({
+//             item: item._id,
+//             supplier: supplier._id,
+//             quantityType,
+//             quantity,
+//             unitPrice,
+//             totalCost,
+//           });
+//         }
+
+//         await purchaseEntry.save({ session });
+
+//         customersArray.push({
+//           customer: customer._id,
+//           discount,
+//           totalAmount: customerTotal - discount,
+//           items: lineItems,
+//         });
+
+//         grandTotal += customerTotal - discount;
+//       }
+
+//       const saleDoc = new SalesEntry({
+//         transactionNumber,
+//         dateOfSale: sales[0].dateOfSale ? new Date(sales[0].dateOfSale) : new Date(),
+//         totalAmount: grandTotal,
+//         status: "completed",
+//         purchase: purchaseDta,
+//         customers: customersArray,
+//       });
+
+//       await saleDoc.save({ session });
+//     });
+
+//     res.status(201).json({ message: "Sales transaction saved successfully" });
+//   } catch (err) {
+//     console.error("Sale transaction error:", err);
+//     res.status(500).json({ message: err.message || "Internal server error" });
+//   } finally {
+//     session.endSession();
+//   }
+// };
+
+
+const getAllCustomerSalesByDate = async (req, res) => {
+  try {
+    const { date } = req.query;
+
+    if (!date) {
+      return res.status(400).json({ message: "Date is required" });
+    }
+
+    const startOfDay = new Date(date);
+    const endOfDay = new Date(date);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    // Fetch sales entries on the selected date
+    const transactions = await SalesEntry.find({
+      dateOfSale: { $gte: startOfDay, $lte: endOfDay },
+    })
+      .populate("customers.customer")
+      .populate("customers.items.item")
+      .populate("customers.items.supplier");
+
+    const customerSalesMap = new Map();
+
+    // Step 1: Group sales by customer
+    transactions.forEach((transaction) => {
+      transaction.customers.forEach((customerEntry) => {
+        const custId = customerEntry.customer._id.toString();
+
+        if (!customerSalesMap.has(custId)) {
+          customerSalesMap.set(custId, {
+            customerId: custId,
+            customerName: customerEntry.customer.customerName,
+            items: [],
+            dailyTotal: 0,
+          });
+        }
+
+        const customerData = customerSalesMap.get(custId);
+        customerData.dailyTotal += customerEntry.totalAmount;
+
+        customerEntry.items.forEach((item) => {
+          customerData.items.push({
+            Date: transaction.dateOfSale.toISOString().split("T")[0],
+            Item: item.item.itemName || "N/A",
+            Supplier: item.supplier.supplierName || "N/A",
+            "Qty (KG)": item.quantityType === "kg" ? item.quantity : "-",
+            "Qty (Box)": item.quantityType === "box" ? item.quantity : "-",
+            Price: item.unitPrice,
+            Total: item.totalCost,
+            supplierCode: item.supplier.supplierCode,
+          });
+        });
+      });
+    });
+
+    const allCustomersSales = Array.from(customerSalesMap.values());
+
+    // Step 2: Calculate previous balance & daily receipts per customer
+    for (const cust of allCustomersSales) {
+      const customerId = cust.customerId;
+
+      // Total sales before date
+      const salesBeforeDate = await SalesEntry.find({
+        dateOfSale: { $lt: startOfDay },
+        "customers.customer": customerId,
+      });
+
+      let totalSalesBefore = 0;
+      salesBeforeDate.forEach((sale) => {
+        sale.customers.forEach((c) => {
+          if (c.customer.toString() === customerId) {
+            totalSalesBefore += c.totalAmount;
+          }
+        });
+      });
+
+      // Total payments before date
+      const paymentsBeforeDate = await Payment.find({
+        customer: customerId,
+        paymentType: "PaymentIn",
+        date: { $lt: startOfDay },
+      });
+
+      let totalPaymentsBefore = 0;
+      paymentsBeforeDate.forEach((p) => {
+        totalPaymentsBefore += p.amount;
+      });
+
+      // Previous balance
+      const previousBalance = totalSalesBefore - totalPaymentsBefore;
+
+      // Daily receipts
+      const paymentsToday = await Payment.find({
+        customer: customerId,
+        paymentType: "PaymentIn",
+        date: { $gte: startOfDay, $lte: endOfDay },
+      });
+
+      let dailyReceipts = 0;
+      paymentsToday.forEach((p) => {
+        dailyReceipts += p.amount;
+      });
+
+      // Final calculations
+      cust.previousBalance = previousBalance;
+      cust.dailyReceipts = dailyReceipts;
+      cust.grossTotal = previousBalance + cust.dailyTotal - dailyReceipts;
+    }
+
+    res.json({
+      date,
+      customers: allCustomersSales,
+      totalCustomers: allCustomersSales.length,
+    });
+  } catch (error) {
+    console.error("Error fetching all customer sales report:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 module.exports = {
   createSaleTransaction,
   getSalesEntries,
   getCustomerSalesReport,
   getCustomerSalesByDate,
-  getSalesEntriesByDate
+  getSalesEntriesByDate,
+  getAllCustomerSalesByDate
 };

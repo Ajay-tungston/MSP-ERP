@@ -6,7 +6,7 @@ import Swal from "sweetalert2";
 const AddExpenseForm = ({ setPopup,refreshExpenses }) => {
   const [expense, setExpense] = useState("");
   const [amount, setAmount] = useState("");
-  const [date, setDate] = useState("");
+  // const [date, setDate] = useState("");
 
   const axiosInstance = useAxiosPrivate();
 
@@ -14,39 +14,45 @@ const AddExpenseForm = ({ setPopup,refreshExpenses }) => {
     // Reset form
     setExpense("");
     setAmount("");
-    setDate("");
+    // setDate("");
     setPopup(false); // Close popup
   };
 
   const handleSave = async () => {
     // Validation
-    if (expense.trim().length < 3) {
-      Swal.fire("Validation Error", "Expense type must be at least 5 characters.", "warning");
+    if (expense.trim().length < 3 || expense.trim().length > 25) {
+      Swal.fire(
+        "Validation Error",
+        "Expense type must be between 3 and 25 characters.",
+        "warning"
+      );
       return;
     }
-    if (!amount || Number(amount) <= 0) {
+    
+    
+    if (!amount || Number(amount) <=  0) {
       Swal.fire("Validation Error", "Amount must be greater than 0.", "warning");
       return;
     }
-    const selectedDate = new Date(date);
-    const today = new Date();
-    if (!date || selectedDate > today) {
-      Swal.fire("Validation Error", "Date cannot be in the future.", "warning");
-      return;
-    }
+    // const selectedDate = new Date(date);
+    // const today = new Date();
+    // if (!date || selectedDate > today) {
+    //   Swal.fire("Validation Error", "Date cannot be in the future.", "warning");
+    //   return;
+    // }
 
     try {
       // Simulate save call
       await axiosInstance.post("/admin/expense/add", {
         expense,
-        amount,
-        date
-      });
+        amount
+        });
 
       Swal.fire("Success", "Expense saved successfully.", "success");
       refreshExpenses()
       setPopup(false);
     } catch (error) {
+      console.log(error)
       Swal.fire("Error", "Failed to save expense.", "error");
     }
   };
@@ -69,10 +75,10 @@ const AddExpenseForm = ({ setPopup,refreshExpenses }) => {
 
         <div className="grid gap-[44px] grid-cols-1 sm:grid-cols-2 lg:grid-cols-2">
           {/* No. Field (Static for now) */}
-          <div className="flex items-center gap-4">
+          {/* <div className="flex items-center gap-4">
             <label className="min-w-[120px] sm:min-w-[172px] text-[#737791] text-xl font-normal">No.</label>
             <div className="font-bold text-gray-800">001</div>
-          </div>
+          </div> */}
 
           {/* Expense Type */}
           <div className="flex items-center gap-4">
@@ -81,6 +87,7 @@ const AddExpenseForm = ({ setPopup,refreshExpenses }) => {
             </label>
             <input
               type="text"
+                   autoComplete="off"
               placeholder="Enter here"
               value={expense}
               onChange={(e) => setExpense(e.target.value)}
@@ -95,6 +102,7 @@ const AddExpenseForm = ({ setPopup,refreshExpenses }) => {
             </label>
             <input
               type="number"
+                   autoComplete="off"
               placeholder="Enter here"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
@@ -103,7 +111,7 @@ const AddExpenseForm = ({ setPopup,refreshExpenses }) => {
           </div>
 
           {/* Date */}
-          <div className="flex items-center gap-4">
+          {/* <div className="flex items-center gap-4">
             <label className="min-w-[120px] sm:min-w-[150px] text-[#737791] text-xl font-normal">
               Date <span className="text-red-500">*</span>
             </label>
@@ -113,7 +121,7 @@ const AddExpenseForm = ({ setPopup,refreshExpenses }) => {
               onChange={(e) => setDate(e.target.value)}
               className="w-full sm:w-[350px] h-[56px] rounded-[12px] pt-4 pr-6 pb-4 pl-6 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
-          </div>
+          </div> */}
         </div>
 
         {/* Buttons */}

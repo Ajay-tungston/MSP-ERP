@@ -1,12 +1,9 @@
-import {
-  AreaChart, Area, CartesianGrid,
-
-} from "recharts";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   PieChart,
   Pie,
   Cell,
+  Area,
   ResponsiveContainer,
   BarChart,
   Bar,
@@ -14,179 +11,427 @@ import {
   YAxis,
   Tooltip,
   LabelList,
+  Label,
+  AreaChart,
+  CartesianGrid,
 } from "recharts";
-const kpiData = [
-  { day: "Mon", NetReceivables: 400, TotalCommission: 780 },
-  { day: "Tue", NetReceivables: 700, TotalCommission: 780 },
-  { day: "Wed", NetReceivables: 900, TotalCommission: 780 },
-  { day: "Thu", NetReceivables: 1100, TotalCommission: 780 },
-  { day: "Fri", NetReceivables: 1600, TotalCommission: 780 },
-  { day: "Sat", NetReceivables: 2000, TotalCommission: 780 },
-];
+import useAxiosPrivate from "../hooks/useAxiosPrivate";
+import { format } from "date-fns";
 
-const salesData = [
-  { name: "Local", value: 1200 },
-  { name: "Route", value: 2400 },
-];
-
-const purchaseData = [
-  { name: "Farm Fresh", value: 1250 },
-  { name: "Green Supply", value: 2000 },
-];
-
-const expenseData = [
-  { name: "Coolie/Logistics", value: 500, color: "#6366F1" },
-  { name: "Market Fees", value: 300, color: "#FACC15" },
-  { name: "Route Expenses", value: 250, color: "#22C55E" },
-];
-
-const totalExpense = expenseData.reduce((acc, curr) => acc + curr.value, 0);
-
-const recentTransactions = [
-  { date: "01/12/2024", module: "Sales", desc: "GreenMart - Apples", amount: 300 },
-  { date: "01/12/2024", module: "Purchase", desc: "Farm Fresh - Bananas", amount: 1250 },
-  { date: "02/12/2024", module: "Expense", desc: "Fuel for Route 1", amount: 120 },
-];
-
-const data = [
-  { name: 'Cash Balance', value: 4140 },
-  { name: 'Customer Receivables', value: 5000 },
-  { name: 'Supplier Receivables', value: 3000 },
-];
-
-const COLORS = ['#5B61EB', '#F3B700', '#3BB273']; // Purple, Yellow, Green
-
-const barData = [
-  { name: "Sales", value: 3600 },
-  { name: "Purchases", value: 2000 },
-  { name: "Expenses", value: 550 },
-];
-
-const totalProfit = 1050;
+const COLORS = ["#5B61EB", "#F3B700", "#3BB273"];
 
 const FinancialDashboard = () => {
+  const [recentTransactions, setRecentTransactions] = useState([]);
+  const axiosInstance = useAxiosPrivate();
+  const [expenseData, setExpenseData] = useState([]);
+  const [totalExpense, setTotalExpense] = useState(0);
+    const [kpiData, setKpiData] = useState([]);
+  const [selectedMonth, setSelectedMonth] = useState(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(
+      2,
+      "0"
+    )}`;
+  });
+
+  const [summary, setSummary] = useState({
+    sales: 0,
+    purchases: 0,
+    expenses: [],
+  });
+
+  ////////////////////////
+  useEffect(() => {
+    const fetchSummary = async () => {
+      try {
+        const res = await axiosInstance.get("/admin/transaction/profit");
+        setSummary(res.data);
+      } catch (err) {
+        console.error("Error fetching summary:", err);
+      }
+    };
+    fetchSummary();
+  }, [axiosInstance]);
+
+  /////////////////////////////////////////
+  useEffect(() => {
+    const fetchExpenseSummary = async () => {
+      try {
+        const res = await axiosInstance.get(
+          `/admin/trialBalance/expense${selectedMonth ? `?month=${selectedMonth}` : ""
+          }`
+        );
+        const res2 = await axiosInstance.get(
+          `/admin/trialBalance/coolie${selectedMonth ? `?month=${selectedMonth}` : ""
+          }`
+        );
+
+        const expense = res.data.totalExpenses || 0;
+        const coolie = res2.data.totalCoolie || 0;
+        const chartData = [
+          { name: "Expense", value: expense, color: COLORS[0] },
+          { name: "Coolie / Market Fee", value: coolie, color: COLORS[1] },
+        ];
+
+        setExpenseData(chartData);
+        setTotalExpense(expense + coolie);
+      } catch (error) {
+        console.error("Failed to fetch expense summary", error);
+      }
+    };
+
+    fetchExpenseSummary();
+  }, []);
+
+  const barData = [
+    { name: "Sales", value: summary.sales },
+    { name: "Purchases", value: summary.purchases },
+    { name: "Expenses", value: summary.expenses },
+  ];
+
+  const todayData = [
+    { name: "Sales", value: summary.sales },
+    { name: "Purchases", value: summary.purchases },
+
+  ];
+  
+
+
+useEffect(() => {
+  const fetchKpi = async () => {
+
+    try {
+      const res = await axiosInstance.get("/admin/transaction/today");
+      setKpiData(res.data);
+    } catch (err) {
+      console.error("❌ KPI Fetch Error:", err);
+    }
+  };
+
+  fetchKpi();
+}, []);
+
+
+
+  useEffect(() => {
+    const fetchRecentTransactions = async () => {
+      try {
+        const resp = await axiosInstance.get("/admin/transaction/transactions");
+
+        setRecentTransactions(resp.data || []);
+      } catch (error) {
+        console.error("Failed to fetch recent transactions", error);
+      }
+    };
+    fetchRecentTransactions();
+  }, [axiosInstance]);
+
+  const [overview, setOverview] = useState([
+    { name: "Cash Balance", value: 0 },
+    { name: "Customer Receivables", value: 0 },
+    { name: "Supplier Receivables", value: 0 },
+  ]);
+
+  useEffect(() => {
+    const fetchOverview = async () => {
+      try {
+        const res1 = await axiosInstance.get("/admin/trialBalance/receivable"); // customer receivables
+        const res2 = await axiosInstance.get(
+          "/admin/trialBalance/supplierbalance"
+        ); // supplier receivables
+        const res3 = await axiosInstance.get("/admin/trialBalance/cashbalance"); // cash balance
+        const data = [
+          { name: "Cash Balance", value: res3.data.cashBalance || 0 },
+          {
+            name: "Customer Receivables",
+            value: res1.data.totalReceivables || 0,
+          },
+          {
+            name: "Supplier Receivables",
+            value: res2.data.totalReceivables || 0,
+          },
+        ];
+
+        setOverview(data);
+      } catch (error) {
+        console.error("Failed to fetch overview", error);
+      }
+    };
+
+    fetchOverview();
+  }, [axiosInstance]);
   return (
     <div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 ">
-  {/* Financial Overview */}
-  <div className="bg-white rounded-2xl shadow-md p-6 w-full">
-    <h2 className="text-lg font-semibold text-black mb-4">Financial Overview</h2>
-    <hr className="mb-4 border-gray-700" />
-    <div className="flex justify-center">
-      <PieChart width={600} height={300}>
-        <Pie
-          data={data}
-          cx="50%"
-          cy="50%"
-          innerRadius={0}
-          outerRadius={100}
-          paddingAngle={1}
-          dataKey="value"
-          label={({ name, value }) => `${name}\n$${value.toLocaleString()}`}
-        >
-          {data.map((entry, index) => (
-            <Cell key={`cell-${index}`} fill={COLORS[index]} stroke="white" strokeWidth={2} />
-          ))}
-        </Pie>
-        <Tooltip formatter={(value) => `$${value.toLocaleString()}`} />
-      </PieChart>
-    </div>
-  </div>
+      <div className="grid grid-cols-1 md:grid-cols-6 gap-6 p-4 ">
+        {/* Financial Overview */}
+        <div className="bg-white rounded-2xl shadow-[0_0_10px_rgba(0,0,0,0.10)] p-6 w-full col-span-2 overflow-visible">
+          <h2 className="text-2xl font-semibold text-[#05004E] mb-4">
+            Financial Overview
+          </h2>
+          <hr className="mb-4 border-gray-200" />
+          <div className="flex justify-center overflow-visible">
+            {overview.some((item) => item.value > 0) ? (
+              <PieChart width={450} height={300}>
+                <Pie
+                  data={overview}
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={150}
+                  innerRadius={0}
+                  dataKey="value"
+                  labelLine={false}
+                  paddingAngle={0}
+                  label={({
+                    cx,
+                    cy,
+                    midAngle,
+                    innerRadius,
+                    outerRadius,
+                    name,
+                    value,
+                  }) => {
+                    const RADIAN = Math.PI / 180;
+                    const radius =
+                      innerRadius + (outerRadius - innerRadius) * 0.6;
+                    const x = cx + radius * Math.cos(-midAngle * RADIAN);
+                    const y = cy + radius * Math.sin(-midAngle * RADIAN);
 
-  {/* Net Profit */}
-  <div className="bg-white shadow-xl rounded-2xl p-4 w-full ">
-    <div className="flex justify-between items-center mb-4">
-      <h2 className="text-xl font-bold text-gray-800">Net Profit</h2>
-      <span className="text-green-600 font-bold text-lg">
-        ${totalProfit.toFixed(2)}
-      </span>
-    </div>
-    <ResponsiveContainer width="100%" height={250}>
-      <BarChart layout="vertical" data={barData}>
-        <XAxis type="number" />
-        <YAxis type="category" dataKey="name" />
-        <Tooltip />
-        <Bar dataKey="value" fill="#6366F1" barSize={20}>
-          <LabelList dataKey="value" position="right" />
-        </Bar>
-      </BarChart>
-    </ResponsiveContainer>
-  </div>
-</div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4">
-        {/* Expense Summary */}
-        <div className="bg-white shadow-xl rounded-2xl p-4">
-          <h2 className="text-xl font-bold text-gray-800 mb-4">Expense Summary</h2>
-          <ResponsiveContainer width="100%" height={220}>
-            <PieChart>
-              <Pie
-                data={expenseData}
-                innerRadius={60}
-                outerRadius={100}
-                paddingAngle={2}
-                dataKey="value"
-              >
-                {expenseData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
-                ))}
-              </Pie>
-            </PieChart>
-          </ResponsiveContainer>
-          <div className="text-3xl font-bold text-center -mt-28 mb-4 text-indigo-900">
-            ${totalExpense}
-          </div>
-          <div className="mt-4 space-y-2 text-sm">
-            {expenseData.map((item, idx) => (
-              <div key={idx} className="flex justify-between items-center">
-                <span className="flex items-center gap-2">
-                  <span
-                    className="w-3 h-3 rounded-full"
-                    style={{ backgroundColor: item.color }}
-                  />
-                  {item.name}
-                </span>
-                <span
-                  className={`font-semibold`}
-                  style={{ color: item.color }}
+                    return (
+                      <text
+                        x={x}
+                        y={y}
+                        fill="white"
+                        textAnchor="middle"
+                        dominantBaseline="central"
+                        style={{ fontSize: "12px", fontWeight: "bold" }}
+                      >
+                        {name}
+                        <tspan x={x} dy="1.2em">
+                          ₹{value.toLocaleString()}
+                        </tspan>
+                      </text>
+                    );
+                  }}
                 >
-                  ${item.value} ({((item.value / totalExpense) * 100).toFixed(2)}%)
-                </span>
+                  {overview.map((entry, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={COLORS[index]}
+                      strokeWidth={0}
+                    />
+                  ))}
+                </Pie>
+                <Tooltip formatter={(value) => `₹${value.toLocaleString()}`} />
+              </PieChart>
+            ) : (
+              <div className="text-center text-gray-500 font-medium h-[250px] flex items-center justify-center">
+                No data available{" "}
               </div>
-            ))}
+            )}
           </div>
+        </div>
+
+        {/* Net Profit */}
+        <div className="bg-white rounded-2xl shadow-[0_0_10px_rgba(0,0,0,0.10)] p-6  w-full col-span-4">
+          {/* <div className="flex justify-between items-center mb-4 w-full overflow-visible"> */}
+          <h2 className="text-2xl font-semibold text-[#05004E] mb-4">
+            Overview
+          </h2>
+          <hr className="mb-4 border-gray-200" />
+
+          {/* <span className="text-green-600 font-bold text-lg ">
+              ${totalProfit.toFixed(2)}
+            </span> */}
+          {/* </div> */}
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart
+              layout="vertical"
+              data={barData}
+              margin={{ top: 20, right: 30, left: 20, bottom: 40 }}
+            >
+              <XAxis type="number" />
+              <YAxis type="category" dataKey="name" />
+              <Tooltip />
+              <Bar dataKey="value" fill="#6366F1" barSize={20}>
+                <LabelList
+                  dataKey="value"
+                  content={({ x, y, width, height, value }) => {
+                    const padding = 5;
+                    const inside = width > 30;
+
+                    return (
+                      <text
+                        x={inside ? x + width - padding : x + width + padding}
+                        y={y + height / 2}
+                        fill={inside ? "white" : "#6366F1"}
+                        textAnchor={inside ? "end" : "start"}
+                        dominantBaseline="middle"
+                        style={{ fontSize: "12px", fontWeight: "bold" }}
+                      >
+                        ₹{value.toLocaleString()}
+                      </text>
+                    );
+                  }}
+                />
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-6 p-4">
+        {/* Expense Summary */}
+
+        <div className="bg-white shadow-[0_0_10px_rgba(0,0,0,0.10)] rounded-2xl p-6 col-span-2">
+          <h2 className="text-2xl font-semibold text-[#05004E] mb-4">
+            Expense Summary
+          </h2>
+          <hr className="mb-4 border-gray-200" />
+
+          {(expenseData[0]?.value || 0) > 0 ||
+            (expenseData[1]?.value || 0) > 0 ? (
+            <ResponsiveContainer
+              width="100%"
+              height={300}
+              className="overflow-visible"
+            >
+              <PieChart>
+                <Pie
+                  data={expenseData}
+                  innerRadius={60}
+                  outerRadius={100}
+                  paddingAngle={2}
+                  dataKey="value"
+                  label={({
+                    cx,
+                    cy,
+                    midAngle,
+                    innerRadius,
+                    outerRadius,
+                    percent,
+                    index,
+                  }) => {
+                    const RADIAN = Math.PI / 180;
+                    const radius = outerRadius + 20;
+                    const x = cx + radius * Math.cos(-midAngle * RADIAN);
+                    const y = cy + radius * Math.sin(-midAngle * RADIAN);
+                    const item = expenseData[index];
+                    return (
+                      <text
+                        x={x}
+                        y={y}
+                        fill={item.color}
+                        textAnchor={x > cx ? "start" : "end"}
+                        dominantBaseline="central"
+                        style={{ fontSize: "12px", fontWeight: 500 }}
+                      >
+                        <tspan x={x} dy="0">
+                          {item.name}
+                        </tspan>
+                        <tspan x={x} dy="1.2em">
+                          ₹{item.value?.toFixed(0)} (
+                          {(percent * 100).toFixed(1)}%)
+                        </tspan>
+                      </text>
+                    );
+                  }}
+                  labelLine={true}
+                >
+                  {expenseData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                  <Label
+                    value={`₹${totalExpense.toFixed(0)}`}
+                    position="center"
+                    style={{
+                      fontSize: "24px",
+                      fill: "#1e1b4b",
+                      fontWeight: "bold",
+                    }}
+                  />
+                </Pie>
+              </PieChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="text-center text-gray-500 font-medium h-[250px] flex items-center justify-center">
+              No expense or coolie data available for this period.
+            </div>
+          )}
         </div>
 
         {/* Recent Transactions */}
-        <div className="bg-white shadow-xl rounded-2xl p-4">
-          <h2 className="text-xl font-bold text-gray-800 mb-4">Recent Transactions</h2>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left text-gray-700">
-              <thead className="text-xs text-gray-600 border-b">
-                <tr>
-                  <th className="py-2 px-4">Date</th>
-                  <th className="py-2 px-4">Module</th>
-                  <th className="py-2 px-4">Discount Freq.</th>
-                  <th className="py-2 px-4 text-right">Amount</th>
-                </tr>
-              </thead>
-              <tbody>
-                {recentTransactions.map((tx, idx) => (
-                  <tr key={idx} className="border-b">
-                    <td className="py-2 px-4">{tx.date}</td>
-                    <td className="py-2 px-4">{tx.module}</td>
-                    <td className="py-2 px-4">{tx.desc}</td>
-                    <td className="py-2 px-4 text-right font-semibold">${tx.amount.toFixed(2)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        {/* <div className="bg-white shadow-[0_0_10px_rgba(0,0,0,0.10)] rounded-2xl p-6 col-span-3">
+          <h2 className="text-2xl font-semibold text-[#05004E] mb-4">
+            Recent Transactions
+          </h2>
+          <hr className="mb-2 border-gray-200" />
+
+          <div className="overflow-x-auto ">
+            <ResponsiveContainer width="100%" height={300}>
+              <AreaChart data={kpiData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="day" />
+                <YAxis />
+                <Tooltip />
+                <Area
+                  type="monotone"
+                  dataKey="NetReceivables"
+                  stroke="#4F46E5"
+                  fill="#4F46E5"
+                  fillOpacity={0.2}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="TotalCommission"
+                  stroke="#FACC15"
+                  fill="#FACC15"
+                  fillOpacity={0.1}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
           </div>
-        </div>
+        </div> */}
+
+
+        <div className="bg-white shadow-[0_0_10px_rgba(0,0,0,0.10)] rounded-2xl p-6 col-span-3">
+          <h2 className="text-2xl font-semibold text-[#05004E] mb-4">
+            Today's Purchase & Sales
+          </h2>
+          <hr className="mb-2 border-gray-200" />
+
+         {Array.isArray(kpiData) && kpiData.length > 0 ? (
+  <ResponsiveContainer width="100%" height={300}>
+    <AreaChart data={kpiData}>
+      <CartesianGrid strokeDasharray="3 3" />
+      <XAxis dataKey="label" />
+      <YAxis />
+      <Tooltip />
+      <Area
+        type="monotone"
+        dataKey="Purchase"
+        stroke="#4F46E5"
+        fill="#4F46E5"
+        fillOpacity={0.2}
+      />
+      <Area
+        type="monotone"
+        dataKey="Sales"
+        stroke="#FACC15"
+        fill="#FACC15"
+        fillOpacity={0.1}
+      />
+    </AreaChart>
+  </ResponsiveContainer>
+) : (
+  <p className="text-center text-gray-500 text-xl">Loading data...</p>
+)}
+
+</div>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-4">
-        {/* KPI Chart */}
-        <div className="bg-white shadow-xl rounded-2xl p-4">
+
+      {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-4"> */}
+      {/* KPI Chart */}
+      {/* <div className="bg-white shadow-[0_0_10px_rgba(0,0,0,0.15)] rounded-2xl p-4">
           <h2 className="text-xl font-bold text-gray-800 mb-4">Key Performance Indicators</h2>
           <ResponsiveContainer width="100%" height={200}>
             <AreaChart data={kpiData}>
@@ -218,10 +463,10 @@ const FinancialDashboard = () => {
               <span className="w-3 h-3 bg-yellow-400 rounded-full" /> Total Commission
             </div>
           </div>
-        </div>
+        </div> */}
 
-        {/* Sales Summary */}
-        <div className="bg-white shadow-xl rounded-2xl p-4">
+      {/* Sales Summary */}
+      {/* <div className="bg-white shadow-xl rounded-2xl p-4">
           <h2 className="text-xl font-bold text-gray-800 mb-4">Sales Summary</h2>
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={salesData} barSize={50}>
@@ -234,10 +479,10 @@ const FinancialDashboard = () => {
               </Bar>
             </BarChart>
           </ResponsiveContainer>
-        </div>
+        </div> */}
 
-        {/* Purchase Summary */}
-        <div className="bg-white shadow-xl rounded-2xl p-4">
+      {/* Purchase Summary */}
+      {/* <div className="bg-white shadow-xl rounded-2xl p-4">
           <h2 className="text-xl font-bold text-gray-800 mb-4">Purchase Summary</h2>
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={purchaseData} barSize={50}>
@@ -250,8 +495,8 @@ const FinancialDashboard = () => {
               </Bar>
             </BarChart>
           </ResponsiveContainer>
-        </div>
-      </div>
+        </div> */}
+      {/* </div> */}
     </div>
   );
 };

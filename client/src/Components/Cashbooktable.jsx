@@ -72,6 +72,9 @@ const TransactionTable = ({
            item.supplier?.supplierName ||
            item.company?.companyName ||
            item.employee?.employeeName ||
+           item.vehicle?.vehicleName ||
+           item.expense?.expense ||
+           item.lender?.name ||
            item.otherPartyName ||
            "Unknown Party";
   }
@@ -86,9 +89,9 @@ const TransactionTable = ({
       ...item,
       balance: runningBalance,
       formattedDate: new Date(item.date).toLocaleDateString('en-GB'),
-      formattedDebit: item.debit ? `$${item.debit.toFixed(2)}` : '-',
-      formattedCredit: item.credit ? `$${item.credit.toFixed(2)}` : '-',
-      formattedBalance: `$${runningBalance.toFixed(2)}`
+      formattedDebit: item.debit ? `₹${item.debit.toFixed(2)}` : '-',
+      formattedCredit: item.credit ? `₹${item.credit.toFixed(2)}` : '-',
+      formattedBalance: `₹${runningBalance.toFixed(2)}`
     };
   });
 
@@ -101,13 +104,13 @@ const TransactionTable = ({
     <div className="p-4">
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200 text-sm">
-          <thead className="bg-gray-100 text-left text-gray-700 font-semibold">
+          <thead className="bg-[#F9FAFB] text-left text-gray-700 font-semibold">
             <tr>
               <th className="p-4">Date</th>
               <th className="p-4">Description</th>
-              <th className="p-4 text-right">Debit ($)</th>
-              <th className="p-4 text-right">Credit ($)</th>
-              <th className="p-4 text-right">Balance ($)</th>
+              <th className="p-4 text-right">Debit (₹)</th>
+              <th className="p-4 text-right">Credit (₹)</th>
+              <th className="p-4 text-right">Balance (₹)</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-100">
@@ -131,7 +134,7 @@ const TransactionTable = ({
                   <td className="p-4">Opening Balance</td>
                   <td className="p-4 text-right">-</td>
                   <td className="p-4 text-right">-</td>
-                  <td className="p-4 text-right">${openingBalance.toFixed(2)}</td>
+                  <td className="p-4 text-right">₹{openingBalance.toFixed(2)}</td>
                 </tr>
                 
                 {/* Transaction Rows */}
@@ -146,11 +149,11 @@ const TransactionTable = ({
                 ))}
                 
                 {/* Totals Row */}
-                <tr className="bg-green-50 font-semibold text-gray-700">
+                <tr className="bg-[#F0FDFA] font-semibold text-gray-700">
   <td className="p-4" colSpan="2">Period Totals</td>
-  <td className="p-4 text-right">${summary.totalDebit.toFixed(2)}</td>
-  <td className="p-4 text-right">${summary.totalCredit.toFixed(2)}</td>
-  <td className="p-4 text-right">${summary.closingBalance.toFixed(2)}</td>
+  <td className="p-4 text-right">₹{summary.totalDebit.toFixed(2)}</td>
+  <td className="p-4 text-right">₹{summary.totalCredit.toFixed(2)}</td>
+  <td className="p-4 text-right">₹{summary.closingBalance.toFixed(2)}</td>
 </tr>
 
               </>
@@ -160,7 +163,7 @@ const TransactionTable = ({
 
         {/* Pagination Controls */}
         {!isLoading && transactionsWithBalance.length > 0 && (
-          <div className="flex justify-between items-center mt-4 text-sm text-gray-700">
+          <div className="flex justify-between items-center mt-4 text-gray-700">
             <div>
               Page {page} of {pagination.totalPages} 
               {pagination.totalTransactions && (
@@ -171,14 +174,21 @@ const TransactionTable = ({
               <button
                 onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
                 disabled={page === 1}
-                className="px-4 py-1 rounded-md bg-gray-100 text-gray-400 border border-gray-200 disabled:cursor-not-allowed hover:bg-gray-200"
+                className={`px-6 py-3 border border-gray-300 rounded-lg 
+                 text-gray-300 cursor-not-allowed
+                    hover:bg-gray-100
+                }`}
               >
                 Previous
               </button>
               <button
                 onClick={() => setPage((prev) => Math.min(prev + 1, pagination.totalPages))}
                 disabled={page === pagination.totalPages}
-                className="px-4 py-1 rounded-md bg-white border border-gray-300 text-blue-600 font-medium hover:bg-blue-50"
+                className={`px-6 py-3 border border-gray-300 rounded-lg 
+              
+                  text-blue-500 cursor-not-allowed
+                     hover:bg-gray-100
+                }`}
               >
                 Next
               </button>
@@ -188,6 +198,6 @@ const TransactionTable = ({
       </div>
     </div>
   );
-};
+};        
 
 export default TransactionTable;

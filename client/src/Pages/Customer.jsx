@@ -1,29 +1,29 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { CiCirclePlus, CiFilter } from "react-icons/ci";
-import { GoTrash } from "react-icons/go";
-import { FaCheckSquare, FaRegSquare } from "react-icons/fa";
 import { LuPencilLine } from "react-icons/lu"; // <--- Added here
 import useAxiosPrivate from "../hooks/useAxiosPrivate";
 import AddCustomerModal from "./AddCustomer";
 import EditCustomerModal from "./EditCustomer";
 import { FaTrashAlt } from "react-icons/fa";
+import { FaChevronRight } from "react-icons/fa6";
+import Swal from "sweetalert2";
+import { debounce } from "lodash";
+import OvalSpinner from "../Components/spinners/OvalSpinner";
 
 export default function CustomerHeader() {
   const [customers, setCustomers] = useState([]);
-  const [selectedRows, setSelectedRows] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
   const axiosInstance = useAxiosPrivate();
-  const navigate = useNavigate();
-  console.log(customers);
-  const fetchCustomers = async (page = 1) => {
+  const [search, setSearch] = useState("");
+  const limit = 10;
+
+  const fetchCustomers = async () => {
     setLoading(true);
     try {
-      const limit = 10;
       const response = await axiosInstance.get(
-        `/admin/customer/get?page=${page}&limit=${limit}`
+        `/admin/customer/get?page=${currentPage}&limit=${limit}&search=${search}`
       );
       const data = response.data;
       setCustomers(data.customers);
@@ -37,24 +37,12 @@ export default function CustomerHeader() {
   };
 
   useEffect(() => {
-    fetchCustomers(currentPage);
-  }, [currentPage]);
-
-  const toggleRowSelection = (id) => {
-    setSelectedRows((prev) =>
-      prev.includes(id) ? prev.filter((rowId) => rowId !== id) : [...prev, id]
-    );
-  };
-
-  const toggleAllRows = () => {
-    if (selectedRows.length === customers.length) {
-      setSelectedRows([]);
-    } else {
-      setSelectedRows(
-        customers.map((customer) => customer._id || customer.customerNumber)
-      );
-    }
-  };
+    const debouncedFetch = debounce(fetchCustomers, 300);
+    debouncedFetch();
+    return () => {
+      debouncedFetch.cancel();
+    };
+  }, [currentPage, search]);
 
   const handlePrevious = () => {
     if (currentPage > 1) {
@@ -69,54 +57,100 @@ export default function CustomerHeader() {
   };
 
   const [popup, setPopup] = useState(false);
+  const [editpopup, setEditPopup] = useState(false);
   const [selectedCustomerId, setSelectedCustomerId] = useState(null);
+
+  const handleDeleteCustomer = async (id) => {
+    const result = await Swal.fire({
+      title: "Are you sure?",
+      text: "This will permanently delete the customer.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, delete it!",
+    });
+
+    if (result.isConfirmed) {
+      try {
+        const response = await axiosInstance.delete(
+          `/admin/customer/delete/${id}`
+        );
+
+        // Remove from state
+        setCustomers((prev) => prev.filter((cust) => cust._id !== id));
+
+        Swal.fire({
+          title: "Deleted!",
+          text: response.data.message,
+          icon: "success",
+          timer: 2000,
+          showConfirmButton: false,
+        });
+      } catch (error) {
+        Swal.fire({
+          title: "Error!",
+          text: error?.response?.data?.message || "Failed to delete customer.",
+          icon: "error",
+          confirmButtonText: "OK",
+        });
+      }
+    }
+  };
 
   return (
     <>
-      <div className="p-4 rounded-lg shadow-sm h-[800px] bg-white mt-5">
+      <div className="p-6 rounded-3xl shadow-md h-[800px] bg-white ">
         {/* Breadcrumb */}
-        <nav className="text-sm text-gray-500 mb-2 mt-10">
-          <span>Master</span> <span className="mx-1">›</span>{" "}
-          <span className="text-gray-700">Customer</span>
+        <nav className="flex items-center text-md text-[#737791] gap-2 mb-2">
+          <span>Master</span>
+          <FaChevronRight />
+          <span className="text-[#737791]">Customer</span>
         </nav>
 
-        <h1 className="text-2xl font-bold text-gray-800 mb-6">Customer</h1>
+        <h1 className="text-3xl font-bold text-[#151D48] mb-6">Customer</h1>
 
-{/* Search Input */}
-<div className="relative max-w-md">
-  <input
-    type="text"
-    placeholder="Search here..."
-    className=" px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-  />
- </div>
-          <div className="flex space-x-3 -mt-10 float-right">
-            <button
-              className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-2 rounded-lg flex items-center gap-2"
-              onClick={() => setPopup(true)}
-            >
-              <CiCirclePlus className="text-xl " /> Add New Customer
-            </button>
-          </div>
-        
+        {/* Search Input */}
+        <div className="relative max-w-md">
+          <input
+            type="text"
+            placeholder="Search here..."
+            value={search}
+            autoComplete="off"
+            onChange={(e) => {
+              const value = e.target.value;
+              setSearch(value);
+              // fetchCustomers(1, value); // Always start from page 1 when searching
+              setCurrentPage(1);
+            }}
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
+        </div>
+        <div className="flex space-x-3 -mt-10 float-right">
+          <button
+            className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-2 rounded-lg flex items-center gap-2"
+            onClick={() => setPopup(true)}
+          >
+            <CiCirclePlus className="text-xl font-bold " /> Add New Customer
+          </button>
+        </div>
+
         {/* Dynamic Table */}
-        <div className="mt-20 bg-white ">
+        <div className="mt-8 bg-white ">
           <table className="w-full border-collapse text-gray-900 ">
             <thead>
-              <tr className="text-left text-gray-900 font-bold border-b-2 border-gray-200 bg-[#F9FAFB] ">
+              <tr className="text-left text-gray-900 font-bold border-b-2 border-gray-200 bg-[#F9FAFB] text-lg ">
+                <th className="p-3 w-[5%] ">No.</th>
+                <th className="p-3 w-[10%] ">Name</th>
+                <th className="p-3 w-[15%] ">Address</th>
+                <th className="p-3 w-[10%] ">Phone</th>
+                <th className="p-3 w-[10%]">WhatsApp</th>
+                <th className="p-3 w-[10%] ">Discount %</th>
 
-                <th className="p-2 w-[5%] ">No.</th>
-                <th className="p-2 w-[10%] ">Name</th>
-                <th className="p-2 w-[15%] ">Address</th>
-                <th className="p-2 w-[10%] ">Phone</th>
-                <th className="p-2 w-[10%]">WhatsApp</th>
-                <th className="p-2 w-[10%] ">Discount %</th>
-
-                <th className="p-2 w-[10%] ">Opening Bal.</th>
-                <th className="p-2 w-[10%] ">Route</th>
-                <th className="p-2 w-[10%]" ></th>
-                <th className="p-2 w-[10%]"></th>
-
+                <th className="p-3 w-[10%] ">Opening Bal.</th>
+                <th className="p-3 w-[10%] ">Route</th>
+                <th className="p-3 w-[10%]"></th>
+                <th className="p-3 w-[10%]"></th>
               </tr>
             </thead>
 
@@ -124,39 +158,57 @@ export default function CustomerHeader() {
               {loading ? (
                 <tr>
                   <td colSpan="10" className="text-center p-5">
-                    Loading...
+                    <OvalSpinner />
                   </td>
                 </tr>
               ) : customers.length > 0 ? (
-                customers.map((customer) => (
+                customers.map((customer, index) => (
                   <tr
                     key={customer._id || customer.customerNumber}
-                    className="border-b border-gray-200 hover:bg-gray-50 bg-white"
+                    className="border-b border-gray-200 hover:bg-gray-50 bg-white text-lg"
                   >
-
-                    <td className="p-2">{customer.customerNumber}</td>
-                    <td className="p-2">{customer.customerName}</td>
-                    <td className="p-2">{customer.address}</td>
-                    <td className="p-2">{customer.phone}</td>
-                    <td className="p-2">{customer.whatsapp}</td>
-                    <td className="p-2">{customer.discount}%</td>
+                    <td className="p-2">
+                      {index + 1 + (currentPage - 1) * limit}
+                    </td>
+                    <td className="p-2">{customer.customerName || "--"}</td>
+                    <td className="p-2 max-w-24 truncate whitespace-nowrap">
+                      {customer.address || "--"}
+                    </td>
+                    <td className="p-2">{customer.phone || "--"}</td>
+                    <td className="p-2">{customer.whatsapp || "--"}</td>
+                    <td className="p-2">
+                      {customer.discount != null
+                        ? `${customer.discount}%`
+                        : "--"}
+                    </td>
 
                     <td className="p-2">
-                      ${customer.openingBalance.toFixed(2)}
+                      {customer.openingBalance != null
+                        ? `₹${customer.openingBalance.toFixed(2)}`
+                        : "--"}
                     </td>
                     <td className="p-2 flex items-center gap-8 ">
-                      {customer.routeCustomer ? "Yes" : "No"}
+                      {customer.routeCustomer != null
+                        ? customer.routeCustomer
+                          ? "Yes"
+                          : "No"
+                        : "--"}
                     </td>
                     <td>
                       <LuPencilLine
                         className="text-[#6A5AE0] w-4 h-4 cursor-pointer"
                         onClick={() => {
                           setSelectedCustomerId(customer._id);
-                          setPopup(true);
+                          setEditPopup(true);
                         }}
                       />
                     </td>
-                    <td className="p-2 text-red-500"> <FaTrashAlt /></td>
+                    <td className="p-2 text-red-500">
+                      <FaTrashAlt
+                        className="cursor-pointer hover:text-red-700"
+                        onClick={() => handleDeleteCustomer(customer._id)}
+                      />
+                    </td>
                   </tr>
                 ))
               ) : (
@@ -179,31 +231,39 @@ export default function CustomerHeader() {
             <button
               onClick={handlePrevious}
               disabled={currentPage === 1}
-              className={`px-4 py-2 border border-gray-300 rounded-lg ${currentPage === 1
-                  ? "text-gray-400 cursor-not-allowed"
+              className={`px-4 py-2 border border-gray-300 rounded-lg ${
+                currentPage === 1
+                  ? "text-gray-300 cursor-not-allowed"
                   : "hover:bg-gray-100"
-                }`}
+              }`}
             >
               Previous
             </button>
             <button
               onClick={handleNext}
               disabled={currentPage === totalPages}
-              className={`px-4 py-2 border border-gray-300 rounded-lg ${currentPage === totalPages
-                  ? "text-gray-400 cursor-not-allowed"
+              className={`px-4 py-2 border border-gray-300 rounded-lg ${
+                currentPage === totalPages
+                  ? "text-[#4079ED] cursor-not-allowed"
                   : "hover:bg-gray-100"
-                }`}
+              }`}
             >
               Next
             </button>
           </div>
         </div>
       </div>
-      {popup && <AddCustomerModal setPopup={setPopup} />}
-      {popup && selectedCustomerId && (
+      {popup && (
+        <AddCustomerModal
+          setPopup={setPopup}
+          fetchCustomersDebounced={fetchCustomers}
+        />
+      )}
+      {editpopup && selectedCustomerId && (
         <EditCustomerModal
           customerId={selectedCustomerId}
-          setPopup={setPopup}
+          setEditPopup={setEditPopup}
+          fetchCustomersDebounced={fetchCustomers}
         />
       )}
     </>

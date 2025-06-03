@@ -33,8 +33,16 @@ const getCashbookData = async (req, res) => {
         .populate({ path: 'supplier', select: 'supplierName' })
         .lean(),
       Payment.find({ date: { $gte: fromDate, $lte: toDate } })
-        .populate('supplier customer employee company', 'supplierName customerName employeeName companyName')
-        .lean(),
+      .populate([
+        { path: 'supplier', select: 'supplierName' },
+        { path: 'customer', select: 'customerName' },
+        { path: 'employee', select: 'employeeName' },
+        { path: 'company', select: 'companyName' },
+        { path: 'expense', select: 'expense' },
+        { path: 'vehicle', select: 'vehicleName' },
+        { path: 'lender', select: 'name' },
+      ])
+              .lean(),
       Expense.find({ date: { $gte: fromDate, $lte: toDate } }).lean(),
       Promise.all([
         Sale.countDocuments({ dateOfSale: { $gte: fromDate, $lte: toDate } }),
@@ -55,6 +63,7 @@ const getCashbookData = async (req, res) => {
       type: p.paymentType.toLowerCase(), // 'paymentin' or 'paymentout'
       date: p.date 
     }));
+
     expenses.forEach(e => allTransactions.push({ ...e, type: 'expense', date: e.date }));
 
     // Sort transactions by date

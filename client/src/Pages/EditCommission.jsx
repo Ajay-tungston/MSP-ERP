@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { XCircleIcon, PlusCircleIcon } from '@heroicons/react/24/outline';
+import { XCircleIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
 import { useNavigate } from 'react-router-dom';
 
 export default function CommissionForm() {
@@ -34,7 +34,6 @@ export default function CommissionForm() {
   // Handle form submission
   const handleSubmit = (e) => {
     e.preventDefault(); // Prevent default form submission
-    console.log("Form submitted:", formData); // Log form data (replace with API call)
     // Optional: Add validation before submission
     navigate('/commission'); // Redirect after submission
   };
@@ -182,7 +181,7 @@ export default function CommissionForm() {
                 onClick={handleSubmit}
                 className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
               >
-                <PlusCircleIcon className="w-5 h-5" />
+                <CheckCircleIcon className="w-5 h-5" />
                 Save
               </button>
             </div>

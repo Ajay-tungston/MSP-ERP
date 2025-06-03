@@ -1,10 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const expenseController = require('../../../controllers/admin/expense/adminExpense');
+const verifyJwt = require('../../../middleware/verifyJwt');
 
-router.get('/', expenseController.getExpenses);
-router.post('/add', expenseController.createExpense);
-router.put('/:id', expenseController.updateExpense);
-router.delete('/:id', expenseController.deleteExpense);
+router.get('/',verifyJwt, expenseController.getExpenses);
+router.post('/add',verifyJwt, expenseController.createExpense);
+router.get("/list",verifyJwt,expenseController.getExpenseList)
+router.put('/:id',verifyJwt, expenseController.updateExpense);
+router.delete('/:id',verifyJwt, expenseController.deleteExpense);
 
 module.exports = router;

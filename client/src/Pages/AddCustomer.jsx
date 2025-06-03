@@ -3,9 +3,9 @@ import Swal from "sweetalert2";
 import { XCircleIcon, PlusCircleIcon } from "@heroicons/react/24/solid";
 import useAxiosPrivate from "../hooks/useAxiosPrivate";
 
-const AddCustomerModal = ({ onClose, setPopup }) => {
+const AddCustomerModal = ({ onClose, setPopup,fetchCustomersDebounced }) => {
   const axiosInstance = useAxiosPrivate();
-  const safeOnClose = typeof onClose === "function" ? onClose : () => {};
+  const safeOnClose = typeof onClose === "function" ? onClose : () => { };
 
   const [formData, setFormData] = useState({
     name: "",
@@ -61,7 +61,7 @@ const AddCustomerModal = ({ onClose, setPopup }) => {
         text: "The customer has been added successfully.",
         confirmButtonColor: "#2563EB",
       });
-
+      fetchCustomersDebounced()
       safeOnClose();
       setPopup(false);
     } catch (err) {
@@ -101,10 +101,10 @@ const AddCustomerModal = ({ onClose, setPopup }) => {
         {/* Form */}
         <div className="grid grid-cols-2 gap-x-20 gap-y-6 mt-6 text-[#05004e] text-xl">
           {/* No. */}
-          <div className="flex items-center">
+          {/* <div className="flex items-center">
             <label className="w-[172px] text-[#737791]">No.</label>
             <span className="font-bold">Auto Generated</span>
-          </div>
+          </div> */}
 
           {/* Customer Name */}
           <div className="flex items-center">
@@ -113,6 +113,7 @@ const AddCustomerModal = ({ onClose, setPopup }) => {
             </label>
             <input
               type="text"
+              autoComplete="off"
               value={formData.name}
               onChange={(e) => handleChange("name", e.target.value)}
               placeholder="Enter here"
@@ -122,9 +123,10 @@ const AddCustomerModal = ({ onClose, setPopup }) => {
 
           {/* Address */}
           <div className="flex items-center">
-            <label className="w-[172px] text-[#737791]">Address</label>
+            <label className="w-[172px] text-[#737791]">Address <span className="text-red-500">*</span></label>
             <input
               type="text"
+                   autoComplete="off"
               value={formData.address}
               onChange={(e) => handleChange("address", e.target.value)}
               placeholder="Enter here"
@@ -134,17 +136,18 @@ const AddCustomerModal = ({ onClose, setPopup }) => {
 
           {/* Phone */}
           <div className="flex items-center">
-  <label className="w-[172px] text-[#737791]">
-    Phone <span className="text-red-500">*</span>
-  </label>
-  <input
-    type="tel"
-    value={formData.phone}
-    onChange={(e) => handleChange("phone", e.target.value)}
-    placeholder="Enter here"
-    className="w-[300px] px-4 py-3 bg-gray-50 rounded-xl outline-none"
-  />
-</div>
+            <label className="w-[172px] text-[#737791]">
+              Phone <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="number"
+                   autoComplete="off"
+              value={formData.phone}
+              onChange={(e) => handleChange("phone", e.target.value)}
+              placeholder="Enter here"
+              className="w-[300px] px-4 py-3 bg-gray-50 rounded-xl outline-none"
+            />
+          </div>
 
 
           {/* WhatsApp */}
@@ -181,6 +184,7 @@ const AddCustomerModal = ({ onClose, setPopup }) => {
             <label className="w-[172px] text-[#737791]">Discount %</label>
             <input
               type="number"
+                   autoComplete="off"
               value={formData.discount}
               onChange={(e) => handleChange("discount", e.target.value)}
               placeholder="Enter here"
@@ -194,9 +198,10 @@ const AddCustomerModal = ({ onClose, setPopup }) => {
               Opening Balance
             </label>
             <div className="w-[300px] flex items-center px-4 py-3 bg-gray-50 rounded-xl">
-              <span className="mr-2 font-bold">$</span>
+              <span className="mr-2 font-bold">₹</span>
               <input
                 type="number"
+                     autoComplete="off"
                 value={formData.balance}
                 onChange={(e) => handleChange("balance", e.target.value)}
                 placeholder="Enter here"
@@ -214,15 +219,13 @@ const AddCustomerModal = ({ onClose, setPopup }) => {
               <button
                 key={val}
                 onClick={() => handleChange("route", val)}
-                className={`px-6 py-3 ${
-                  formData.route === val
+                className={`px-6 py-3 ${formData.route === val
                     ? "bg-blue-100 text-blue-700 border border-blue-500"
                     : "bg-gray-100 text-gray-500 border border-gray-300"
-                } ${
-                  idx === 0
+                  } ${idx === 0
                     ? "rounded-l-xl border-r-0"
                     : "rounded-r-xl border-l-0"
-                }`}
+                  }`}
               >
                 {val}
               </button>

@@ -58,8 +58,11 @@ function Purchasetransaction() {
   const [itemList, setItemList] = useState([]);
   const [itemLoading, setItemLoading] = useState(false);
   const [itemInputFocused, setItemInputFocused] = useState(false);
-  const [showActionModal, setShowActionModal] = useState(false);
-
+  const [advanceAmount, setAdvanceAmount] = useState(0);
+  const [advanceLoading, setAdvanceLoading] = useState(false);
+  const [isAdvanceDeductionChecked, setIsAdvanceDeductionChecked] =
+    useState(false);
+  const [deductedAmount, setDeductedAmount] = useState(0);
   const [purchaseCount, setPurchaseCount] = useState(1);
   const [submitLoading, setSubmitloading] = useState(false);
 
@@ -78,7 +81,6 @@ function Purchasetransaction() {
           `/admin/supplier/list?search=${searchTerm}`
         );
         setSupplierList(response.data);
-        console.log(response.data);
       } catch (error) {
         console.log(error);
       } finally {
@@ -107,7 +109,6 @@ function Purchasetransaction() {
           `/admin/item/list?search=${searchTerm}`
         );
         setItemList(response.data);
-        console.log(response.data);
       } catch (error) {
         console.log(error);
       } finally {
@@ -131,13 +132,11 @@ function Purchasetransaction() {
     try {
       const response = await axiosInstance(`/admin/purchase/count`);
       setPurchaseCount((Number(response?.data?.count) || 0) + 1);
-      console.log(response?.data?.count)
     } catch (error) {
       console.log(error);
     }
   };
   useEffect(() => {
-   
     fetchPurchaseCount();
   }, []);
 
@@ -149,20 +148,63 @@ function Purchasetransaction() {
   const handleKeyDown = (e, rowIndex, colIndex) => {
     if (e.key === "Enter") {
       e.preventDefault();
-      const nextRef = inputRefs.current?.[rowIndex]?.[colIndex + 1];
-      if (nextRef) nextRef.focus();
-      else if (inputRefs.current?.[rowIndex + 1]?.[0])
-        inputRefs.current[rowIndex + 1][0].focus();
+
+      const row = inputRefs.current?.[rowIndex];
+      if (!row) return;
+
+      // Try to find next enabled input in the same row
+      for (let nextCol = colIndex + 1; nextCol < row.length; nextCol++) {
+        const nextRef = row[nextCol];
+        if (nextRef && nextRef.disabled !== true && nextRef.readOnly !== true) {
+          nextRef.focus();
+          return;
+        }
+      }
+
+      // No more inputs in this row, move to the first input of the next row
+      const nextRow = inputRefs.current?.[rowIndex + 1];
+      if (nextRow) {
+        for (let i = 0; i < nextRow.length; i++) {
+          const nextRef = nextRow[i];
+          if (
+            nextRef &&
+            nextRef.disabled !== true &&
+            nextRef.readOnly !== true
+          ) {
+            nextRef.focus();
+            return;
+          }
+        }
+      }
     }
   };
 
+  // useEffect for setting up refs after rendering
   useEffect(() => {
-    inputRefs.current = items.map((_, i) =>
-      Array(6)
-        .fill(null)
-        .map((_, j) => inputRefs.current?.[i]?.[j] || React.createRef())
+    inputRefs.current = items.map(() =>
+      [0, 1, 2, 3, 4, 5].map(() => React.createRef())
     );
-  }, [items]);
+  }, [items.length]);
+
+  useEffect(() => {
+    setDeductedAmount(Number(selectedSupplier?.advanceDeducted) || 0);
+    if (!selectedSupplier?._id) return;
+
+    const fetchSupplierAdvance = async () => {
+      setAdvanceLoading(true);
+      try {
+        const response = await axiosInstance.get(
+          `/admin/supplier/advance/${selectedSupplier?._id}`
+        );
+        setAdvanceAmount(response?.data?.advanceAmount);
+      } catch (error) {
+        console.log(error);
+      } finally {
+        setAdvanceLoading(false);
+      }
+    };
+    fetchSupplierAdvance();
+  }, [selectedSupplier]);
 
   const totalQuantityInKg = items.reduce((acc, item) => {
     const qty = parseFloat(item.kg);
@@ -195,6 +237,30 @@ function Purchasetransaction() {
       supplierNameRef.current.focus();
       return;
     }
+
+    if (isAdvanceDeductionChecked&&deductedAmount > advanceAmount) {
+      Swal.fire({
+        title: "Invalid Deduction Amount",
+        text: `You cannot deduct more than the available advance of ₹${advanceAmount?.toFixed(
+          2
+        )}`,
+        icon: "error",
+        confirmButtonText: "Okay",
+      });
+      return
+    } 
+     if (isAdvanceDeductionChecked&&deductedAmount > (totalPrice - totalDeduction)) {
+      Swal.fire({
+        title: "Invalid Deduction Amount",
+        text: `You cannot deduct more than the total bill amount of ₹${(totalPrice - totalDeduction)?.toFixed(
+          2
+        )}`,
+        icon: "error",
+        confirmButtonText: "Okay",
+      });
+      return
+    }
+
     // Validate item rows
     for (let i = 0; i < items.length; i++) {
       const item = items[i];
@@ -238,7 +304,16 @@ function Purchasetransaction() {
         dateOfPurchase,
         marketFee,
       });
-      if(isPrint){
+      if (isAdvanceDeductionChecked) {
+        const response2 = await axiosInstance.post(`/admin/payment/add`, {
+          paymentType: "PaymentIn",
+          category: "supplier",
+          amount: deductedAmount,
+          supplier: selectedSupplier?._id,
+          date: new Date().toISOString(),
+        });
+      }
+      if (isPrint) {
         const transaction = {
           selectedSupplier,
           purchaseCount,
@@ -272,7 +347,7 @@ function Purchasetransaction() {
       setSelectedSupplier("");
       setItemSearch("");
       setItemList([]);
-      fetchPurchaseCount()
+      fetchPurchaseCount();
     } catch (error) {
       Swal.fire({
         title: "Something went wrong!",
@@ -292,11 +367,11 @@ function Purchasetransaction() {
           <OvalSpinner />
         </div>
       ) : (
-        <div className="w-full min-h-screen bg-white rounded-3xl p-8 overflow-x-hidden mt-10">
+        <div className="w-full min-h-screen bg-white rounded-3xl p-6 overflow-x-hidden  shadow-md">
           <div className="max-w-screen-xl mx-auto flex flex-col gap-12">
             {/* Page Header */}
             <div className="pb-6 border-b border-gray-400">
-              <h1 className="text-indigo-950 text-4xl font-bold font-['Urbanist']">
+              <h1 className="text-indigo-950 text-3xl font-bold font-['Urbanist']">
                 Add New Purchase Transaction
               </h1>
             </div>
@@ -314,7 +389,7 @@ function Purchasetransaction() {
                   </div>
                 </div>
                 <div className="flex items-center gap-6 w-full md:w-[48%]">
-                  <label className="min-w-44 text-slate-500 text-xl font-normal">
+                  <label className="min-w-44 text-[#73779166]  text-xl font-normal">
                     Date of Purchase <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -456,7 +531,7 @@ function Purchasetransaction() {
               </div>
 
               {/* Table Header */}
-              <div className="w-full grid grid-cols-12 gap-4 bg-gray-50 px-6 py-4 font-bold text-indigo-950 text-xl border-b">
+              <div className="w-full grid grid-cols-12 gap-4 bg-gray-50 px-6 py-4 font-bold text-indigo-950  border-b text-lg">
                 <div className="col-span-1">No.</div>
                 <div className="col-span-3">Item Name</div>
                 <div className="col-span-2">Qty (KG)</div>
@@ -469,7 +544,7 @@ function Purchasetransaction() {
               {items.map((item, index) => (
                 <div
                   key={index}
-                  className="relative w-full grid grid-cols-12 gap-4  px-6 py-4 text-xl border-b hover:bg-gray-100 group"
+                  className="relative w-full grid grid-cols-12 gap-4  px-6 py-4 text-lg border-b  group"
                 >
                   {/* No. */}
                   <input
@@ -500,6 +575,9 @@ function Purchasetransaction() {
                         const updatedItems = [...items];
                         updatedItems[index].name = selectedItem.itemName;
                         setItems(updatedItems);
+                        setTimeout(() => {
+                          inputRefs.current?.[index]?.[2]?.focus();
+                        }, 0); // Delay to allow Combobox selection to complete
                       }}
                     >
                       <div className="relative w-full">
@@ -511,7 +589,14 @@ function Purchasetransaction() {
                           onFocus={() => setItemInputFocused(index)}
                           onBlur={() => setItemInputFocused(false)}
                           className="bg-white border-none outline-none placeholder:text-gray-400 w-full h-full"
+                          // ⛔️ REMOVE handleKeyDown — let Combobox handle Enter key
+                          ref={(el) => {
+                            if (!inputRefs.current[index])
+                              inputRefs.current[index] = [];
+                            inputRefs.current[index][1] = el;
+                          }}
                         />
+
                         {itemLoading ? (
                           itemInputFocused === index && (
                             <div className="absolute z-10 w-full border border-gray-200 rounded-xl bg-white max-h-60 overflow-y-auto shadow-lg px-6 py-3 text-gray-700">
@@ -548,75 +633,60 @@ function Purchasetransaction() {
 
                   {/* Quantity */}
                   {/* KG Input */}
-                  <input
-                    type="number"
-                    name="kg"
-                    value={item.kg}
-                    disabled={
-                      !itemList.some(
-                        (option) => option.itemName === item.name
-                      ) || !!item.box
-                    }
-                    onChange={(e) => {
-                      const updatedItems = [...items];
-                      updatedItems[index].kg = e.target.value;
-                      setItems(updatedItems);
-                    }}
-                    onKeyDown={(e) => handleKeyDown(e, index, 2)}
-                    ref={(el) => (inputRefs.current[index][2] = el)}
-                    className="col-span-2 bg-white border-none outline-none placeholder:text-gray-400 w-full"
-                    placeholder="Qty(Kg)"
-                  />
+              <input
+  type="number"
+  name="kg"
+  value={item.kg}
+  disabled={
+    !itemList.some((option) => option.itemName === item.name) || !!item.box
+  }
+  onChange={(e) => handleInputChange(index, e)}
+  onKeyDown={(e) => handleKeyDown(e, index, 2)}
+  ref={(el) => {
+    if (!inputRefs.current[index]) inputRefs.current[index] = [];
+    inputRefs.current[index][2] = el;
+  }}
+  className="col-span-2 bg-white border-none outline-none placeholder:text-gray-400 w-full"
+  placeholder="Qty(Kg)"
+/>
 
                   {/* BOX Input */}
-                  <input
-                    type="number"
-                    name="box"
-                    value={item.box}
-                    disabled={
-                      !itemList.some(
-                        (option) => option.itemName === item.name
-                      ) || !!item.kg
-                    }
-                    onChange={(e) => {
-                      const updatedItems = [...items];
-                      updatedItems[index].box = e.target.value;
-                      setItems(updatedItems);
-                    }}
-                    onKeyDown={(e) => handleKeyDown(e, index, 3)}
-                    ref={(el) => (inputRefs.current[index][3] = el)}
-                    className="col-span-2 bg-white border-none outline-none placeholder:text-gray-400 w-full"
-                    placeholder="Qty(Box)"
-                  />
+                 <input
+  type="number"
+  name="box"
+  value={item.box}
+  disabled={
+    !itemList.some((option) => option.itemName === item.name) || !!item.kg
+  }
+  onChange={(e) => handleInputChange(index, e)}
+  onKeyDown={(e) => handleKeyDown(e, index, 3)}
+  ref={(el) => {
+    if (!inputRefs.current[index]) inputRefs.current[index] = [];
+    inputRefs.current[index][3] = el;
+  }}
+  className="col-span-2 bg-white border-none outline-none placeholder:text-gray-400 w-full"
+  placeholder="Qty(Box)"
+/>
 
-                  {/* Unit Selector */}
-                  {/* <select
-                name="unit"
-                value={item.unit}
-                disabled={
-                  !itemList.some((option) => option.itemName === item.name)
-                }
-                onChange={(e) => handleInputChange(index, e)}
-                className="col-span-1 bg-gray-100 border border-gray-300 text-gray-700 px-2 rounded-md w-full"
-              >
-                <option value="box">Box</option>
-                <option value="kg">Kg</option>
-              </select> */}
 
                   {/* Price */}
-                  <input
-                    type="number"
-                    name="price"
-                    disabled={
-                      !itemList.some((option) => option.itemName === item.name)
-                    }
-                    value={item.price}
-                    onChange={(e) => handleInputChange(index, e)}
-                    onKeyDown={(e) => handleKeyDown(e, index, 4)}
-                    ref={(el) => (inputRefs.current[index][4] = el)}
-                    className="col-span-2 bg-white border-none outline-none placeholder:text-gray-400 w-full"
-                    placeholder="Unit Price"
-                  />
+                <input
+  type="number"
+  name="price"
+  value={item.price}
+  disabled={
+    !itemList.some((option) => option.itemName === item.name)
+  }
+  onChange={(e) => handleInputChange(index, e)}
+  onKeyDown={(e) => handleKeyDown(e, index, 4)}
+  ref={(el) => {
+    if (!inputRefs.current[index]) inputRefs.current[index] = [];
+    inputRefs.current[index][4] = el;
+  }}
+  className="col-span-2 bg-white border-none outline-none placeholder:text-gray-400 w-full"
+  placeholder="Unit Price"
+/>
+
 
                   {/* Total (Read Only) */}
                   <input
@@ -628,7 +698,11 @@ function Purchasetransaction() {
                     value={item.total}
                     readOnly
                     onKeyDown={(e) => handleKeyDown(e, index, 5)}
-                    ref={(el) => (inputRefs.current[index][5] = el)}
+                    ref={(el) => {
+                      if (!inputRefs.current[index])
+                        inputRefs.current[index] = [];
+                      inputRefs.current[index][5] = el;
+                    }}
                     className="col-span-2 bg-white border-none outline-none placeholder:text-gray-400 w-full"
                     placeholder="Subtotal"
                   />
@@ -719,8 +793,21 @@ function Purchasetransaction() {
 
               <div className="flex flex-wrap gap-8">
                 {[
-                  { label: "Advance Deduction", value: "0" },
-                  { label: "Advance Amount", value: "0" },
+                  {
+                    label: "Advance Deduction",
+                    value: selectedSupplier
+                      ? `${deductedAmount ?? 0}`
+                      : "Select a supplier",
+                    prefix: "₹",
+                  },
+                  {
+                    label: "Advance Amount",
+                    value: selectedSupplier
+                      ? advanceLoading
+                        ? "Loading.."
+                        : `₹ ${advanceAmount ? advanceAmount?.toFixed(2) : 0}`
+                      : "select a supplier",
+                  },
                   {
                     label: "Net Payable",
                     value:
@@ -736,40 +823,74 @@ function Purchasetransaction() {
                   >
                     <label className="min-w-44 text-slate-500 text-xl">
                       {item.label}
+                      <br />
+                      {item.label === "Advance Deduction" && (
+                        <span
+                          className={`flex justify-end items-center ${
+                            isAdvanceDeductionChecked
+                              ? "text-slate-500"
+                              : "text-slate-400 "
+                          }`}
+                        >
+                          Deduct
+                          <input
+                            type="checkbox"
+                            checked={isAdvanceDeductionChecked}
+                            onChange={() =>
+                              setIsAdvanceDeductionChecked(
+                                !isAdvanceDeductionChecked
+                              )
+                            }
+                            className="ml-2 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded cursor-pointer"
+                          />
+                        </span>
+                      )}
                     </label>
+
                     <div className="w-full md:w-80 px-6 py-4 bg-gray-50 rounded-xl flex items-center gap-2">
                       {item.prefix && (
                         <span className="text-indigo-950 font-bold">
                           {item.prefix}
                         </span>
                       )}
-                      <span
-                        className={`text-xl ${
+                      <input
+                        type="text"
+                        value={item.value}
+                        onChange={(e) => {
+                          if (item.label === "Advance Deduction") {
+                            setDeductedAmount(e.target.value);
+                          }
+                        }}
+                        readOnly={
+                          !(
+                            item.label === "Advance Deduction" &&
+                            selectedSupplier
+                          )
+                        }
+                        className={`text-xl bg-gray-50 outline-none w-full ${
                           item.label === "Net Payable"
                             ? "text-indigo-950 font-bold"
                             : "text-gray-400"
                         }`}
-                      >
-                        {item.value}
-                      </span>
+                      />
                     </div>
                   </div>
                 ))}
                 <div className="flex justify-end gap-4 mt-6">
                   <button
-                    className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700"
-                    onClick={()=>handleSubmit(false)}
+                    className="bg-[#4079ED] text-white px-6 py-2 rounded"
+                    onClick={() => handleSubmit(false)}
                   >
                     Save
                   </button>
                   <button
-                    className="bg-purple-600 text-white px-6 py-2 rounded hover:bg-purple-700"
-                    onClick={()=>handleSubmit(true)}
+                    className=" text-[#4667aa] px-6 py-2 rounded border border-[#4079ED] bg-blue-50"
+                    onClick={() => handleSubmit(true)}
                   >
                     Print
                   </button>
                   <button
-                    className="bg-gray-400 text-white px-6 py-2 rounded hover:bg-gray-500"
+                    className=" text-red-500 px-6 py-2 rounded border border-red-500 bg-red-50"
                     onClick={() => {
                       // You can clear the form or reset states here
                       setItems([
@@ -789,7 +910,7 @@ function Purchasetransaction() {
                       setDateOfPurchase("");
                     }}
                   >
-                    Cancel
+                    Clear
                   </button>
                 </div>
               </div>

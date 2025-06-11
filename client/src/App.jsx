@@ -1,15 +1,6 @@
 import { Route, Routes } from "react-router-dom";
 import "./index.css";
 import Login from "./Pages/Login";
-
-import AddCustomer from "./Pages/AddCustomer";
-import AddSupplier from "./Pages/AddSupplier";
-import Addemploye from "./Pages/Addemploye";
-import AddItem from "./Pages/AddItem";
-import AddCommission from "./Pages/AddCommission";
-import AddExpense from "./Pages/AddExpense";
-import AddCompany from "./Pages/AddCompany";
-import AddLender from "./Pages/AddLender";
 import Otp from "./Pages/Otp";
 import ForgetPassword from "./Pages/ForgetPassword";
 import ResetPassword from "./Pages/ResetPassword";
@@ -36,19 +27,11 @@ import { ToastContainer } from "react-toastify";
 import TrialBalance from "./Pages/TrialBalance";
 // import Whatsapp from "./Pages/Whatsapp";
 import Payment from "./Pages/Payment/Payment";
-import AddPayment from "./Pages/Payment/AddPayment";
 import LocalsalesReport from "./Pages/LocalsalesReport";
 import EditPurchaseTransaction from "./Pages/purchase/EditPurchaseTransaction";
 import EditCustomerModal from "./Pages/EditCustomer";
-import EditCustomer from "./Pages/EditCustomer";
-import EditCommission from "./Pages/EditCommission";
-import EditCompany from "./Pages/EditCompany";
-import EditEmployee from "./Pages/EditEmployee";
-import EditItem from "./Pages/EditItem";
-import EditSupplier from "./Pages/EditSupplier";
 import Lender from "./Pages/Lender";
 import DailySalesReport from "./Pages/DailySalesReport";
-import AddPickup from "./Pages/AddPickup";
 import Report from "./Pages/Report";
 import Vehicle from "./Pages/Vehicle";
 import ErrorBoundary from "./Components/ErrorBoundary";
@@ -118,35 +101,10 @@ function App() {
                   element={<EditCustomerModal />}
                 />
               </Route>
+              <Route path="/sales/:id" element={<Sales />} />
             </Route>
           </Route>
-          {/* <Route path="/login" element={<Login />} />
-          <Route path="/add-item" element={<AddItem />} />
-          <Route path="/otp" element={<Otp />} />
-          <Route path="/forgot-password" element={<ForgetPassword />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/add-commission" element={<AddCommission />} />
-          <Route path="/add-company" element={<AddCompany />} />
-          <Route path="/expense" element={<AddExpense />} />
 
-          <Route path="/add-employe" element={<Addemploye />} />
-          <Route
-            path="/purchase-transaction"
-            element={<Purchasetransaction />}
-          />
-          <Route path="/add-customer" element={<AddCustomer />} />
-          <Route path="/add-supplier" element={<AddSupplier />} />
-          <Route path="/company" element={<Company />} />
-          <Route path="/edit-customer/:id" element={<EditCustomer />} />
-          <Route path="/edit-commission" element={<EditCommission />} />
-          <Route path="/edit-company" element={<EditCompany />} />
-          <Route path="/edit-employee" element={<EditEmployee />} />
-          <Route path="/edit-item" element={<EditItem />} />
-          <Route path="/edit-supplier" element={<EditSupplier />} />
-          <Route path="/add-lender" element={<AddLender />} />
-          <Route path="/add-pickup" element={<AddPickup />} /> */}
-
-          <Route path="/sales/:id" element={<Sales />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </ErrorBoundary>
